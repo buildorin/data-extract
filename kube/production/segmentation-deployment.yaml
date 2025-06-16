@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: segmentation
+  namespace: data-extract
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: segmentation
+  template:
+    metadata:
+      labels:
+        app: segmentation
+    spec:
+      containers:
+      - name: segmentation
+        image: luminainc/segmentation:1.4.2
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MAX_BATCH_SIZE
+          value: "4"
+        - name: BATCH_WAIT_TIME
+          value: "0.2"
+        - name: OVERLAP_THRESHOLD
+          value: "0.025"
+        - name: SCORE_THRESHOLD
+          value: "0.2"
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "8Gi"
+            cpu: "2"
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: dshm
+          mountPath: /dev/shm
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: segmentation
+  namespace: data-extract
+spec:
+  selector:
+    app: segmentation
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP 

@@ -1,0 +1,68 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+  DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to Docker Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.DOCKER_REGISTRY }}
+        username: ${{ env.DOCKER_USERNAME }}
+        password: ${{ env.DOCKER_PASSWORD }}
+
+    - name: Build and Push Docker Images
+      run: |
+        docker build -t $DOCKER_REGISTRY/server:${{ github.sha }} -f docker/server/Dockerfile .
+        docker build -t $DOCKER_REGISTRY/web:${{ github.sha }} -f docker/web/Dockerfile .
+        docker build -t $DOCKER_REGISTRY/segmentation:${{ github.sha }} -f docker/segmentation/Dockerfile .
+        docker build -t $DOCKER_REGISTRY/ocr:${{ github.sha }} -f docker/ocr/Dockerfile .
+        
+        docker push $DOCKER_REGISTRY/server:${{ github.sha }}
+        docker push $DOCKER_REGISTRY/web:${{ github.sha }}
+        docker push $DOCKER_REGISTRY/segmentation:${{ github.sha }}
+        docker push $DOCKER_REGISTRY/ocr:${{ github.sha }}
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Deploy to Kubernetes
+      run: |
+        echo "$KUBE_CONFIG" > kubeconfig.yaml
+        export KUBECONFIG=kubeconfig.yaml
+        
+        # Update image tags in Kubernetes manifests
+        sed -i "s|image: luminainc/server:.*|image: $DOCKER_REGISTRY/server:${{ github.sha }}|" kube/production/server-deployment.yaml
+        sed -i "s|image: luminainc/web:.*|image: $DOCKER_REGISTRY/web:${{ github.sha }}|" kube/production/web-deployment.yaml
+        sed -i "s|image: luminainc/segmentation:.*|image: $DOCKER_REGISTRY/segmentation:${{ github.sha }}|" kube/production/segmentation-deployment.yaml
+        sed -i "s|image: luminainc/ocr:.*|image: $DOCKER_REGISTRY/ocr:${{ github.sha }}|" kube/production/ocr-deployment.yaml
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f kube/production/namespace.yaml
+        kubectl apply -f kube/production/secrets-template.yaml
+        kubectl apply -f kube/production/postgres-deployment.yaml
+        kubectl apply -f kube/production/redis-deployment.yaml
+        kubectl apply -f kube/production/server-deployment.yaml
+        kubectl apply -f kube/production/web-deployment.yaml
+        kubectl apply -f kube/production/segmentation-deployment.yaml
+        kubectl apply -f kube/production/ocr-deployment.yaml
+        kubectl apply -f kube/production/ingress.yaml
+        kubectl apply -f kube/production/monitoring.yaml 

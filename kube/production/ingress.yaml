@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: data-extract-ingress
+  namespace: data-extract
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  tls:
+  - hosts:
+    - app.useorin.com
+    secretName: useorin-tls
+  rules:
+  - host: app.useorin.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: server
+            port:
+              number: 8000
+      - path: /segmentation
+        pathType: Prefix
+        backend:
+          service:
+            name: segmentation
+            port:
+              number: 8000
+      - path: /ocr
+        pathType: Prefix
+        backend:
+          service:
+            name: ocr
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 8000 

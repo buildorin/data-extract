@@ -50,7 +50,11 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: (
+          <AuthGuard>
+            <Dashboard />
+          </AuthGuard>
+        ),
       },
       !isSelfHost && {
         path: "blog",
@@ -59,14 +63,6 @@ const router = createBrowserRouter([
       !isSelfHost && {
         path: "blog/:slug",
         element: <BlogPostPage />,
-      },
-      {
-        path: "dashboard",
-        element: (
-          <AuthGuard>
-            <Dashboard />
-          </AuthGuard>
-        ),
       },
       {
         path: "checkout/return",
