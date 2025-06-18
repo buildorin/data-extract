@@ -15,7 +15,7 @@ fn default_keycloak_url() -> String {
 }
 
 fn default_keycloak_realm() -> String {
-    "chunkr".to_string()
+    "orin".to_string()
 }
 
 impl Config {

@@ -3,17 +3,17 @@ import { Link } from "react-router-dom";
 import { AuthContextProps } from "react-oidc-context";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { getRepoStats } from "../../services/githubApi";
+import { env } from "../../config/env";
 import "./Header.css";
 
-const isSelfHost = import.meta.env.VITE_IS_SELF_HOST === "true";
-const DOCS_URL = import.meta.env.VITE_DOCS_URL;
+const isSelfHost = env.isSelfHost;
+const DOCS_URL = env.docsUrl;
 
 interface HeaderProps {
   auth?: AuthContextProps;
 }
 
 export default function Header({ auth }: HeaderProps) {
-  const [showAccount, setShowAccount] = useState(false);
   const isAuthenticated = auth?.isAuthenticated;
   const [repoStats, setRepoStats] = useState({ stars: 0, forks: 0 });
 
@@ -53,7 +53,7 @@ export default function Header({ auth }: HeaderProps) {
 
           <nav className="hidden md:flex items-center space-x-8">
             <a
-              href="https://github.com/lumina-ai-inc/chunkr"
+              href="https://github.com/buildorin/data-extract"
               target="_blank"
               className="flex items-center text-text-light hover:text-text-dark"
             >
@@ -87,7 +87,7 @@ export default function Header({ auth }: HeaderProps) {
             )}
 
             <a
-              href="https://cal.com/mehulc/30min"
+              href="https://cal.com/useorin/orin-harish-sync-up"
               target="_blank"
               className="text-sm font-medium text-text-light hover:text-text-dark"
             >
@@ -155,7 +155,7 @@ export default function Header({ auth }: HeaderProps) {
               >
                 <DropdownMenu.Item className="px-4 py-2 text-sm text-text-light hover:bg-gray-100">
                   <a
-                    href="https://github.com/lumina-ai-inc/chunkr"
+                    href="https://github.com/buildorin/data-extract"
                     target="_blank"
                     className="block"
                   >
@@ -164,7 +164,7 @@ export default function Header({ auth }: HeaderProps) {
                 </DropdownMenu.Item>
                 <DropdownMenu.Item className="px-4 py-2 text-sm text-text-light hover:bg-gray-100">
                   <a
-                    href="https://cal.com/mehulc/30min"
+                    href="https://cal.com/useorin/orin-harish-sync-up"
                     target="_blank"
                     className="block"
                   >

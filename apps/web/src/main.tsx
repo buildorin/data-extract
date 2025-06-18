@@ -13,24 +13,26 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import Auth from "./auth/Auth.tsx";
-import Home from "./pages/Home/Home.tsx";
 import AuthGuard from "./auth/AuthGuard.tsx";
 import store from "./store/store";
 import Dashboard from "./pages/Dashboard/Dashboard.tsx";
 import Checkout from "./pages/Checkout/Checkout";
-import Blog from "./pages/Blog/Blog.tsx";
-import BlogPostPage from "./pages/BlogPostPage/BlogPostPage";
-const isSelfHost = import.meta.env.VITE_IS_SELF_HOST === "true";
+import { env } from "./config/env";
+
+// Debug logging
+console.log('Environment variables:', {
+  VITE_KEYCLOAK_URL: env.keycloakUrl,
+  VITE_KEYCLOAK_REALM: env.keycloakRealm,
+  VITE_KEYCLOAK_CLIENT_ID: env.keycloakClientId,
+  VITE_KEYCLOAK_REDIRECT_URI: env.keycloakRedirectUri,
+  VITE_KEYCLOAK_POST_LOGOUT_REDIRECT_URI: env.keycloakPostLogoutRedirectUri,
+});
 
 const oidcConfig: AuthProviderProps = {
-  authority:
-    import.meta.env.VITE_KEYCLOAK_URL +
-    "/realms/" +
-    import.meta.env.VITE_KEYCLOAK_REALM,
-  client_id: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
-  redirect_uri: import.meta.env.VITE_KEYCLOAK_REDIRECT_URI,
-  post_logout_redirect_uri: import.meta.env
-    .VITE_KEYCLOAK_POST_LOGOUT_REDIRECT_URI,
+  authority: `${env.keycloakUrl}/realms/${env.keycloakRealm}`,
+  client_id: env.keycloakClientId,
+  redirect_uri: env.keycloakRedirectUri,
+  post_logout_redirect_uri: env.keycloakPostLogoutRedirectUri,
   automaticSilentRenew: true,
   loadUserInfo: true,
   onSigninCallback: (user) => {
@@ -56,13 +58,13 @@ const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      !isSelfHost && {
-        path: "blog",
-        element: <Blog />,
-      },
-      !isSelfHost && {
-        path: "blog/:slug",
-        element: <BlogPostPage />,
+      {
+        path: "dashboard",
+        element: (
+          <AuthGuard>
+            <Dashboard />
+          </AuthGuard>
+        ),
       },
       {
         path: "checkout/return",

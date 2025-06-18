@@ -169,7 +169,12 @@ pub fn main() -> std::io::Result<()> {
         HttpServer::new(move || {
             let mut app = App::new()
                 .wrap(RequestTracing::new())
-                .wrap(Cors::permissive())
+                .wrap(
+                    Cors::default()
+                        .allow_any_origin()
+                        .allow_any_method()
+                        .allow_any_header()
+                )
                 .wrap(Logger::default())
                 .wrap(Logger::new("%a %{User-Agent}i"))
                 .app_data(

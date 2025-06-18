@@ -30,6 +30,8 @@ common:
       value: >-
         https://{{ .Values.services.keycloak.ingress.subdomain }}.{{
         .Values.ingress.domain }}
+    - name: AUTH__KEYCLOAK_REALM
+      value: orin
     - name: AWS__ENDPOINT
       value: http://{{- .Release.Name }}-minio:9000
     - name: AWS__PRESIGNED_URL_ENDPOINT
@@ -168,13 +170,13 @@ services:
       - name: VITE_DOCS_URL
         value: https://docs.chunkr.ai
       - name: VITE_KEYCLOAK_CLIENT_ID
-        value: chunkr
+        value: orin
       - name: VITE_KEYCLOAK_POST_LOGOUT_REDIRECT_URI
         value: >-
           https://{{ .Values.services.web.ingress.subdomain }}.{{
           .Values.ingress.domain }}
       - name: VITE_KEYCLOAK_REALM
-        value: chunkr
+        value: orin
       - name: VITE_KEYCLOAK_REDIRECT_URI
         value: >-
           https://{{ .Values.services.web.ingress.subdomain }}.{{

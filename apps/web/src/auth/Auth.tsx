@@ -14,11 +14,14 @@ export default function Auth({ children }: AuthProps) {
   // Handle access token and axios setup
   useEffect(() => {
     if (auth.isAuthenticated && auth.user?.access_token) {
+      console.log('Setting auth token:', auth.user.access_token.substring(0, 20) + '...');
       axiosInstance.defaults.headers.common[
         "Authorization"
       ] = `Bearer ${auth.user.access_token}`;
+      console.log('Axios headers:', axiosInstance.defaults.headers.common);
     } else {
-      delete axiosInstance.defaults.headers.common["Authorization"]; // cleaner thannull
+      console.log('Removing auth token');
+      delete axiosInstance.defaults.headers.common["Authorization"];
     }
   }, [auth.isAuthenticated, auth.user]);
 

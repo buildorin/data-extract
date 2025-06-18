@@ -46,7 +46,7 @@ export default function UploadDialog({
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <g clip-path="url(#clip0_113_1479)">
+            <g clipPath="url(#clip0_113_1479)">
               <path
                 d="M19.75 9.25V20.25C19.75 20.8 19.3 21.25 18.75 21.25H6.25C5.7 21.25 5.25 20.8 5.25 20.25V3.75C5.25 3.2 5.7 2.75 6.25 2.75H13.25"
                 stroke="#FFF"

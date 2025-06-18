@@ -1,6 +1,6 @@
 {
   "id": "0b2071df-876e-4ec3-a539-8c24f58c4980",
-  "realm": "chunkr",
+  "realm": "orin",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
@@ -46,7 +46,7 @@
   "failureFactor": 30,
   "defaultRole": {
     "id": "b8fc2e81-a56f-47f0-b697-29ebc375c56a",
-    "name": "default-roles-chunkr",
+    "name": "default-roles-orin",
     "description": "${role_default-roles}",
     "composite": true,
     "clientRole": false,
@@ -119,13 +119,13 @@
       "clientId": "account",
       "name": "${client_account}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/chunkr/account/",
+      "baseUrl": "/realms/orin/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/chunkr/account/*"
+        "/realms/orin/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -164,13 +164,13 @@
       "clientId": "account-console",
       "name": "${client_account-console}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/chunkr/account/",
+      "baseUrl": "/realms/orin/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/chunkr/account/*"
+        "/realms/orin/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -295,7 +295,7 @@
     },
     {
       "id": "0840b235-191c-4904-a822-843ea04e87aa",
-      "clientId": "chunkr",
+      "clientId": "orin",
       "name": "",
       "description": "",
       "rootUrl": "",
@@ -400,13 +400,13 @@
       "clientId": "security-admin-console",
       "name": "${client_security-admin-console}",
       "rootUrl": "${authAdminUrl}",
-      "baseUrl": "/admin/chunkr/console/",
+      "baseUrl": "/admin/orin/console/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/admin/chunkr/console/*"
+        "/admin/orin/console/*"
       ],
       "webOrigins": [
         "+"

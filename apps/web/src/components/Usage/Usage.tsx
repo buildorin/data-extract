@@ -360,13 +360,13 @@ export default function UsagePage({ customerId }: UsageProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="1.5"
-                clipPath="url(#gRimTy0T6Ra)"
+                clipPath="url(#clip0_305_27868)"
               >
                 <path d="M9.25 6.75h6.5m-7.75 9h11.75v5.5H8c-1.52 0-2.75-1.23-2.75-2.75S6.48 15.75 8 15.75" />
                 <path d="M5.25 18.5V5.75a3 3 0 0 1 3-3h10.5a1 1 0 0 1 1 1V16" />
               </g>
               <defs>
-                <clipPath id="gRimTy0T6Ra">
+                <clipPath id="clip0_305_27868">
                   <path fill="#fff" d="M.5 0h24v24H.5z" />
                 </clipPath>
               </defs>
@@ -469,7 +469,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                 stroke="#FFF"
                 strokeLinecap="round"
                 strokeWidth="1.5"
-                clipPath="url(#WyWBQHSz7Ta)"
+                clipPath="url(#clip0_113_1447)"
               >
                 <path
                   strokeLinejoin="round"
@@ -479,7 +479,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                 <path strokeMiterlimit="10" d="M8.25 13.75h8.5m-8.5 3.5h4.5" />
               </g>
               <defs>
-                <clipPath id="WyWBQHSz7Ta">
+                <clipPath id="clip0_113_1447">
                   <path fill="#fff" d="M.5 0h24v24H.5z" />
                 </clipPath>
               </defs>
@@ -605,7 +605,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
-                      <g clip-path="url(#clip0_305_27868)">
+                      <g clipPath="url(#clip0_305_27868)">
                         <path
                           d="M12 21.25C17.1086 21.25 21.25 17.1086 21.25 12C21.25 6.89137 17.1086 2.75 12 2.75C6.89137 2.75 2.75 6.89137 2.75 12C2.75 17.1086 6.89137 21.25 12 21.25Z"
                           stroke="#FFFFFF"
@@ -694,7 +694,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
-                      <g clip-path="url(#clip0_113_1447)">
+                      <g clipPath="url(#clip0_113_1447)">
                         <path
                           d="M12.5 6.25C17.61 6.25 21.75 10.39 21.75 15.5V18.25H3.25V15.5C3.25 10.39 7.39 6.25 12.5 6.25Z"
                           stroke="#FFFFFF"
@@ -824,7 +824,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
-                      <g clip-path="url(#clip0_113_1389)">
+                      <g clipPath="url(#clip0_113_1389)">
                         <path
                           d="M7.25 9V16.75"
                           stroke="#FFFFFF"

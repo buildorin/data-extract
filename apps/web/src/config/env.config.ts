@@ -1,3 +1,5 @@
+import { env } from "./env";
+
 export interface Features {
   pipeline: boolean;
   // Add new feature flags here
@@ -11,7 +13,7 @@ export interface EnvConfig {
 export const getEnvConfig = (): EnvConfig => {
   return {
     features: {
-      pipeline: import.meta.env.VITE_FEATURE_FLAG_PIPELINE === "true",
+      pipeline: env.featureFlagPipeline,
       // Add new feature implementations here
     },
   };
@@ -21,8 +23,8 @@ export function validateEnvConfig(): void {
   const requiredFlags: Array<keyof Features> = ["pipeline"];
 
   for (const flag of requiredFlags) {
-    const value = import.meta.env[`VITE_FEATURE_FLAG_${flag.toUpperCase()}`];
-    if (value !== "true" && value !== "false") {
+    const value = flag === "pipeline" ? env.featureFlagPipeline : false;
+    if (value !== true && value !== false) {
       throw new Error(
         `VITE_FEATURE_FLAG_${flag.toUpperCase()} must be either "true" or "false"`,
       );

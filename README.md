@@ -1,10 +1,10 @@
 <br />
 <div align="center">
-  <a href="https://github.com/lumina-ai-inc/chunkr">
+  <a href="https://github.com/buildorin/data-extract">
     <img src="images/logo.svg" alt="Logo" width="80" height="80">
   </a>
 
-<h3 align="center">Chunkr | Open Source Document Intelligence API</h3>
+<h3 align="center">Orin | Open Source Data Extraction API</h3>
 
   <p align="center">
     Production-ready API service for document layout analysis, OCR, and semantic chunking.<br />Convert PDFs, PPTs, Word docs & images into RAG/LLM-ready chunks.
@@ -14,7 +14,7 @@
     <br />
     <a href="https://www.chunkr.ai"><img src="https://img.shields.io/badge/Try_it_out-chunkr.ai-blue?style=flat&logo=rocket&height=20" alt="Try it out" height="20"></a>
     &nbsp;&nbsp;&nbsp;
-    <a href="https://github.com/lumina-ai-inc/chunkr/issues/new"><img src="https://img.shields.io/badge/Report_Bug-GitHub_Issues-red?style=flat&logo=github&height=20" alt="Report Bug" height="20"></a>
+    <a href="https://github.com/buildorin/data-extract/issues/new"><img src="https://img.shields.io/badge/Report_Bug-GitHub_Issues-red?style=flat&logo=github&height=20" alt="Report Bug" height="20"></a>
     &nbsp;&nbsp;&nbsp;
     <a href="#connect-with-us"><img src="https://img.shields.io/badge/Contact-Get_in_Touch-green?style=flat&logo=mail&height=20" alt="Contact" height="20"></a>
     &nbsp;&nbsp;&nbsp;
@@ -89,8 +89,8 @@ Visit our [docs](https://docs.chunkr.ai) for more information and examples.
 
 2. Clone the repo:
 ```bash
-git clone https://github.com/lumina-ai-inc/chunkr
-cd chunkr
+git clone https://github.com/buildorin/data-extract
+cd data-extract
 ```
 
 3. Set up environment variables:
@@ -248,14 +248,6 @@ Below is a table of common LLM providers and their configuration details to get 
 
 ## Licensing
 
-The core of this project is dual-licensed:
+The core of this project is licensed under:
 
 1. [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
-2. Commercial License
-
-To use Chunkr without complying with the AGPL-3.0 license terms you can [contact us](mailto:mehul@chunkr.ai) or visit our [website](https://chunkr.ai).
-
-## Connect With Us
-- 📧 Email: [mehul@chunkr.ai](mailto:mehul@chunkr.ai)
-- 📅 Schedule a call: [Book a 30-minute meeting](https://cal.com/mehulc/30min)
-- 🌐 Visit our website: [chunkr.ai](https://chunkr.ai)

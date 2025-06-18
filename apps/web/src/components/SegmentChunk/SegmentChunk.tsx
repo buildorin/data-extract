@@ -382,7 +382,7 @@ export const SegmentChunk = memo(
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
-                      <g clip-path="url(#clip0_304_23709)">
+                      <g clipPath="url(#clip0_304_23709)">
                         <path
                           d="M20.25 4.75H3.75C3.19772 4.75 2.75 5.19772 2.75 5.75V18.25C2.75 18.8023 3.19772 19.25 3.75 19.25H20.25C20.8023 19.25 21.25 18.8023 21.25 18.25V5.75C21.25 5.19772 20.8023 4.75 20.25 4.75Z"
                           stroke={specialSegmentColorVar}

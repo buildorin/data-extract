@@ -556,7 +556,7 @@ export function ChunkProcessingControls({
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <g clip-path="url(#clip0_305_31854)">
+            <g clipPath="url(#clip0_305_31854)">
               <path
                 d="M9.25 16C9.25 14.2051 7.79493 12.75 6 12.75C4.20507 12.75 2.75 14.2051 2.75 16C2.75 17.7949 4.20507 19.25 6 19.25C7.79493 19.25 9.25 17.7949 9.25 16Z"
                 stroke="#FFF"

@@ -603,7 +603,7 @@ const TaskTable = () => {
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <g clip-path="url(#clip0_113_1419)">
+                <g clipPath="url(#clip0_113_1419)">
                   <path
                     d="M9.25 6.75H15.75"
                     stroke="#FFF"
@@ -702,7 +702,7 @@ const TaskTable = () => {
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                           >
-                            <g clip-path="url(#clip0_113_1439)">
+                            <g clipPath="url(#clip0_113_1439)">
                               <path
                                 d="M9.25 15.25L15.75 8.75"
                                 stroke="#FFF"
@@ -750,7 +750,7 @@ const TaskTable = () => {
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                           >
-                            <g clip-path="url(#clip0_113_1417)">
+                            <g clipPath="url(#clip0_113_1417)">
                               <path
                                 d="M16.25 15.25H20.75V19.75"
                                 stroke="#FFF"

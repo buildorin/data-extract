@@ -18,11 +18,11 @@ fi
 
 # Stop any running containers
 echo "Stopping any running containers..."
-docker compose -f compose-local.yaml down
+docker compose -f compose-cpu.yaml -f compose-mac.yaml down
 
 # Start the services
 echo "Starting services..."
-docker compose -f compose-local.yaml up -d
+docker compose -f compose-cpu.yaml -f compose-mac.yaml up -d
 
 # Wait for services to be ready
 echo "Waiting for services to be ready..."
@@ -45,4 +45,4 @@ echo -e "\nTo view logs, run:"
 echo "docker compose -f compose-local.yaml logs -f"
 
 echo -e "\nTo stop the services, run:"
-echo "docker compose -f compose-local.yaml down" 
+echo "docker compose -f compose-cpu.yaml -f compose-mac.yaml down" 

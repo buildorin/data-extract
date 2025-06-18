@@ -33,7 +33,7 @@ export default function ApiKeyDialog({
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <g clip-path="url(#clip0_113_1449)">
+              <g clipPath="url(#clip0_113_1449)">
                 <path
                   d="M17.25 7.75L21.75 12.08L17.25 16.25"
                   stroke="#FFFFFF"

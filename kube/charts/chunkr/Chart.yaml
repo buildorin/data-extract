@@ -7,15 +7,15 @@ description: >-
 type: application
 version: 1.20.1
 maintainers:
-  - name: Lumina AI Inc.
-    email: akhilesh@lumina.sh
-    url: https://chunkr.ai
+  - name: Orin Inc.
+    email: harish@useorin.com
+    url: https://www.app.useorin.com
 keywords:
   - rag
   - llm
   - document-processing
   - ocr
   - pdf-processing
-home: https://www.chunkr.ai
+home: https://www.app.useorin.com
 sources:
-  - https://github.com/lumina-ai-inc/chunkr
+  - https://github.com/buildorin/data-extract

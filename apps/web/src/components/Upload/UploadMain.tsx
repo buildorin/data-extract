@@ -20,9 +20,10 @@ import {
 import { uploadFile } from "../../services/uploadFileApi";
 import { UploadForm } from "../../models/upload.model";
 import { getEnvConfig, WhenEnabled } from "../../config/env.config";
+import { env } from "../../config/env";
 import { toast } from "react-hot-toast";
 
-const DOCS_URL = import.meta.env.VITE_DOCS_URL || "https://docs.chunkr.ai";
+const DOCS_URL = env.docsUrl || "https://docs.chunkr.ai";
 
 // threshold under which we encode on main thread (10 MB)
 const SMALL_FILE_SIZE = 10 * 1024 * 1024;

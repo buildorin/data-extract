@@ -80,7 +80,7 @@ export default function Footer() {
             </svg>
           </a>
           <a
-            href="https://github.com/lumina-ai-inc/chunkr"
+            href="https://github.com/buildorin/data-extract"
             target="_blank"
             rel="noopener noreferrer"
           >
