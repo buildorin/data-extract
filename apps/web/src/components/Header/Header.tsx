@@ -106,7 +106,7 @@ export default function Header({ auth }: HeaderProps) {
               target="_blank"
               className="text-sm font-medium text-text-light hover:text-text-dark"
             >
-              Docs
+              Help
             </a>
 
             {isAuthenticated ? (
@@ -178,7 +178,7 @@ export default function Header({ auth }: HeaderProps) {
                 </DropdownMenu.Item>
                 <DropdownMenu.Item className="px-4 py-2 text-sm text-text-light hover:bg-gray-100">
                   <a href={DOCS_URL} target="_blank" className="block">
-                    Docs
+                    Help
                   </a>
                 </DropdownMenu.Item>
                 {isAuthenticated ? (

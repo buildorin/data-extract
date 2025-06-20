@@ -295,7 +295,7 @@ export default function UsagePage({ customerId }: UsageProps) {
               size="5"
               align="center"
               weight="bold"
-              style={{ color: "#FFF" }}
+              style={{ color: "#111" }}
             >
               Overview
             </Text>
@@ -375,9 +375,9 @@ export default function UsagePage({ customerId }: UsageProps) {
             <Text
               size="3"
               weight="bold"
-              style={{ color: "rgba(255,255,255,0.9)" }}
+              style={{ color: "#111" }}
             >
-              Tasks Status Per Day (UTC)
+              Flows Status Per Day (UTC)
             </Text>
           </Flex>
           <Flex className="chart-container">
@@ -394,16 +394,16 @@ export default function UsagePage({ customerId }: UsageProps) {
                 />
                 <XAxis
                   dataKey="date"
-                  stroke="rgba(255,255,255,0.2)"
-                  tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                  stroke="#111"
+                  tick={{ fill: "#111", fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   dy={10}
                 />
                 <YAxis
                   allowDecimals={false}
-                  stroke="rgba(255,255,255,0.2)"
-                  tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                  stroke="#111"
+                  tick={{ fill: "#111", fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   dx={-10}
@@ -487,7 +487,7 @@ export default function UsagePage({ customerId }: UsageProps) {
             <Text
               size="3"
               weight="bold"
-              style={{ color: "rgba(255,255,255,0.9)" }}
+              style={{ color: "#111" }}
             >
               Pages Processed Per Day (UTC)
             </Text>
@@ -506,16 +506,16 @@ export default function UsagePage({ customerId }: UsageProps) {
                 />
                 <XAxis
                   dataKey={timeRange === "today" ? "hour" : "date"}
-                  stroke="rgba(255,255,255,0.2)"
-                  tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                  stroke="#111"
+                  tick={{ fill: "#111", fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   dy={10}
                 />
                 <YAxis
                   allowDecimals={false}
-                  stroke="rgba(255,255,255,0.2)"
-                  tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }}
+                  stroke="#111"
+                  tick={{ fill: "#111", fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                   dx={-10}
@@ -576,12 +576,12 @@ export default function UsagePage({ customerId }: UsageProps) {
               size="5"
               align="center"
               weight="bold"
-              style={{ color: "#FFF" }}
+              style={{ color: "#111" }}
             >
               Current Billing Cycle
             </Text>
             <Flex direction="row" gap="4" className="tier-badge">
-              <Text size="2" style={{ color: "rgba(255,255,255,0.9)" }}>
+              <Text size="2" style={{ color: "#111" }}>
                 {tier}
               </Text>
             </Flex>
@@ -643,7 +643,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                     <Text
                       size="3"
                       weight="bold"
-                      style={{ color: "rgba(255,255,255,0.9)" }}
+                      style={{ color: "#111" }}
                     >
                       Credits
                     </Text>
@@ -652,7 +652,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                   <Text
                     size="1"
                     weight="medium"
-                    style={{ color: "rgba(255,255,255,0.9)" }}
+                    style={{ color: "#111" }}
                   >
                     {usage.toLocaleString()} / {limit.toLocaleString()} Pages
                   </Text>
@@ -666,11 +666,11 @@ export default function UsagePage({ customerId }: UsageProps) {
                 </div>
 
                 <Flex justify="between" align="center">
-                  <Text size="1" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  <Text size="1" style={{ color: "#111" }}>
                     {percentage.toFixed(1)}% used
                   </Text>
                   <Flex className="usage-badge">
-                    <Text size="1" style={{ color: "rgba(255,255,255,0.8)" }}>
+                    <Text size="1" style={{ color: "#111" }}>
                       {limit - usage > 0
                         ? `${(limit - usage).toLocaleString()} pages remaining`
                         : "Limit reached"}
@@ -746,7 +746,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                     <Text
                       size="3"
                       weight="bold"
-                      style={{ color: "rgba(255,255,255,0.9)" }}
+                      style={{ color: "#111" }}
                     >
                       Overage
                     </Text>
@@ -754,7 +754,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                   <Text
                     size="1"
                     weight="medium"
-                    style={{ color: "rgba(255,255,255,0.9)" }}
+                    style={{ color: "#111" }}
                   >
                     {overage.toLocaleString()} Pages
                   </Text>
@@ -763,7 +763,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                 <Text
                   size="2"
                   weight="bold"
-                  style={{ color: "rgba(255,255,255,0.9)" }}
+                  style={{ color: "#111" }}
                 >
                   {monthlyUsage?.[0]?.overage_cost
                     ? `$${Number(monthlyUsage[0].overage_cost).toLocaleString(
@@ -778,7 +778,7 @@ export default function UsagePage({ customerId }: UsageProps) {
 
                 {overage === 0 && (
                   <Flex justify="between" align="center">
-                    <Text size="1" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    <Text size="1" style={{ color: "#111" }}>
                       No overage incurred
                     </Text>
                     <Flex
@@ -788,7 +788,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                         border: "1px solid rgba(0, 255, 157, 0.2)",
                       }}
                     >
-                      <Text size="1" style={{ color: "#00ff9d" }}>
+                      <Text size="1" style={{ color: "#111" }}>
                         Within your plan
                       </Text>
                     </Flex>
@@ -797,14 +797,14 @@ export default function UsagePage({ customerId }: UsageProps) {
 
                 {overage > 0 && (
                   <Flex justify="between" align="center">
-                    <Text size="1" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    <Text size="1" style={{ color: "#111" }}>
                       Plan credits used
                     </Text>
                     <Flex
                       className="usage-badge"
                       style={{ backgroundColor: "#FF4D4D33" }}
                     >
-                      <Text size="1" style={{ color: "#ff824d" }}>
+                      <Text size="1" style={{ color: "#111" }}>
                         Overage charges apply
                       </Text>
                     </Flex>
@@ -881,7 +881,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                     <Text
                       size="3"
                       weight="bold"
-                      style={{ color: "rgba(255,255,255,0.9)" }}
+                      style={{ color: "#111" }}
                     >
                       {tier === "Free" ? "Upgrade Plan" : "Payment Status"}
                     </Text>
@@ -904,7 +904,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                 </Flex>
 
                 <Flex direction="column" gap="3">
-                  <Text size="2" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  <Text size="2" style={{ color: "#111" }}>
                     {tier === "Free"
                       ? "Upgrade to a paid plan to unlock higher usage limits."
                       : monthlyUsage?.[0]?.last_paid_status === false
@@ -917,7 +917,7 @@ export default function UsagePage({ customerId }: UsageProps) {
                       onClick={handleManagePayment}
                       disabled={isLoadingPortal}
                     >
-                      <Text size="2" className="white">
+                      <Text size="2" className="white" style={{ color: "#111" }}>
                         {isLoadingPortal
                           ? "Loading..."
                           : tier === "Free"

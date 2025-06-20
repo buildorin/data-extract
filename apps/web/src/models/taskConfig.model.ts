@@ -150,7 +150,7 @@ export interface UploadFormData {
 
 export enum Pipeline {
   Azure = "Azure",
-  Chunkr = "Chunkr",
+  Orin = "Orin",
 }
 
 const DEFAULT_SEGMENT_CONFIG: SegmentProcessingConfig = {

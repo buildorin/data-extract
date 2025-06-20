@@ -215,15 +215,15 @@ export default function UploadMain({
                   setConfig({
                     ...config,
                     pipeline: (features.pipeline
-                      ? value === Pipeline.Chunkr
-                        ? Pipeline.Chunkr
+                      ? value === Pipeline.Orin
+                        ? Pipeline.Orin
                         : Pipeline.Azure
                       : undefined) as WhenEnabled<"pipeline", Pipeline>,
                   })
                 }
                 options={[
                   { label: "Azure", value: Pipeline.Azure },
-                  { label: "Chunkr", value: Pipeline.Chunkr },
+                  { label: "Orin", value: Pipeline.Orin },
                 ]}
               />
             )}
@@ -515,7 +515,7 @@ export default function UploadMain({
                 className="docs-text"
               >
                 <Text size="1" weight="bold" className="white ">
-                  Docs
+                  Help
                 </Text>
                 <svg
                   width="12px"

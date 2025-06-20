@@ -114,7 +114,7 @@ const TaskTable = () => {
       },
       {
         accessorKey: "task_id",
-        header: "Task ID",
+        header: "Flow ID",
         Cell: ({ cell }) => {
           const fullId = cell.getValue<string>();
           return (
@@ -579,7 +579,7 @@ const TaskTable = () => {
           gap="4"
         >
           <Text size="4" mb="4" weight="medium" className="white">
-            Get started by uploading a file
+            Get started by adding your document
           </Text>
           <Flex direction="column" gap="4" align="center">
             <UploadDialog
@@ -638,7 +638,7 @@ const TaskTable = () => {
                 </defs>
               </svg>
               <Text size="2" weight="medium" style={{ color: "#FFF" }}>
-                Docs
+                Help
               </Text>
             </BetterButton>
           </Flex>
@@ -706,23 +706,23 @@ const TaskTable = () => {
                               <path
                                 d="M9.25 15.25L15.75 8.75"
                                 stroke="#FFF"
-                                stroke-width="1.5"
-                                stroke-miterlimit="10"
-                                stroke-linecap="round"
+                                strokeWidth="1.5"
+                                strokeMiterlimit="10"
+                                strokeLinecap="round"
                               />
                               <path
                                 d="M15.75 15.25L9.25 8.75"
                                 stroke="#FFF"
-                                stroke-width="1.5"
-                                stroke-miterlimit="10"
-                                stroke-linecap="round"
+                                strokeWidth="1.5"
+                                strokeMiterlimit="10"
+                                strokeLinecap="round"
                               />
                               <path
                                 d="M12.5 21.25C17.6086 21.25 21.75 17.1086 21.75 12C21.75 6.89137 17.6086 2.75 12.5 2.75C7.39137 2.75 3.25 6.89137 3.25 12C3.25 17.1086 7.39137 21.25 12.5 21.25Z"
                                 stroke="#FFF"
-                                stroke-width="1.5"
-                                stroke-miterlimit="10"
-                                stroke-linecap="round"
+                                strokeWidth="1.5"
+                                strokeMiterlimit="10"
+                                strokeLinecap="round"
                               />
                             </g>
                             <defs>
@@ -736,12 +736,12 @@ const TaskTable = () => {
                               </clipPath>
                             </defs>
                           </svg>
-                          <Text size="1">Cancel Tasks</Text>
+                          <Text size="1">Cancel Flows</Text>
                         </BetterButton>
                       </Tooltip>
                     )}
                     {hasSelectedFailedTasks() && (
-                      <Tooltip arrow title="Retry Selected Failed Tasks">
+                      <Tooltip arrow title="Retry Selected Failed Flows">
                         <BetterButton onClick={handleRetrySelected}>
                           <svg
                             width="20"
@@ -784,7 +784,7 @@ const TaskTable = () => {
                             </defs>
                           </svg>
 
-                          <Text size="1">Retry Tasks</Text>
+                          <Text size="1">Retry Flows</Text>
                         </BetterButton>
                       </Tooltip>
                     )}
@@ -800,46 +800,46 @@ const TaskTable = () => {
                           <path
                             d="M4.25 4.75H20.75"
                             stroke="#FFF"
-                            stroke-width="1.5"
-                            stroke-miterlimit="10"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
+                            strokeLinecap="round"
                           />
                           <path
                             d="M12.5 2.75V4.75"
                             stroke="#FFF"
-                            stroke-width="1.5"
-                            stroke-miterlimit="10"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
+                            strokeLinecap="round"
                           />
                           <path
                             d="M14.2402 17.27V12.77"
                             stroke="#FFF"
-                            stroke-width="1.5"
-                            stroke-miterlimit="10"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
+                            strokeLinecap="round"
                           />
                           <path
                             d="M10.75 17.25V12.75"
                             stroke="#FFF"
-                            stroke-width="1.5"
-                            stroke-miterlimit="10"
-                            stroke-linecap="round"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
+                            strokeLinecap="round"
                           />
                           <path
                             d="M5.87012 8.75H19.1701"
                             stroke="#FFF"
-                            stroke-width="1.5"
-                            stroke-miterlimit="10"
+                            strokeWidth="1.5"
+                            strokeMiterlimit="10"
                           />
                           <path
                             d="M15.91 21.25H9.09C8.07 21.25 7.21 20.48 7.1 19.47L5.5 4.75H19.5L17.9 19.47C17.79 20.48 16.93 21.25 15.91 21.25V21.25Z"
                             stroke="#FFF"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
                         </svg>{" "}
-                        <Text size="1">Delete Tasks</Text>
+                        <Text size="1">Delete Flows</Text>
                       </BetterButton>
                     </Tooltip>
                   </>

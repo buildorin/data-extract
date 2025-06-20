@@ -80,3 +80,41 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded-full hover:bg-gray-400;
 }
+
+body, #root, .main-container, .dashboard-nav-container, .main-header, .main-body {
+  background: #fff !important;
+  color: #111 !important;
+}
+
+button, .button-resting, .button-active {
+  background: #06b6d4 !important; /* Tailwind teal-500 */
+  color: #fff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+button:hover, .button-resting:hover, .button-active:hover {
+  background: #0891b2 !important; /* Tailwind teal-600 */
+  color: #fff !important;
+}
+
+.dashboard-nav-item.selected {
+  background: #e0f7fa !important;
+  color: #111 !important;
+}
+
+.dashboard-nav-item.selected svg path {
+  stroke: #06b6d4 !important;
+}
+
+input, select, textarea {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+.profile-section, .profile-info, .profile-popup, .profile-name, .profile-menu, .profile-menu-item {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1.5px solid #bdbdbd !important;
+}

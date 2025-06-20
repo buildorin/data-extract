@@ -1,5 +1,5 @@
 .dialog-overlay {
-  background-color: rgba(2, 5, 6, 0.98);
+  background-color: #fff !important;
   position: fixed;
   max-width: 800px;
   max-height: 684px;
@@ -10,6 +10,7 @@
   z-index: 999;
   overflow: hidden;
   padding: 4px !important;
+  border: 2px solid #bdbdbd !important;
 }
 
 .dialog-close {

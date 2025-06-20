@@ -1,0 +1,74 @@
+:root {
+  --primary-bg: #fff;
+  --secondary-bg: #fff;
+  --border-color: #e5e7eb;
+  --text-primary: #111;
+  --text-secondary: #222;
+  --text-muted: #444;
+  --hover-bg: #f3f4f6;
+  --button-primary: #01838f;
+  --button-primary-hover: #016a74;
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+}
+
+body, html {
+  background: var(--primary-bg) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a, p, span, div, h1, h2, h3, h4, h5, h6, label, th, td {
+  color: var(--text-primary) !important;
+}
+
+button, .button, .MuiButton-root {
+  background: var(--button-primary) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  transition: background 0.2s;
+}
+
+button:hover, .button:hover, .MuiButton-root:hover {
+  background: var(--button-primary-hover) !important;
+}
+
+input, textarea, select {
+  background: #fff !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+}
+
+.MuiDialog-paper, .dialog, .modal, .MuiPaper-root {
+  background: #fff !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+table, .MuiTable-root {
+  background: #fff !important;
+  color: var(--text-primary) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+th, td, .MuiTableCell-root {
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.card, .MuiCard-root {
+  background: #fff !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--border-color) !important;
+} 

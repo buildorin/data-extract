@@ -85,7 +85,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     panelBackground="solid"
     style={{
       height: "100%",
-      backgroundColor: "#020809",
+      backgroundColor: "#fff",
+      color: "#111",
     }}
   >
     <QueryClientProvider client={queryClient}>

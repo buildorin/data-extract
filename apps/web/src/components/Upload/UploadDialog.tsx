@@ -87,8 +87,8 @@ export default function UploadDialog({
               </clipPath>
             </defs>
           </svg>
-          <Text size="2" weight="medium" style={{ color: "#FFF" }}>
-            Create Task
+          <Text size="3" weight="bold">
+            Create Flow
           </Text>
         </BetterButton>
       </Dialog.Trigger>

@@ -109,9 +109,9 @@ export default function Upload({
               <Text
                 size="5"
                 weight="bold"
-                style={{ color: "hsl(0, 0%, 100%, 0.98)" }}
+                style={{ color: "#111" }}
               >
-                Create Tasks
+                Create Flows
               </Text>
             </Flex>
             {files.length > 0 && (
@@ -140,7 +140,7 @@ export default function Upload({
             mt="2"
             style={{
               background: "rgba(255, 255, 255, 0.01)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              border: "1.5px solid #bdbdbd",
               borderRadius: "8px",
               padding: "12px 16px",
               backdropFilter: "blur(8px)",
@@ -190,7 +190,7 @@ export default function Upload({
             </svg>
             <Text
               size="2"
-              style={{ color: "rgba(255, 255, 255, 0.85)", lineHeight: "1.6" }}
+              style={{ color: "#111", lineHeight: "1.6" }}
             >
               Upload and process documents with our pre-configured settings, or
               customize processing options below. Learn more about all features
@@ -200,7 +200,7 @@ export default function Upload({
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  color: "rgba(255, 255, 255, 0.95)",
+                  color: "#111",
                   textDecoration: "underline",
                   textUnderlineOffset: "2px",
                 }}

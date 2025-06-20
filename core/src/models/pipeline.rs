@@ -56,7 +56,7 @@ impl PipelineStepMessages for PipelineStep {
             #[cfg(feature = "azure")]
             PipelineStep::AzureAnalysis => "Failed to run Azure analysis".to_string(),
             PipelineStep::Chunking => "Failed to chunk".to_string(),
-            PipelineStep::ChunkrAnalysis => "Failed to run Chunkr analysis".to_string(),
+            PipelineStep::ChunkrAnalysis => "Failed to run Orin Extraction".to_string(),
             PipelineStep::ConvertToImages => "Failed to convert pages to images".to_string(),
             PipelineStep::Crop => "Failed to crop segments".to_string(),
             PipelineStep::SegmentProcessing => {

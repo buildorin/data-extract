@@ -24,7 +24,7 @@ const DOCS_URL = import.meta.env.VITE_DOCS_URL;
 export default function Dashboard() {
   const auth = useAuth();
   const user = useUser();
-  const [selectedNav, setSelectedNav] = useState("Tasks");
+  const [selectedNav, setSelectedNav] = useState("Flows");
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [isNavOpen, setIsNavOpen] = useState(true);
@@ -49,7 +49,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!searchParams.has("view")) {
       const params = new URLSearchParams(searchParams);
-      params.set("view", "tasks");
+      params.set("view", "flows");
       navigate({
         pathname: "/dashboard",
         search: params.toString(),
@@ -75,7 +75,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (location.pathname === "/dashboard") {
-      setSelectedNav("Tasks");
+      setSelectedNav("Flows");
     }
   }, [location.pathname]);
 
@@ -88,7 +88,7 @@ export default function Dashboard() {
   }, [location.state]);
 
   const navIcons = {
-    Tasks: (
+    Flows: (
       <g>
         <path
           d="M12.75 7.5H21.25"
@@ -129,7 +129,7 @@ export default function Dashboard() {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <g clip-path="url(#clip0_113_1401)">
+          <g clipPath="url(#clip0_113_1401)">
             <path
               d="M5.25 20.25H6.75C7.30228 20.25 7.75 19.8023 7.75 19.25L7.75 13.75C7.75 13.1977 7.30228 12.75 6.75 12.75H5.25C4.69772 12.75 4.25 13.1977 4.25 13.75L4.25 19.25C4.25 19.8023 4.69772 20.25 5.25 20.25Z"
               stroke="#FFF"
@@ -172,16 +172,16 @@ export default function Dashboard() {
       const params = new URLSearchParams();
       const currentParams = new URLSearchParams(searchParams);
 
-      // Set view first (either "tasks" or "usage")
+      // Set view first (either "flows" or "usage")
       params.set("view", item.toLowerCase());
 
-      // Always preserve all view-specific parameters EXCEPT taskId when clicking on Tasks
-      // For Tasks view
+      // Always preserve all view-specific parameters EXCEPT taskId when clicking on Flows
+      // For Flows view
       const tablePageIndex = currentParams.get("tablePageIndex");
       const tablePageSize = currentParams.get("tablePageSize");
-      // Only preserve taskId if we're not clicking on Tasks nav item
+      // Only preserve taskId if we're not clicking on Flows nav item
       const taskId = currentParams.get("taskId");
-      if (taskId && item !== "Tasks") {
+      if (taskId && item !== "Flows") {
         params.set("taskId", taskId);
       }
 
@@ -209,8 +209,8 @@ export default function Dashboard() {
     const view = searchParams.get("view");
     if (view === "usage") {
       setSelectedNav("Usage");
-    } else if (view === "tasks") {
-      setSelectedNav("Tasks");
+    } else if (view === "flows") {
+      setSelectedNav("Flows");
     }
   }, [searchParams]);
 
@@ -219,7 +219,7 @@ export default function Dashboard() {
     const currentParams = new URLSearchParams(searchParams);
 
     // Set view first
-    params.set("view", "tasks");
+    params.set("view", "flows");
 
     // Preserve all view-specific parameters
     for (const [key, value] of currentParams.entries()) {
@@ -233,7 +233,7 @@ export default function Dashboard() {
       pathname: "/dashboard",
       search: params.toString(),
     });
-    setSelectedNav("Tasks");
+    setSelectedNav("Flows");
   }, [searchParams, navigate]);
 
   const handleGithubNav = useCallback(() => {
@@ -266,11 +266,11 @@ export default function Dashboard() {
             <Usage key="usage-view" customerId={user.data?.customer_id || ""} />
           ),
         };
-      case "tasks":
+      case "flows":
       default:
         if (taskId) {
           return {
-            title: `Tasks > ${taskResponse?.output?.file_name || taskId}`,
+            title: `Flows > ${taskResponse?.output?.file_name || taskId}`,
             component: (
               <Suspense fallback={<Loader />}>
                 {isLoading ? (
@@ -285,7 +285,7 @@ export default function Dashboard() {
           };
         }
         return {
-          title: "Tasks",
+          title: "Flows",
           component: (
             <TaskTable key={`task-table-${searchParams.toString()}`} />
           ),
@@ -375,7 +375,7 @@ export default function Dashboard() {
                 </linearGradient>
               </defs>
             </svg>
-            <Text size="5" weight="bold" mb="2px" style={{ color: "#FFF" }}>
+            <Text size="5" weight="bold" mb="2px" style={{ color: "#111" }}>
               Orin Extract
             </Text>
           </Flex>
@@ -389,21 +389,21 @@ export default function Dashboard() {
             >
               <path
                 d="M21.97 15V9C21.97 4 19.97 2 14.97 2H8.96997C3.96997 2 1.96997 4 1.96997 9V15C1.96997 20 3.96997 22 8.96997 22H14.97C19.97 22 21.97 20 21.97 15Z"
-                stroke="#FFF"
+                stroke="#111"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M7.96997 2V22"
-                stroke="#FFF"
+                stroke="#111"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M14.97 9.43994L12.41 11.9999L14.97 14.5599"
-                stroke="#FFF"
+                stroke="#111"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -418,34 +418,48 @@ export default function Dashboard() {
         >
           <Flex direction="column">
             <Flex className="dashboard-nav-items" direction="column">
-              {["Tasks", "Usage"].map((item) => (
-                <Flex
-                  key={item}
-                  className={`dashboard-nav-item ${
-                    selectedNav === item ? "selected" : ""
-                  }`}
-                  onClick={() => handleNavigation(item)}
+              <Flex
+                className={`dashboard-nav-item ${selectedNav === "Flows" ? "selected" : ""}`}
+                onClick={() => handleNavigation("Flows")}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 22 22"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 22 22"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    {navIcons[item as keyof typeof navIcons]}
-                  </svg>
-                  <Text
-                    size="3"
-                    weight="medium"
-                    style={{
-                      color: selectedNav === item ? "rgb(2, 5, 6)" : "#FFF",
-                    }}
-                  >
-                    {item}
-                  </Text>
-                </Flex>
-              ))}
+                  {navIcons.Flows}
+                </svg>
+                <Text
+                  size="3"
+                  weight="medium"
+                  style={{ color: selectedNav === "Flows" ? "rgb(2, 5, 6)" : "#111" }}
+                >
+                  Flows
+                </Text>
+              </Flex>
+              <Flex
+                className={`dashboard-nav-item ${selectedNav === "Usage" ? "selected" : ""}`}
+                onClick={() => handleNavigation("Usage")}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 22 22"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {navIcons.Usage}
+                </svg>
+                <Text
+                  size="3"
+                  weight="medium"
+                  style={{ color: selectedNav === "Usage" ? "rgb(2, 5, 6)" : "#111" }}
+                >
+                  Usage
+                </Text>
+              </Flex>
             </Flex>
           </Flex>
 
@@ -458,11 +472,10 @@ export default function Dashboard() {
             >
               <Flex gap="12px" align="center">
                 <Flex direction="column" gap="4px">
-                  <Text size="3" weight="bold" style={{ color: "#FFF" }}>
+                  <Text size="3" weight="bold" style={{ color: "#111" }}>
                     {userDisplayName}
                   </Text>
-                  <Text size="1" style={{ color: "rgba(255,255,255,0.8)" }}>
-                    {/* Use the formatted tier name */}
+                  <Text size="1" style={{ color: "#111" }}>
                     {displayTier}
                   </Text>
                 </Flex>
@@ -496,7 +509,7 @@ export default function Dashboard() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      <Text size="2" weight="medium" style={{ color: "#FFF" }}>
+                      <Text size="2" weight="medium" style={{ color: "#111" }}>
                         {user?.data?.tier === "Free"
                           ? "Upgrade Plan"
                           : "Manage Billing"}
@@ -514,7 +527,7 @@ export default function Dashboard() {
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <g clip-path="url(#clip0_305_31838)">
+                        <g clipPath="url(#clip0_305_31838)">
                           <path
                             d="M20.25 4.75H3.75C3.19772 4.75 2.75 5.19771 2.75 5.75V18.25C2.75 18.8023 3.19772 19.25 3.75 19.25H20.25C20.8023 19.25 21.25 18.8023 21.25 18.25V5.75C21.25 5.19772 20.8023 4.75 20.25 4.75Z"
                             stroke="#FFF"
@@ -536,7 +549,7 @@ export default function Dashboard() {
                           </clipPath>
                         </defs>
                       </svg>
-                      <Text size="2" weight="medium" style={{ color: "#FFF" }}>
+                      <Text size="2" weight="medium" style={{ color: "#111" }}>
                         Email Us
                       </Text>
                     </Flex>
@@ -553,7 +566,7 @@ export default function Dashboard() {
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <g clip-path="url(#clip0_305_31814)">
+                        <g clipPath="url(#clip0_305_31814)">
                           <path
                             d="M19.2499 14.93V18.23C19.2499 19.46 18.1599 20.4 16.9399 20.23C9.59991 19.21 3.78991 13.4 2.76991 6.06C2.59991 4.84 3.53991 3.75 4.76991 3.75H8.06991C8.55991 3.75 8.97991 4.1 9.05991 4.58L9.44991 6.77C9.58991 7.54 9.26991 8.32 8.62991 8.77L7.73991 9.4C9.16991 11.81 11.1999 13.82 13.6199 15.24L14.2299 14.37C14.6799 13.73 15.4599 13.41 16.2299 13.55L18.4199 13.94C18.8999 14.03 19.2499 14.44 19.2499 14.93V14.93Z"
                             stroke="#FFF"
@@ -582,7 +595,7 @@ export default function Dashboard() {
                           </clipPath>
                         </defs>
                       </svg>
-                      <Text size="2" weight="medium" style={{ color: "#FFF" }}>
+                      <Text size="2" weight="medium" style={{ color: "#111" }}>
                         Book a Call
                       </Text>
                     </Flex>
@@ -617,7 +630,7 @@ export default function Dashboard() {
                           />
                         </g>
                       </svg>
-                      <Text size="2" weight="medium" style={{ color: "#FFF" }}>
+                      <Text size="2" weight="medium" style={{ color: "#111" }}>
                         Join the Discord
                       </Text>
                     </Flex>
@@ -632,27 +645,27 @@ export default function Dashboard() {
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <g clip-path="url(#clip0_305_27927)">
+                        <g clipPath="url(#clip0_305_27927)">
                           <path
                             d="M16 16.25L20.25 12L16 7.75"
                             stroke="#FFFFFF"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
                           <path
                             d="M20.25 12H8.75"
                             stroke="#FFFFFF"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
                           <path
                             d="M13.25 20.25H5.75C4.65 20.25 3.75 19.35 3.75 18.25V5.75C3.75 4.65 4.65 3.75 5.75 3.75H13.25"
                             stroke="#FFFFFF"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
                         </g>
                         <defs>
@@ -661,7 +674,7 @@ export default function Dashboard() {
                           </clipPath>
                         </defs>
                       </svg>
-                      <Text size="2" weight="medium" style={{ color: "#FFF" }}>
+                      <Text size="2" weight="medium" style={{ color: "#111" }}>
                         Logout
                       </Text>
                     </Flex>
@@ -685,21 +698,21 @@ export default function Dashboard() {
               >
                 <path
                   d="M21.97 15V9C21.97 4 19.97 2 14.97 2H8.96997C3.96997 2 1.96997 4 1.96997 9V15C1.96997 20 3.96997 22 8.96997 22H14.97C19.97 22 21.97 20 21.97 15Z"
-                  stroke="#FFF"
+                  stroke="#111"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
                 <path
                   d="M14.97 2V22"
-                  stroke="#FFF"
+                  stroke="#111"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
                 <path
                   d="M7.96997 9.43994L10.53 11.9999L7.96997 14.5599"
-                  stroke="#FFF"
+                  stroke="#111"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -710,8 +723,8 @@ export default function Dashboard() {
               onClick={handleHeaderNavigation}
               style={{ cursor: "pointer" }}
             >
-              <Text size="5" weight="bold" className="main-header-text">
-                {taskId ? "Tasks" : content.title}
+              <Text size="5" weight="bold" className="main-header-text" style={{ color: "#111" }}>
+                {taskId ? "Flows" : content.title}
               </Text>
             </Flex>
             {taskId && taskResponse?.output?.file_name && (
@@ -761,7 +774,7 @@ export default function Dashboard() {
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <g clip-path="url(#clip0_113_1419)">
+                <g clipPath="url(#clip0_113_1419)">
                   <path
                     d="M9.25 6.75H15.75"
                     stroke="#FFF"
@@ -797,7 +810,7 @@ export default function Dashboard() {
               </svg>
 
               <Text size="2" weight="medium" style={{ color: "#FFF" }}>
-                Docs
+                Help
               </Text>
             </BetterButton>
             <BetterButton onClick={handleGithubNav}>

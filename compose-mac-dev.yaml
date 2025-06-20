@@ -1,0 +1,48 @@
+services:
+  # Uncomment the service(s) you want to build locally for development.
+  server:
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
+    image: luminainc/server:dev
+    platform: linux/amd64
+  # task:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/task/Dockerfile
+  #   image: luminainc/task:dev
+  #   platform: linux/amd64
+  # web:
+  #   build:
+  #     context: ./docker/web
+  #     dockerfile: Dockerfile
+  #   image: luminainc/web:dev
+  #   platform: linux/amd64
+  # segmentation-backend:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/segmentation/Dockerfile
+  #   image: luminainc/segmentation-yolo-cpu:dev
+  #   platform: linux/amd64
+  # ocr-backend:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/doctr/Dockerfile
+  #   image: luminainc/doctr-small:dev
+  #   platform: linux/amd64
+  # ocr:
+  #   build:
+  #     context: ./docker/ocr
+  #     dockerfile: Dockerfile
+  #   image: luminainc/ocr:dev
+  #   platform: linux/amd64
+  # segmentation:
+  #   build:
+  #     context: ./docker/segmentation
+  #     dockerfile: Dockerfile
+  #   image: luminainc/segmentation:dev
+  #   platform: linux/amd64
+  redis:
+    platform: linux/arm64
+  keycloak:
+    platform: linux/arm64 
