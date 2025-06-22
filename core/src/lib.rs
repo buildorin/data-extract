@@ -173,7 +173,7 @@ pub fn main() -> std::io::Result<()> {
                     Cors::default()
                         .allow_any_origin()
                         .allow_any_method()
-                        .allow_any_header()
+                        .allow_any_header(),
                 )
                 .wrap(Logger::default())
                 .wrap(Logger::new("%a %{User-Agent}i"))
