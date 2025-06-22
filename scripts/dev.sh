@@ -1,19 +1,33 @@
 #!/bin/bash
 
 # Development script for Mac ARM
-# This ensures you're running in development mode, not production
+# Supports both local build (compose-mac-dev.yaml) and remote image (compose-mac.yaml) workflows
+# Usage: ./scripts/dev.sh [local|remote]
+# Default: remote
 
 set -e
+
+MODE=${1:-remote}
+
+if [ "$MODE" = "local" ]; then
+  MAC_COMPOSE_FILE=compose-mac-dev.yaml
+  echo "🛠  Using LOCAL build mode (compose-mac-dev.yaml)"
+else
+  MAC_COMPOSE_FILE=compose-mac.yaml
+  echo "🐳 Using REMOTE image mode (compose-mac.yaml)"
+fi
+
+COMPOSE_FILES="-f compose-cpu.yaml -f $MAC_COMPOSE_FILE"
 
 echo "🚀 Starting Data Extract in DEVELOPMENT mode..."
 
 # Stop any existing containers
 echo "📦 Stopping existing containers..."
-docker compose -f compose-cpu.yaml -f compose-mac.yaml down
+docker compose $COMPOSE_FILES down
 
 # Start backend services (excluding web and server)
 echo "🔧 Starting backend services..."
-docker compose -f compose-cpu.yaml -f compose-mac.yaml up -d postgres redis minio keycloak segmentation segmentation-backend ocr ocr-backend task
+docker compose $COMPOSE_FILES up -d postgres redis minio keycloak segmentation segmentation-backend ocr ocr-backend task
 
 # Wait for services to be ready
 echo "⏳ Waiting for services to be ready..."
@@ -21,10 +35,10 @@ sleep 10
 
 # Build and start development backend
 echo "🔨 Building development backend..."
-docker compose -f compose-cpu.yaml -f compose-mac.yaml build server
+docker compose $COMPOSE_FILES build server
 
 echo "🚀 Starting development backend..."
-docker compose -f compose-cpu.yaml -f compose-mac.yaml up -d server
+docker compose $COMPOSE_FILES up -d server
 
 # Wait for backend to be ready
 echo "⏳ Waiting for backend to be ready..."
@@ -72,8 +86,8 @@ echo "🔐 Keycloak: http://localhost:8080/"
 echo ""
 echo "📋 Useful commands:"
 echo "  - View logs: docker logs -f data-extract-server-1"
-echo "  - Stop all:  docker compose -f compose-cpu.yaml -f compose-mac.yaml down"
-echo "  - Restart:   ./scripts/dev.sh"
+echo "  - Stop all:  docker compose $COMPOSE_FILES down"
+echo "  - Restart:   ./scripts/dev.sh [$MODE]"
 echo ""
 echo "Press Ctrl+C to stop the frontend (backend will continue running)"
 echo ""

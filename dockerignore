@@ -43,3 +43,8 @@ Cargo.lock
 __pycache__
 
 *.llm_providers.yaml
+
+# Ignore web build artifacts and node_modules
+apps/web/node_modules
+apps/web/dist
+apps/web/build

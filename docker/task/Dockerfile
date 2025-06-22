@@ -1,4 +1,4 @@
-FROM rust:1.82-slim-bookworm AS chef
+FROM rustlang/rust:nightly-slim AS chef
 RUN apt-get update -y && apt-get -y install pkg-config libssl-dev libpq-dev g++ curl libglib2.0-dev
 RUN cargo install cargo-chef
 WORKDIR /app
@@ -34,9 +34,10 @@ RUN apt-get update -y; \
     mkdir -p /app/tmp && \
     sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
 
-# Download and extract PDFium binary
+# Download and extract PDFium binary based on architecture
+ARG TARGETARCH
 RUN mkdir -p /app/pdfium-binaries && \
-    curl -L https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-x64.tgz | \
+    curl -L https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-${TARGETARCH}.tgz | \
     tar -xz -C /tmp && \
     cp /tmp/lib/libpdfium.so /app/pdfium-binaries/
 

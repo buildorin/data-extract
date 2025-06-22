@@ -1,45 +1,45 @@
-FROM rust:1.82-slim-bookworm AS chef
-RUN apt-get update -y && apt-get -y install pkg-config libssl-dev libpq-dev g++ curl libglib2.0-dev
-RUN cargo install cargo-chef
+# ---- Builder Stage ----
+FROM rustlang/rust:nightly as builder
+
+ARG TARGETPLATFORM
+RUN echo "Building for $TARGETPLATFORM"
+
 WORKDIR /app
 
-FROM chef AS planner
-COPY core/ .
-RUN cargo chef prepare --recipe-path recipe.json
+# Copy the source code for the 'core' application
+COPY core/ ./core/
 
-FROM chef AS builder
-COPY --from=planner /app/recipe.json recipe.json
-# Build dependencies - this is the caching Docker layer!
-RUN cargo chef cook --release --recipe-path recipe.json
-# Build application
-COPY core/ .
-RUN cargo build --release
+# Build the 'core' binary
+RUN cd core && cargo build --release
 
-FROM debian:bookworm-slim AS runtime
-WORKDIR /app
+# ---- Final Stage ----
+FROM debian:bookworm-slim
 
-RUN apt-get update -y; \
-    apt-get install -y \
+RUN apt-get update -y && apt-get install -y \
     pkg-config \
-    build-essential\
+    build-essential \
     libssl-dev \
     libpq-dev \
     ca-certificates \
     libreoffice \
     file \
-    imagemagick \
     curl \
-    ; \
-    mkdir -p /app/tmp && \
-    sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
+    imagemagick \
+    pandoc \
+    && mkdir -p /app/tmp \
+    && sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml
 
-# Download and extract PDFium binary
+WORKDIR /app
+
+# Download and extract PDFium binary based on architecture
+ARG TARGETARCH
 RUN mkdir -p /app/pdfium-binaries && \
-    curl -L https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-x64.tgz | \
+    curl -L https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-${TARGETARCH}.tgz | \
     tar -xz -C /tmp && \
     cp /tmp/lib/libpdfium.so /app/pdfium-binaries/
 
-COPY --from=builder /app/target/release/core /app/core
+# Copy the pre-built binary from the builder stage
+COPY --from=builder /app/core/target/release/core /app/core
 
 EXPOSE 8000
-ENTRYPOINT ["/app/core"]
+ENTRYPOINT ["/app/core"] 
