@@ -9,7 +9,7 @@ import { useTaskQuery } from "../../hooks/useTaskQuery";
 import { Suspense, lazy } from "react";
 import Loader from "../Loader/Loader";
 import Usage from "../../components/Usage/Usage";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import UploadDialog from "../../components/Upload/UploadDialog";
 import { useTasksQuery } from "../../hooks/useTaskQuery";
 import ApiKeyDialog from "../../components/ApiDialog/ApiKeyDialog";
@@ -24,17 +24,14 @@ const DOCS_URL = import.meta.env.VITE_DOCS_URL;
 export default function Dashboard() {
   const auth = useAuth();
   const user = useUser();
-  const [selectedNav, setSelectedNav] = useState("Flows");
+  const [selectedNav, setSelectedNav] = useState("Extracts");
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const [showApiKey, setShowApiKey] = useState(false);
 
   const location = useLocation();
-  const searchParams = useMemo(
-    () => new URLSearchParams(location.search),
-    [location.search]
-  );
+  const [searchParams] = useSearchParams();
   const taskId = searchParams.get("taskId");
 
   const { data: taskResponse, isLoading } = useTaskQuery(taskId || "");
@@ -49,7 +46,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!searchParams.has("view")) {
       const params = new URLSearchParams(searchParams);
-      params.set("view", "flows");
+      params.set("view", "extracts");
       navigate({
         pathname: "/dashboard",
         search: params.toString(),
@@ -75,7 +72,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (location.pathname === "/dashboard") {
-      setSelectedNav("Flows");
+      setSelectedNav("Extracts");
     }
   }, [location.pathname]);
 
@@ -88,43 +85,39 @@ export default function Dashboard() {
   }, [location.state]);
 
   const navIcons = {
+    Extracts: (
+      <g>
+        <rect x="6" y="4" width="10" height="14" rx="2" stroke="#222" strokeWidth="1.7" fill="none" />
+        <line x1="9" y1="7" x2="13" y2="7" stroke="#222" strokeWidth="1.2" />
+        <line x1="9" y1="10" x2="13" y2="10" stroke="#222" strokeWidth="1.2" />
+        <line x1="9" y1="13" x2="13" y2="13" stroke="#222" strokeWidth="1.2" />
+        <path d="M11 15V11" stroke="#222" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M9.5 13.5L11 15L12.5 13.5" stroke="#222" strokeWidth="1.5" strokeLinecap="round" />
+      </g>
+    ),
     Flows: (
       <g>
-        <path
-          d="M12.75 7.5H21.25"
-          stroke="#FFF"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M12.75 16.5H21.25"
-          stroke="#FFF"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M8.25 4.75H2.75V10.25H8.25V4.75Z"
-          stroke="#FFF"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M8.25 13.75H2.75V19.25H8.25V13.75Z"
-          stroke="#FFF"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M12.75 7.5H21.25" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12.75 16.5H21.25" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="2.75" y="4.75" width="5.5" height="5.5" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="2.75" y="13.75" width="5.5" height="5.5" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+    ),
+    Connectors: (
+      <g>
+        <circle cx="6" cy="12" r="2" stroke="#222" strokeWidth="1.5" fill="none" />
+        <circle cx="16" cy="8" r="2" stroke="#222" strokeWidth="1.5" fill="none" />
+        <circle cx="16" cy="16" r="2" stroke="#222" strokeWidth="1.5" fill="none" />
+        <line x1="7.5" y1="12" x2="14" y2="8.5" stroke="#222" strokeWidth="1.2" />
+        <line x1="7.5" y1="12" x2="14" y2="15.5" stroke="#222" strokeWidth="1.2" />
+        <line x1="16" y1="10" x2="16" y2="14" stroke="#222" strokeWidth="1.2" />
       </g>
     ),
     Usage: (
       <g>
         <svg
-          width="20"
-          height="20"
+          width="22"
+          height="22"
           viewBox="0 0 22 22"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -132,21 +125,21 @@ export default function Dashboard() {
           <g clipPath="url(#clip0_113_1401)">
             <path
               d="M5.25 20.25H6.75C7.30228 20.25 7.75 19.8023 7.75 19.25L7.75 13.75C7.75 13.1977 7.30228 12.75 6.75 12.75H5.25C4.69772 12.75 4.25 13.1977 4.25 13.75L4.25 19.25C4.25 19.8023 4.69772 20.25 5.25 20.25Z"
-              stroke="#FFF"
+              stroke="#222"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
             <path
               d="M18.25 20.25H19.75C20.3023 20.25 20.75 19.8023 20.75 19.25V9.75C20.75 9.19772 20.3023 8.75 19.75 8.75H18.25C17.6977 8.75 17.25 9.19771 17.25 9.75V19.25C17.25 19.8023 17.6977 20.25 18.25 20.25Z"
-              stroke="#FFF"
+              stroke="#222"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
             <path
               d="M11.75 20.25H13.25C13.8023 20.25 14.25 19.8023 14.25 19.25L14.25 5.75C14.25 5.19771 13.8023 4.75 13.25 4.75H11.75C11.1977 4.75 10.75 5.19771 10.75 5.75L10.75 19.25C10.75 19.8023 11.1977 20.25 11.75 20.25Z"
-              stroke="#FFF"
+              stroke="#222"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -172,16 +165,16 @@ export default function Dashboard() {
       const params = new URLSearchParams();
       const currentParams = new URLSearchParams(searchParams);
 
-      // Set view first (either "flows" or "usage")
+      // Set view first (either "extracts", "flows", or "usage")
       params.set("view", item.toLowerCase());
 
-      // Always preserve all view-specific parameters EXCEPT taskId when clicking on Flows
-      // For Flows view
+      // Always preserve all view-specific parameters EXCEPT taskId when clicking on Extracts or Flows
+      // For Extracts and Flows views
       const tablePageIndex = currentParams.get("tablePageIndex");
       const tablePageSize = currentParams.get("tablePageSize");
-      // Only preserve taskId if we're not clicking on Flows nav item
+      // Only preserve taskId if we're not clicking on Extracts or Flows nav items
       const taskId = currentParams.get("taskId");
-      if (taskId && item !== "Flows") {
+      if (taskId && item !== "Extracts" && item !== "Flows") {
         params.set("taskId", taskId);
       }
 
@@ -209,6 +202,8 @@ export default function Dashboard() {
     const view = searchParams.get("view");
     if (view === "usage") {
       setSelectedNav("Usage");
+    } else if (view === "extracts") {
+      setSelectedNav("Extracts");
     } else if (view === "flows") {
       setSelectedNav("Flows");
     }
@@ -219,7 +214,7 @@ export default function Dashboard() {
     const currentParams = new URLSearchParams(searchParams);
 
     // Set view first
-    params.set("view", "flows");
+    params.set("view", "extracts");
 
     // Preserve all view-specific parameters
     for (const [key, value] of currentParams.entries()) {
@@ -233,7 +228,7 @@ export default function Dashboard() {
       pathname: "/dashboard",
       search: params.toString(),
     });
-    setSelectedNav("Flows");
+    setSelectedNav("Extracts");
   }, [searchParams, navigate]);
 
   const handleGithubNav = useCallback(() => {
@@ -266,11 +261,46 @@ export default function Dashboard() {
             <Usage key="usage-view" customerId={user.data?.customer_id || ""} />
           ),
         };
+      case "connectors":
+        return {
+          title: "Application Connectors",
+          component: (
+            <div style={{ width: "100%", height: "100vh", background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <img
+                src="/connectors.png"
+                alt="Connectors"
+                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+              />
+            </div>
+          ),
+        };
       case "flows":
+        if (taskId) {
+          return {
+            title: "Flows",
+            component: (
+              <img
+                src="/flow-template.png"
+                alt="Flow Template"
+                style={{ width: "100%", height: "auto", padding: "24px" }}
+              />
+            ),
+          };
+        }
+        return {
+          title: "Data Flows",
+          component: (
+            <TaskTable
+              key={`flows-table-${searchParams.toString()}`}
+              context="flows"
+            />
+          ),
+        };
+      case "extracts":
       default:
         if (taskId) {
           return {
-            title: `Flows > ${taskResponse?.output?.file_name || taskId}`,
+            title: `Extract > ${taskResponse?.output?.file_name || taskId}`,
             component: (
               <Suspense fallback={<Loader />}>
                 {isLoading ? (
@@ -285,9 +315,9 @@ export default function Dashboard() {
           };
         }
         return {
-          title: "Flows",
+          title: "Extract Documents",
           component: (
-            <TaskTable key={`task-table-${searchParams.toString()}`} />
+            <TaskTable key={`task-table-${searchParams.toString()}`} context="extracts" />
           ),
         };
     }
@@ -376,7 +406,7 @@ export default function Dashboard() {
               </defs>
             </svg>
             <Text size="5" weight="bold" mb="2px" style={{ color: "#111" }}>
-              Orin Extract
+              Orin
             </Text>
           </Flex>
           <Flex className="dashboard-toggle" onClick={toggleNav}>
@@ -419,12 +449,33 @@ export default function Dashboard() {
           <Flex direction="column">
             <Flex className="dashboard-nav-items" direction="column">
               <Flex
+                className={`dashboard-nav-item ${selectedNav === "Extracts" ? "selected" : ""}`}
+                onClick={() => handleNavigation("Extracts")}
+              >
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 22 22"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {navIcons.Extracts}
+                </svg>
+                <Text
+                  size="3"
+                  weight="medium"
+                  style={{ color: selectedNav === "Extracts" ? "rgb(2, 5, 6)" : "#111" }}
+                >
+                  Extract
+                </Text>
+              </Flex>
+              <Flex
                 className={`dashboard-nav-item ${selectedNav === "Flows" ? "selected" : ""}`}
                 onClick={() => handleNavigation("Flows")}
               >
                 <svg
-                  width="20"
-                  height="20"
+                  width="22"
+                  height="22"
                   viewBox="0 0 22 22"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -436,7 +487,28 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Flows" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Flows
+                  Data Flows
+                </Text>
+              </Flex>
+              <Flex
+                className={`dashboard-nav-item ${selectedNav === "Connectors" ? "selected" : ""}`}
+                onClick={() => handleNavigation("Connectors")}
+              >
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 22 22"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {navIcons.Connectors}
+                </svg>
+                <Text
+                  size="3"
+                  weight="medium"
+                  style={{ color: selectedNav === "Connectors" ? "rgb(2, 5, 6)" : "#111" }}
+                >
+                  Connectors
                 </Text>
               </Flex>
               <Flex
@@ -444,8 +516,8 @@ export default function Dashboard() {
                 onClick={() => handleNavigation("Usage")}
               >
                 <svg
-                  width="20"
-                  height="20"
+                  width="22"
+                  height="22"
                   viewBox="0 0 22 22"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -601,41 +673,6 @@ export default function Dashboard() {
                     </Flex>
                     <Flex
                       className="profile-menu-item"
-                      onClick={() =>
-                        window.open("https://discord.gg/XzKWFByKzW", "_blank")
-                      }
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="none"
-                        viewBox="0 0 430 430"
-                      >
-                        <g strokeWidth="12">
-                          <path
-                            stroke="#FFFFFF"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M312.601 305.475c-26.273 14.715-58.717 23.408-93.825 23.408s-67.552-8.693-93.825-23.408"
-                          />
-                          <path
-                            stroke="#FFFFFF"
-                            strokeLinejoin="round"
-                            d="M158.352 72.148c3.725 6.192 6.909 13.393 9.531 21.46 15.975-4.123 33.091-6.358 50.893-6.358 15.228 0 29.955 1.636 43.895 4.69 2.513-7.394 5.511-14.03 8.977-19.792 25.747 3.086 49.437 10.893 69.495 22.22 20.228 24.718 37.723 59.3 48.459 99.37 11.642 43.446 13.177 85.277 6.259 118.097-21.508 20.403-52.494 36.375-88.916 45.331-7.134-12.146-13.866-25.549-20.013-39.981-20.648 7.5-43.759 11.698-68.156 11.698-26.99 0-52.406-5.137-74.653-14.199-6.428 15.387-13.524 29.638-21.068 42.482-36.422-8.956-67.408-24.928-88.916-45.331-6.918-32.82-5.383-74.651 6.259-118.097 10.736-40.07 28.23-74.652 48.46-99.37 20.057-11.327 43.747-19.134 69.494-22.22Z"
-                          />
-                          <path
-                            stroke="#FFFFFF"
-                            d="M310 230c0 16.569-11.193 30-25 30s-25-13.431-25-30 11.193-30 25-30 25 13.431 25 30Zm-140 0c0 16.569-11.193 30-25 30s-25-13.431-25-30 11.193-30 25-30 25 13.431 25 30Z"
-                          />
-                        </g>
-                      </svg>
-                      <Text size="2" weight="medium" style={{ color: "#111" }}>
-                        Join the Discord
-                      </Text>
-                    </Flex>
-                    <Flex
-                      className="profile-menu-item"
                       onClick={() => auth.signoutRedirect()}
                     >
                       <svg
@@ -724,7 +761,7 @@ export default function Dashboard() {
               style={{ cursor: "pointer" }}
             >
               <Text size="5" weight="bold" className="main-header-text" style={{ color: "#111" }}>
-                {taskId ? "Flows" : content.title}
+                {taskId ? "Document Extract" : content.title}
               </Text>
             </Flex>
             {taskId && taskResponse?.output?.file_name && (

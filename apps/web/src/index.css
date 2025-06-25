@@ -118,3 +118,8 @@ input, select, textarea {
   color: #111 !important;
   border: 1.5px solid #bdbdbd !important;
 }
+
+.dashboard-nav-item svg {
+  opacity: 1 !important;
+  filter: none !important;
+}

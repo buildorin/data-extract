@@ -7,7 +7,7 @@ import {
 } from "material-react-table";
 import { IconButton, Tooltip, createTheme, ThemeProvider } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { TaskResponse } from "../../models/taskResponse.model";
 import { useTasksQuery } from "../../hooks/useTaskQuery";
 import useUser from "../../hooks/useUser";
@@ -26,9 +26,9 @@ import Loader from "../../pages/Loader/Loader";
 
 const DOCS_URL = import.meta.env.VITE_DOCS_URL;
 
-const TaskTable = () => {
+const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" }) => {
   const navigate = useNavigate();
-  const searchParams = new URLSearchParams(window.location.search);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [showApiKey, setShowApiKey] = useState(false);
 
@@ -39,14 +39,20 @@ const TaskTable = () => {
     searchParams.set("tablePageSize", "20");
 
   // Update URL with default params if needed
-  if (!window.location.search) {
-    navigate(
-      {
-        search: searchParams.toString(),
-      },
-      { replace: true }
-    );
-  }
+  useEffect(() => {
+    let madeChange = false;
+    if (!searchParams.has("tablePageIndex")) {
+      searchParams.set("tablePageIndex", "0");
+      madeChange = true;
+    }
+    if (!searchParams.has("tablePageSize")) {
+      searchParams.set("tablePageSize", "20");
+      madeChange = true;
+    }
+    if (madeChange) {
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const tablePageIndex = parseInt(searchParams.get("tablePageIndex") || "0");
   const tablePageSize = parseInt(searchParams.get("tablePageSize") || "20");
@@ -58,17 +64,11 @@ const TaskTable = () => {
 
   // Add effect to update URL when pagination changes
   useEffect(() => {
-    const newParams = new URLSearchParams(window.location.search);
+    const newParams = new URLSearchParams(searchParams);
     newParams.set("tablePageIndex", pagination.pageIndex.toString());
     newParams.set("tablePageSize", pagination.pageSize.toString());
-
-    navigate(
-      {
-        search: newParams.toString(),
-      },
-      { replace: true }
-    );
-  }, [pagination, navigate]);
+    setSearchParams(newParams, { replace: true });
+  }, [pagination, setSearchParams]);
 
   const { data: user } = useUser();
   const auth = useAuth();
@@ -83,20 +83,24 @@ const TaskTable = () => {
   } = useTasksQuery(pagination.pageIndex + 1, pagination.pageSize);
 
   const handleTaskClick = (task: TaskResponse) => {
-    navigate(
-      `/dashboard?taskId=${task.task_id}&pageCount=${
-        task.output?.page_count || 10
-      }&tablePageIndex=${pagination.pageIndex}&tablePageSize=${
-        pagination.pageSize
-      }`
-    );
+    const newParams = new URLSearchParams(searchParams);
+    if (context === "flows") {
+      newParams.set("view", "flows");
+    }
+    newParams.set("taskId", task.task_id);
+
+    if (context === "extracts") {
+      newParams.set("pageCount", (task.output?.page_count || 10).toString());
+    }
+    
+    setSearchParams(newParams, { replace: true });
   };
 
   const columns = useMemo<MRT_ColumnDef<TaskResponse>[]>(
     () => [
       {
         accessorKey: "output.file_name",
-        header: "File Name",
+        header: context === "flows" ? "Flow Name" : "File Name",
         Cell: ({ cell }) => (
           <Tooltip arrow title={cell.getValue<string>()}>
             <div
@@ -114,7 +118,7 @@ const TaskTable = () => {
       },
       {
         accessorKey: "task_id",
-        header: "Flow ID",
+        header: context === "flows" ? "Flow ID" : "Extract ID",
         Cell: ({ cell }) => {
           const fullId = cell.getValue<string>();
           return (
@@ -126,7 +130,13 @@ const TaskTable = () => {
       },
       {
         accessorKey: "output.page_count",
-        header: "Pages",
+        header: context === "flows" ? "Components" : "Pages",
+        Cell: ({ row }) => {
+          if (context === "flows") {
+            return 8;
+          }
+          return row.original.output?.page_count || 0;
+        },
       },
       {
         accessorKey: "status",
@@ -195,7 +205,7 @@ const TaskTable = () => {
         },
       },
     ],
-    []
+    [context]
   );
 
   const renderDetailPanel = ({ row }: { row: MRT_Row<TaskResponse> }) => (
@@ -736,12 +746,12 @@ const TaskTable = () => {
                               </clipPath>
                             </defs>
                           </svg>
-                          <Text size="1">Cancel Flows</Text>
+                          <Text size="1">Cancel Extracts</Text>
                         </BetterButton>
                       </Tooltip>
                     )}
                     {hasSelectedFailedTasks() && (
-                      <Tooltip arrow title="Retry Selected Failed Flows">
+                      <Tooltip arrow title="Retry Selected Failed Extracts">
                         <BetterButton onClick={handleRetrySelected}>
                           <svg
                             width="20"
@@ -784,7 +794,7 @@ const TaskTable = () => {
                             </defs>
                           </svg>
 
-                          <Text size="1">Retry Flows</Text>
+                          <Text size="1">Retry Extracts</Text>
                         </BetterButton>
                       </Tooltip>
                     )}
@@ -839,7 +849,7 @@ const TaskTable = () => {
                             strokeLinejoin="round"
                           />
                         </svg>{" "}
-                        <Text size="1">Delete Flows</Text>
+                        <Text size="1">Delete Extracts</Text>
                       </BetterButton>
                     </Tooltip>
                   </>
@@ -855,18 +865,23 @@ const TaskTable = () => {
                     .closest(".MuiTableCell-root")
                     ?.classList.contains("MuiTableCell-paddingNone")
                 ) {
-                  if (row.original.message === "Task succeeded") {
+                  if (context === "flows") {
                     handleTaskClick(row.original);
-                  } else if (
-                    row.original.status !== Status.Failed &&
-                    row.original.status !== Status.Succeeded
-                  ) {
-                    refetch();
+                  } else {
+                    if (row.original.message === "Task succeeded") {
+                      handleTaskClick(row.original);
+                    } else if (
+                      row.original.status !== Status.Failed &&
+                      row.original.status !== Status.Succeeded
+                    ) {
+                      refetch();
+                    }
                   }
                 }
               },
               sx: {
                 cursor:
+                  context === "flows" ||
                   row.original.message === "Task succeeded" ||
                   (row.original.status !== Status.Failed &&
                     row.original.status !== Status.Succeeded)
@@ -874,6 +889,7 @@ const TaskTable = () => {
                     : "default",
                 "&:hover": {
                   backgroundColor:
+                    context === "flows" ||
                     row.original.message === "Task succeeded" ||
                     (row.original.status !== Status.Failed &&
                       row.original.status !== Status.Succeeded)

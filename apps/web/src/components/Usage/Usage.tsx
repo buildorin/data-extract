@@ -377,7 +377,7 @@ export default function UsagePage({ customerId }: UsageProps) {
               weight="bold"
               style={{ color: "#111" }}
             >
-              Flows Status Per Day (UTC)
+              Document Status Per Day (UTC)
             </Text>
           </Flex>
           <Flex className="chart-container">

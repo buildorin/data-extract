@@ -111,7 +111,7 @@ export default function Upload({
                 weight="bold"
                 style={{ color: "#111" }}
               >
-                Create Flows
+                Create Extracts
               </Text>
             </Flex>
             {files.length > 0 && (
