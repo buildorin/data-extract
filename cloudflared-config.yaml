@@ -1,0 +1,30 @@
+tunnel: YOUR_TUNNEL_ID
+credentials-file: /root/.cloudflared/YOUR_TUNNEL_ID.json
+
+ingress:
+  # Main web application
+  - hostname: app.useorin.com
+    service: http://localhost:5173
+    originRequest:
+      noTLSVerify: true
+
+  # API server
+  - hostname: api.app.useorin.com
+    service: http://localhost:8000
+    originRequest:
+      noTLSVerify: true
+
+  # Authentication
+  - hostname: auth.app.useorin.com
+    service: http://localhost:8080
+    originRequest:
+      noTLSVerify: true
+
+  # S3/MinIO console (optional, for admin access)
+  - hostname: s3.app.useorin.com
+    service: http://localhost:9001
+    originRequest:
+      noTLSVerify: true
+
+  # Catch-all rule - return 404 for unmatched hostnames
+  - service: http_status:404 

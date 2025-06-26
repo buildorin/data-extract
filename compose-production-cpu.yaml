@@ -1,0 +1,218 @@
+version: '3.8'
+
+services:
+  # Main API Server - Custom Orin Build
+  server:
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
+    image: orin/server:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - ./models.yaml:/app/models.yaml:ro
+    environment:
+      - AUTH__KEYCLOAK_URL=https://auth.app.useorin.com
+      - AUTH__KEYCLOAK_REALM=orin
+      - AWS__ENDPOINT=http://minio:9000
+      - AWS__PRESIGNED_URL_ENDPOINT=https://s3.app.useorin.com
+      - AWS__REGION=us-east-1
+      - LLM__MODELS_PATH=/app/models.yaml
+      - PG__URL=postgresql://postgres:postgres@postgres:5432/chunkr
+      - REDIS__URL=redis://redis:6379
+      - WORKER__GENERAL_OCR_URL=http://ocr-backend:8000
+      - WORKER__SEGMENTATION_URL=http://segmentation-backend:8000
+      - WORKER__SERVER_URL=http://server:8000
+
+  # Task Workers - Custom Orin Build
+  task:
+    build:
+      context: .
+      dockerfile: docker/task/Dockerfile
+    image: orin/task:latest
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - ./models.yaml:/app/models.yaml:ro
+    environment:
+      - AWS__ACCESS_KEY=minioadmin
+      - AWS__SECRET_KEY=minioadmin
+      - AWS__ENDPOINT=http://minio:9000
+      - AWS__REGION=us-east-1
+      - WORKER__S3_BUCKET=chunkr
+      - WORKER__SERVER_URL=http://server:8000
+      - WORKER__SEGMENTATION_URL=http://segmentation-backend:8000
+      - WORKER__GENERAL_OCR_URL=http://ocr-backend:8000
+      - PG__URL=postgresql://postgres:postgres@postgres:5432/chunkr
+      - REDIS__URL=redis://redis:6379
+    deploy:
+      replicas: 2  # Reduced for CPU-only
+
+  # Web Frontend - Custom Orin Build
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    image: orin/web:latest
+    platform: linux/amd64
+    ports:
+      - "5173:8000"
+    env_file:
+      - .env
+    restart: always
+    environment:
+      - VITE_API_URL=https://api.app.useorin.com
+      - VITE_DOCS_URL=https://docs.useorin.com
+      - VITE_KEYCLOAK_CLIENT_ID=orin
+      - VITE_KEYCLOAK_POST_LOGOUT_REDIRECT_URI=https://app.useorin.com
+      - VITE_KEYCLOAK_REALM=orin
+      - VITE_KEYCLOAK_REDIRECT_URI=https://app.useorin.com
+      - VITE_KEYCLOAK_URL=https://auth.app.useorin.com
+
+  # Segmentation Service - CPU Optimized
+  segmentation-backend:
+    image: luminainc/segmentation:1.4.2
+    expose:
+      - "8000"
+    volumes:
+      - /dev/shm:/dev/shm
+    environment:
+      - MAX_BATCH_SIZE=2  # Reduced for CPU
+      - BATCH_WAIT_TIME=0.5
+      - OVERLAP_THRESHOLD=0.025
+      - SCORE_THRESHOLD=0.2
+      - OMP_NUM_THREADS=4
+      - MKL_NUM_THREADS=4
+      - NUMEXPR_NUM_THREADS=4
+      - OPENBLAS_NUM_THREADS=4
+      - VECLIB_MAXIMUM_THREADS=4
+    restart: always
+    deploy:
+      replicas: 1
+
+  # OCR Service - CPU Optimized
+  ocr-backend:
+    image: luminainc/doctr:1.20.1
+    expose:
+      - "8000"
+    volumes:
+      - /dev/shm:/dev/shm
+    environment:
+      - OCR_BATCH_WAIT_TIME=0.2
+      - OCR_MAX_BATCH_SIZE=5  # Reduced for CPU
+      - OMP_NUM_THREADS=4
+      - MKL_NUM_THREADS=4
+      - NUMEXPR_NUM_THREADS=4
+      - OPENBLAS_NUM_THREADS=4
+      - VECLIB_MAXIMUM_THREADS=4
+    restart: always
+    deploy:
+      replicas: 1
+
+  # Database
+  postgres:
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chunkr
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # Redis Cache
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # S3 Storage
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 1
+    restart: always
+
+  # MinIO Initialization
+  minio-init:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin &&
+        /usr/bin/mc mb myminio/chunkr --ignore-existing &&
+        /usr/bin/mc anonymous set public myminio/chunkr
+      "
+    restart: "no"
+
+  # Authentication
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.2
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_PROXY=edge
+      - KC_DB=postgres
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HTTP_ENABLED=true
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+      - KC_HEALTH_ENABLED=true
+      - KC_TRANSACTION_XA_ENABLED=false
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+    command: [ "start-dev", "--import-realm" ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 600s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data: 
