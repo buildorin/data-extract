@@ -1,6 +1,9 @@
+version: '3.8'
+
 services:
+  # Main API Server - Orin Build
   server:
-    image: luminainc/server:1.20.1
+    image: ghcr.io/buildorin/orin-server:latest
     ports:
       - "8000:8000"
     depends_on:
@@ -9,136 +12,139 @@ services:
       - minio
     env_file:
       - .env
-    deploy:
-      replicas: 1
     restart: always
     volumes:
       - ./models.yaml:/app/models.yaml:ro
+    environment:
+      - AUTH__KEYCLOAK_URL=https://auth.app.useorin.com
+      - AUTH__KEYCLOAK_REALM=orin
+      - AWS__ENDPOINT=http://minio:9000
+      - AWS__PRESIGNED_URL_ENDPOINT=https://s3.app.useorin.com
+      - AWS__REGION=us-east-1
+      - LLM__MODELS_PATH=/app/models.yaml
+      - PG__URL=postgresql://postgres:postgres@postgres:5432/chunkr
+      - REDIS__URL=redis://redis:6379
+      - WORKER__GENERAL_OCR_URL=http://ocr-backend:8000
+      - WORKER__SEGMENTATION_URL=http://segmentation-backend:8000
+      - WORKER__SERVER_URL=http://server:8000
 
+  # Task Workers - Orin Build
   task:
-    image: luminainc/task:1.20.1
+    image: ghcr.io/buildorin/orin-task:latest
     depends_on:
       - postgres
       - redis
       - minio
     env_file:
       - .env
-    deploy:
-      replicas: 10
     restart: always
     volumes:
       - ./models.yaml:/app/models.yaml:ro
+    environment:
+      - RUST_BACKTRACE=1
+      - AWS__ACCESS_KEY=minioadmin
+      - AWS__SECRET_KEY=minioadmin
+      - AWS__ENDPOINT=http://minio:9000
+      - AWS__REGION=us-east-1
+      - WORKER__S3_BUCKET=chunkr
+      - WORKER__SERVER_URL=http://server:8000
+      - WORKER__SEGMENTATION_URL=http://segmentation-backend:8000
+      - WORKER__GENERAL_OCR_URL=http://ocr-backend:8000
+      - PG__URL=postgresql://postgres:postgres@postgres:5432/chunkr
+      - REDIS__URL=redis://redis:6379
+    deploy:
+      replicas: 3
 
+  # Web Frontend - Orin Build
   web:
-    image: luminainc/web:1.20.1
+    image: ghcr.io/buildorin/orin-web:latest
+    platform: linux/amd64
     ports:
       - "5173:8000"
     env_file:
       - .env
+    restart: always
     environment:
-      - VITE_FEATURE_FLAG_PIPELINE=true
+      - VITE_API_URL=https://api.app.useorin.com
+      - VITE_DOCS_URL=https://docs.useorin.com
+      - VITE_KEYCLOAK_CLIENT_ID=orin
+      - VITE_KEYCLOAK_POST_LOGOUT_REDIRECT_URI=https://app.useorin.com
+      - VITE_KEYCLOAK_REALM=orin
+      - VITE_KEYCLOAK_REDIRECT_URI=https://app.useorin.com
+      - VITE_KEYCLOAK_URL=https://auth.app.useorin.com
+
+  # Segmentation Service - Orin Build
+  segmentation-backend:
+    image: ghcr.io/buildorin/orin-segmentation:latest
+    expose:
+      - "8000"
+    volumes:
+      - /dev/shm:/dev/shm
+    environment:
+      - MAX_BATCH_SIZE=4
+      - BATCH_WAIT_TIME=0.2
+      - OVERLAP_THRESHOLD=0.025
+      - SCORE_THRESHOLD=0.2
+      - OMP_NUM_THREADS=8
+      - MKL_NUM_THREADS=8
+      - NUMEXPR_NUM_THREADS=8
+      - OPENBLAS_NUM_THREADS=8
+      - VECLIB_MAXIMUM_THREADS=8
+    restart: always
     deploy:
       replicas: 1
-    restart: always
 
-  segmentation:
-    image: nginx:latest
-    ports:
-      - "8001:8000"
-    volumes:
-      - ./nginx/segmentation.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-    depends_on:
-      - segmentation-backend
-    restart: always
-
-  segmentation-backend:
-    image: luminainc/segmentation-yolo-cpu:1.10.0-enterprise
+  # OCR Service - Orin Build
+  ocr-backend:
+    image: ghcr.io/buildorin/orin-ocr:latest
     expose:
       - "8000"
-    deploy:
-      replicas: 6
     volumes:
       - /dev/shm:/dev/shm
     environment:
-      - MAX_BATCH_SIZE=64
-      - BATCH_WAIT_TIME=0.2
-      - OVERLAP_THRESHOLD=0.2
-      - SCORE_THRESHOLD=0.14
-      - OMP_NUM_THREADS=12
-      - MKL_NUM_THREADS=12
-      - NUMEXPR_NUM_THREADS=12
+      - OCR_BATCH_WAIT_TIME=0.1
+      - OCR_MAX_BATCH_SIZE=10
+      - OMP_NUM_THREADS=8
+      - MKL_NUM_THREADS=8
+      - NUMEXPR_NUM_THREADS=8
+      - OPENBLAS_NUM_THREADS=8
+      - VECLIB_MAXIMUM_THREADS=8
     restart: always
-
-  ocr:
-    image: nginx:latest
-    ports:
-      - "8002:8000"
-    volumes:
-      - ./nginx/ocr.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-    depends_on:
-      - ocr-backend
-    restart: always
-
-  ocr-backend:
-    image: luminainc/doctr-small:1.20.1
-    expose:
-      - "8000"
     deploy:
-      replicas: 3
-    volumes:
-      - /dev/shm:/dev/shm
-    restart: always
+      replicas: 1
 
+  # Database
   postgres:
-    build:
-      context: ./docker/postgres
-      dockerfile: Dockerfile
+    image: postgres:14
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: chunkr
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    deploy:
-      replicas: 1
-
-  adminer:
-    image: adminer:latest
-    ports:
-      - "8082:8080"
-    depends_on:
-      - postgres
     restart: always
 
+  # Redis Cache
   redis:
     image: redis:latest
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    deploy:
-      replicas: 1
+    restart: always
 
+  # S3 Storage
   minio:
     image: minio/minio:latest
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
@@ -146,11 +152,13 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
       timeout: 20s
       retries: 1
+    restart: always
 
+  # MinIO Initialization
   minio-init:
     image: minio/mc
     depends_on:
@@ -162,17 +170,19 @@ services:
         /usr/bin/mc mb myminio/chunkr --ignore-existing &&
         /usr/bin/mc anonymous set public myminio/chunkr
       "
+    restart: "no"
 
+  # Authentication
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.2
-    ports:
-      - "8080:8080"
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KC_PROXY=edge
-      - KC_HTTP_ENABLED=true
       - KC_DB=postgres
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HTTP_ENABLED=true
       - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=postgres
@@ -180,9 +190,9 @@ services:
       - KC_TRANSACTION_XA_ENABLED=false
     volumes:
       - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
-    command: ["start-dev", "--import-realm"]
+    command: [ "start-dev", "--import-realm" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -191,60 +201,6 @@ services:
       postgres:
         condition: service_healthy
     restart: always
-
-  keycloak-proxy:
-    image: nginx:latest
-    ports:
-      - "8090:8090" # HTTP port
-      - "8443:8443" # HTTPS port
-    volumes:
-      - ./nginx/keycloak.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-    restart: always
-    profiles:
-      - proxy
-
-  web-proxy:
-    image: nginx:latest
-    ports:
-      - "80:80" # HTTP port
-      - "443:443" # HTTPS port
-    volumes:
-      - ./nginx/web.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-    depends_on:
-      - web
-    restart: always
-    profiles:
-      - proxy
-
-  server-proxy:
-    image: nginx:latest
-    ports:
-      - "8010:8010" # HTTP port
-      - "8444:8444" # HTTPS port
-    volumes:
-      - ./nginx/server.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-    depends_on:
-      - server
-    restart: always
-    profiles:
-      - proxy
-
-  minio-proxy:
-    image: nginx:latest
-    ports:
-      - "9100:9100" # MinIO API
-      - "9101:9101" # MinIO Console
-    volumes:
-      - ./nginx/minio.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
-    depends_on:
-      - minio
-    restart: always
-    profiles:
-      - proxy
 
 volumes:
   postgres_data:

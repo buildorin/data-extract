@@ -136,9 +136,9 @@ docker pull ghcr.io/buildorin/orin-task:v1.2.3
 docker pull ghcr.io/buildorin/orin-web:v1.2.3
 
 # Update compose files manually
-sed -i 's/ghcr.io\/buildorin\/orin-server:latest/ghcr.io\/buildorin\/orin-server:v1.2.3/g' /opt/orin/compose-production.yaml
-sed -i 's/ghcr.io\/buildorin\/orin-task:latest/ghcr.io\/buildorin\/orin-task:v1.2.3/g' /opt/orin/compose-production.yaml
-sed -i 's/ghcr.io\/buildorin\/orin-web:latest/ghcr.io\/buildorin\/orin-web:v1.2.3/g' /opt/orin/compose-production.yaml
+sed -i 's/ghcr.io\/buildorin\/orin-server:latest/ghcr.io\/buildorin\/orin-server:v1.2.3/g' compose-cpu.yaml
+sed -i 's/ghcr.io\/buildorin\/orin-task:latest/ghcr.io\/buildorin\/orin-task:v1.2.3/g' compose-cpu.yaml
+sed -i 's/ghcr.io\/buildorin\/orin-web:latest/ghcr.io\/buildorin\/orin-web:v1.2.3/g' compose-cpu.yaml
 
 # Restart services
 sudo systemctl restart orin-app
@@ -150,12 +150,12 @@ sudo systemctl restart orin-app
 
 ```bash
 # View all service logs
-docker-compose -f /opt/orin/compose-production.yaml logs -f
+docker-compose -f compose-cpu.yaml logs -f
 
 # View specific service logs
-docker-compose -f /opt/orin/compose-production.yaml logs -f server
-docker-compose -f /opt/orin/compose-production.yaml logs -f task
-docker-compose -f /opt/orin/compose-production.yaml logs -f web
+docker-compose -f compose-cpu.yaml logs -f server
+docker-compose -f compose-cpu.yaml logs -f task
+docker-compose -f compose-cpu.yaml logs -f web
 ```
 
 ### Check Service Status
@@ -166,7 +166,7 @@ sudo systemctl status orin-app
 sudo systemctl status cloudflared-orin
 
 # Docker containers
-docker-compose -f /opt/orin/compose-production.yaml ps
+docker-compose -f compose-cpu.yaml ps
 docker stats
 ```
 
@@ -260,10 +260,10 @@ For issues related to:
 - Added comprehensive documentation 
 
 # Show last 50 lines of server logs
-sudo docker-compose -f /opt/orin/compose-production.yaml logs --tail=50 server
+sudo docker-compose -f compose-cpu.yaml logs --tail=50 server
 
 # Show last 50 lines of task logs
-sudo docker-compose -f /opt/orin/compose-production.yaml logs --tail=50 task
+sudo docker-compose -f compose-cpu.yaml logs --tail=50 task
 
 # Show last 50 lines of keycloak logs
-sudo docker-compose -f /opt/orin/compose-production.yaml logs --tail=50 keycloak 
+sudo docker-compose -f compose-cpu.yaml logs --tail=50 keycloak 
