@@ -7,7 +7,7 @@ import {
 } from "material-react-table";
 import { IconButton, Tooltip, createTheme, ThemeProvider } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { TaskResponse } from "../../models/taskResponse.model";
 import { useTasksQuery } from "../../hooks/useTaskQuery";
 import useUser from "../../hooks/useUser";
@@ -27,7 +27,6 @@ import Loader from "../../pages/Loader/Loader";
 const DOCS_URL = import.meta.env.VITE_DOCS_URL;
 
 const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" }) => {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [showApiKey, setShowApiKey] = useState(false);

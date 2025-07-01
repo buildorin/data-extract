@@ -3,10 +3,7 @@ version: '3.8'
 services:
   # Main API Server - Custom Orin Build
   server:
-    build:
-      context: .
-      dockerfile: docker/server/Dockerfile
-    image: orin/server:latest
+    image: ghcr.io/buildorin/orin-server:latest
     ports:
       - "8000:8000"
     depends_on:
@@ -18,25 +15,13 @@ services:
     restart: always
     volumes:
       - ./models.yaml:/app/models.yaml:ro
-    environment:
-      - AUTH__KEYCLOAK_URL=https://auth.app.useorin.com
-      - AUTH__KEYCLOAK_REALM=orin
-      - AWS__ENDPOINT=http://minio:9000
-      - AWS__PRESIGNED_URL_ENDPOINT=https://s3.app.useorin.com
-      - AWS__REGION=us-east-1
-      - LLM__MODELS_PATH=/app/models.yaml
-      - PG__URL=postgresql://postgres:postgres@postgres:5432/chunkr
-      - REDIS__URL=redis://redis:6379
-      - WORKER__GENERAL_OCR_URL=http://ocr-backend:8000
-      - WORKER__SEGMENTATION_URL=http://segmentation-backend:8000
-      - WORKER__SERVER_URL=http://server:8000
 
   # Task Workers - Custom Orin Build
   task:
     build:
       context: .
       dockerfile: docker/task/Dockerfile
-    image: orin/task:latest
+    image: ghcr.io/buildorin/orin-task:latest
     depends_on:
       - postgres
       - redis
@@ -46,17 +31,6 @@ services:
     restart: always
     volumes:
       - ./models.yaml:/app/models.yaml:ro
-    environment:
-      - AWS__ACCESS_KEY=minioadmin
-      - AWS__SECRET_KEY=minioadmin
-      - AWS__ENDPOINT=http://minio:9000
-      - AWS__REGION=us-east-1
-      - WORKER__S3_BUCKET=chunkr
-      - WORKER__SERVER_URL=http://server:8000
-      - WORKER__SEGMENTATION_URL=http://segmentation-backend:8000
-      - WORKER__GENERAL_OCR_URL=http://ocr-backend:8000
-      - PG__URL=postgresql://postgres:postgres@postgres:5432/chunkr
-      - REDIS__URL=redis://redis:6379
     deploy:
       replicas: 2  # Reduced for CPU-only
 
@@ -65,7 +39,7 @@ services:
     build:
       context: .
       dockerfile: docker/web/Dockerfile
-    image: orin/web:latest
+    image: ghcr.io/buildorin/orin-web:latest
     platform: linux/amd64
     ports:
       - "5173:8000"
@@ -83,7 +57,7 @@ services:
 
   # Segmentation Service - CPU Optimized
   segmentation-backend:
-    image: luminainc/segmentation:1.4.2
+    image: ghcr.io/buildorin/orin-segmentation:latest
     expose:
       - "8000"
     volumes:
@@ -104,7 +78,7 @@ services:
 
   # OCR Service - CPU Optimized
   ocr-backend:
-    image: luminainc/doctr:1.20.1
+    image: ghcr.io/buildorin/orin-ocr:latest
     expose:
       - "8000"
     volumes:
@@ -123,9 +97,7 @@ services:
 
   # Database
   postgres:
-    build:
-      context: ./docker/postgres
-      dockerfile: Dockerfile
+    image: postgres:14
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

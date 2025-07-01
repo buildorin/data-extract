@@ -34,7 +34,7 @@ WORKDIR /app
 # Download and extract PDFium binary based on architecture
 ARG TARGETARCH
 RUN mkdir -p /app/pdfium-binaries && \
-    curl -L https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-${TARGETARCH}.tgz | \
+    curl -L https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7256/pdfium-v8-linux-x64.tgz | \
     tar -xz -C /tmp && \
     cp /tmp/lib/libpdfium.so /app/pdfium-binaries/
 
