@@ -57,21 +57,22 @@ services:
 
   # Web Frontend - Orin Build
   web:
-    image: ghcr.io/buildorin/orin-web:latest
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+      args:
+        VITE_KEYCLOAK_URL: https://auth.app.useorin.com
+        VITE_KEYCLOAK_REALM: orin
+        VITE_KEYCLOAK_CLIENT_ID: orin
+        VITE_KEYCLOAK_REDIRECT_URI: https://app.useorin.com
+        VITE_KEYCLOAK_POST_LOGOUT_REDIRECT_URI: https://app.useorin.com
+        VITE_API_URL: https://api.app.useorin.com
     platform: linux/amd64
     ports:
-      - "5173:8000"
+      - "80:80"
     env_file:
-      - .env
+      - apps/web/.env
     restart: always
-    environment:
-      - VITE_API_URL=https://api.app.useorin.com
-      - VITE_DOCS_URL=https://docs.useorin.com
-      - VITE_KEYCLOAK_CLIENT_ID=orin
-      - VITE_KEYCLOAK_POST_LOGOUT_REDIRECT_URI=https://app.useorin.com
-      - VITE_KEYCLOAK_REALM=orin
-      - VITE_KEYCLOAK_REDIRECT_URI=https://app.useorin.com
-      - VITE_KEYCLOAK_URL=https://auth.app.useorin.com
 
   # Segmentation Service - Orin Build
   segmentation-backend:
@@ -175,6 +176,8 @@ services:
   # Authentication
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.2
+    ports:
+      - "8080:8080"
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -183,6 +186,9 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HTTP_ENABLED=true
+      - KC_HTTPS_ENABLED=false
+      - KC_HOSTNAME=auth.app.useorin.com
+      - KC_HOSTNAME_PORT=443
       - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=postgres
@@ -195,12 +201,13 @@ services:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 600s
+      retries: 3
+      start_period: 40s
     depends_on:
       postgres:
         condition: service_healthy
-    restart: always
+    networks:
+      - default
 
 volumes:
   postgres_data:

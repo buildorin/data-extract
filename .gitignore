@@ -184,3 +184,7 @@ models.yaml
 *.pdfs.zip.part.3
 
 otel-collector-config.yaml
+# Deployment files with sensitive data
+current-values.yaml
+apps/web/.env.production
+

@@ -4,27 +4,32 @@ credentials-file: /root/.cloudflared/YOUR_TUNNEL_ID.json
 ingress:
   # Main web application
   - hostname: app.useorin.com
-    service: http://localhost:5173
+    service: http://127.0.0.1:80
     originRequest:
       noTLSVerify: true
+      connectTimeout: 30s
 
   # API server
   - hostname: api.app.useorin.com
-    service: http://localhost:8000
+    service: http://127.0.0.1:8000
     originRequest:
       noTLSVerify: true
+      connectTimeout: 30s
 
-  # Authentication
+  # Authentication - point directly to Keycloak HTTP (official approach)
   - hostname: auth.app.useorin.com
-    service: http://localhost:8080
+    service: http://127.0.0.1:8080
     originRequest:
       noTLSVerify: true
+      connectTimeout: 30s
+      httpHostHeader: auth.app.useorin.com
 
   # S3/MinIO console (optional, for admin access)
   - hostname: s3.app.useorin.com
-    service: http://localhost:9001
+    service: http://127.0.0.1:9001
     originRequest:
       noTLSVerify: true
+      connectTimeout: 30s
 
   # Catch-all rule - return 404 for unmatched hostnames
   - service: http_status:404 

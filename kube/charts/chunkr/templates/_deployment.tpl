@@ -50,6 +50,9 @@ spec:
       {{- if $service.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml $service.imagePullSecrets | nindent 8 }}
+      {{- else if $.Values.global.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml $.Values.global.image.pullSecrets | nindent 8 }}
       {{- end }}
       containers:
       - name: {{ $name }}

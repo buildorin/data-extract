@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: server
-  namespace: data-extract
+  namespace: orin
 spec:
   replicas: 2
   selector:
@@ -13,9 +13,11 @@ spec:
       labels:
         app: server
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
       - name: server
-        image: luminainc/server:1.20.1
+        image: ghcr.io/buildorin/orin-server:latest
         ports:
         - containerPort: 8000
         env:
@@ -50,7 +52,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: server
-  namespace: data-extract
+  namespace: orin
 spec:
   selector:
     app: server

@@ -38,7 +38,7 @@ services:
       - configMapRef:
           name: keycloak-config
       - secretRef:
-          name: chunkr-secret
+          name: orin-secret
     readinessProbe:
       httpGet:
         path: /realms/master
@@ -130,12 +130,12 @@ services:
       - name: MINIO_ROOT_USER
         valueFrom:
           secretKeyRef:
-            name: chunkr-secret
+            name: orin-secret
             key: AWS__ACCESS_KEY
       - name: MINIO_ROOT_PASSWORD
         valueFrom:
           secretKeyRef:
-            name: chunkr-secret
+            name: orin-secret
             key: AWS__SECRET_KEY
     args:
       - server
@@ -185,12 +185,12 @@ services:
       - name: MINIO_ROOT_USER
         valueFrom:
           secretKeyRef:
-            name: chunkr-secret
+            name: orin-secret
             key: AWS__ACCESS_KEY
       - name: MINIO_ROOT_PASSWORD
         valueFrom:
           secretKeyRef:
-            name: chunkr-secret
+            name: orin-secret
             key: AWS__SECRET_KEY
     volumes:
       - name: init-script
