@@ -10,22 +10,22 @@ ingress:
       connectTimeout: 30s
 
   # API server
-  - hostname: api.app.useorin.com
+  - hostname: api.useorin.com
     service: http://127.0.0.1:8000
     originRequest:
       noTLSVerify: true
       connectTimeout: 30s
 
   # Authentication - point directly to Keycloak HTTP (official approach)
-  - hostname: auth.app.useorin.com
+  - hostname: auth.useorin.com
     service: http://127.0.0.1:8080
     originRequest:
       noTLSVerify: true
       connectTimeout: 30s
-      httpHostHeader: auth.app.useorin.com
+      httpHostHeader: auth.useorin.com
 
   # S3/MinIO console (optional, for admin access)
-  - hostname: s3.app.useorin.com
+  - hostname: s3.useorin.com
     service: http://127.0.0.1:9001
     originRequest:
       noTLSVerify: true

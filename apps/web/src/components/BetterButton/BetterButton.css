@@ -2,10 +2,9 @@
   box-sizing: border-box;
   width: fit-content;
   height: fit-content;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(6px);
-  color: inherit;
+  border: 1px solid #545454;
+  background-color: #ffffff;
+  color: #545454;
   text-align: center;
   text-decoration: none;
   display: inline-block;
@@ -13,27 +12,27 @@
   cursor: pointer;
   padding: 4px 10px;
   transition: all 0.2s ease;
-  border: 1px solid transparent;
 }
 
 .button-resting:hover {
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(84, 84, 84, 0.05);
+  border: 1px solid #545454;
 }
 
 .button-resting:hover > span {
-  color: hsla(0, 0%, 100%) !important;
+  color: #545454 !important;
 }
 
 .button-active {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  background: #545454;
+  color: #ffffff;
+  border: 1px solid #545454;
 }
 
 .button-active:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  background: #545454;
+  color: #ffffff;
+  border: 1px solid #545454;
 }
 
 .button-resting:focus {

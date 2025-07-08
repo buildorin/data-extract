@@ -21,15 +21,11 @@ import { Status } from "../../models/taskResponse.model";
 import BetterButton from "../BetterButton/BetterButton";
 import ReactJson from "react-json-view";
 import UploadDialog from "../Upload/UploadDialog";
-import ApiKeyDialog from "../ApiDialog/ApiKeyDialog";
 import Loader from "../../pages/Loader/Loader";
-
-const DOCS_URL = import.meta.env.VITE_DOCS_URL;
 
 const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [showApiKey, setShowApiKey] = useState(false);
 
   // Set default values if params don't exist
   if (!searchParams.has("tablePageIndex"))
@@ -117,7 +113,7 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
       },
       {
         accessorKey: "task_id",
-        header: context === "flows" ? "Flow ID" : "Extract ID",
+        header: context === "flows" ? "Flow ID" : "Prep ID",
         Cell: ({ cell }) => {
           const fullId = cell.getValue<string>();
           return (
@@ -234,16 +230,16 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
     () =>
       createTheme({
         palette: {
-          mode: "dark",
+          mode: "light",
           primary: {
-            main: "#ffffff",
+            main: "#545454",
           },
           info: {
-            main: "rgb(2, 8, 9)",
+            main: "#545454",
           },
           background: {
-            default: "rgb(2, 8, 9)",
-            paper: "rgb(2, 8, 9)",
+            default: "#ffffff",
+            paper: "#ffffff",
           },
         },
         typography: {
@@ -262,8 +258,8 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                 backdropFilter: "none",
                 height: "100%",
                 zIndex: 1000,
-                backgroundColor: "rgb(2, 8, 9) !important",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
+                backgroundColor: "#ffffff !important",
+                border: "none",
               },
             },
           },
@@ -271,11 +267,11 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
             styleOverrides: {
               root: {
                 "& .MuiTableCell-head": {
-                  color: "rgb(255, 255, 255, 0.9)",
-                  backgroundColor: "rgb(2, 8, 9, 0.7)",
+                  color: "#545454",
+                  backgroundColor: "#ffffff",
                   fontSize: "16px",
                   fontWeight: 600,
-                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderBottom: "1px solid rgba(84, 84, 84, 0.1)",
                   padding: "14px",
                   paddingBottom: "16px",
                   paddingTop: "18px",
@@ -288,18 +284,18 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
             styleOverrides: {
               root: {
                 "& .MuiTableRow-root": {
-                  backgroundColor: "rgb(2, 8, 9) !important",
+                  backgroundColor: "#ffffff !important",
                   "&:hover": {
-                    backgroundColor: "rgb(2, 8, 9) !important",
+                    backgroundColor: "#f8f8f8 !important",
                     backdropFilter: "blur(8px)",
                   },
                   transition: "all 0.2s ease",
                 },
                 "& .MuiTableCell-body": {
-                  color: "rgba(255, 255, 255, 0.8)",
+                  color: "#545454",
                   fontSize: "14px",
                   padding: "16px 14px",
-                  borderBottom: "1px solid rgba(255, 255, 255, 0.03)",
+                  borderBottom: "1px solid rgba(84, 84, 84, 0.1)",
                 },
               },
             },
@@ -307,11 +303,12 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           MuiIconButton: {
             styleOverrides: {
               root: {
-                color: "rgba(255, 255, 255, 0.8)",
+                color: "#545454",
                 padding: "8px",
                 borderRadius: "6px",
+                backgroundColor: "#545454",
                 "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  backgroundColor: "#545454",
                 },
                 transition: "all 0.2s ease",
               },
@@ -320,7 +317,7 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           MuiSvgIcon: {
             styleOverrides: {
               root: {
-                color: "rgba(255, 255, 255, 0.8)",
+                color: "#ffffff",
                 height: "20px",
                 width: "20px",
               },
@@ -329,20 +326,36 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           MuiTableContainer: {
             styleOverrides: {
               root: {
-                backgroundColor: "rgb(2, 8, 9)",
+                backgroundColor: "#ffffff",
               },
             },
           },
           MuiTablePagination: {
             styleOverrides: {
               root: {
-                color: "rgba(255, 255, 255, 0.8)",
+                color: "#545454",
+                "& .MuiTablePagination-select": {
+                  color: "#545454",
+                },
+                "& .MuiTablePagination-selectIcon": {
+                  color: "#545454",
+                },
+                "& .MuiIconButton-root": {
+                  backgroundColor: "#545454",
+                  color: "#ffffff",
+                  "&:hover": {
+                    backgroundColor: "#545454",
+                  },
+                },
+                "& .MuiIconButton-root .MuiSvgIcon-root": {
+                  color: "#ffffff",
+                },
               },
               select: {
-                color: "rgba(255, 255, 255, 0.8)",
+                color: "#545454",
               },
               selectIcon: {
-                color: "rgba(255, 255, 255, 0.8)",
+                color: "#545454",
               },
             },
           },
@@ -350,11 +363,12 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
             styleOverrides: {
               tooltip: {
                 fontSize: "14px",
-                background: "rgb(2, 8, 9)",
+                background: "#545454",
                 backdropFilter: "blur(8px)",
                 padding: "8px 12px",
                 borderRadius: "6px",
                 height: "fit-content",
+                color: "#ffffff",
               },
             },
           },
@@ -369,6 +383,10 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
             styleOverrides: {
               root: {
                 borderRadius: "6px",
+                color: "#545454",
+                "&.Mui-checked": {
+                  color: "#545454",
+                },
               },
             },
           },
@@ -383,17 +401,36 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
             styleOverrides: {
               root: {
                 fontSize: "14px !important",
-                color: "rgba(255, 255, 255, 0.9) !important",
+                color: "#545454 !important",
                 padding: "8px 12px !important",
                 borderRadius: "6px",
                 margin: "4px 0px !important",
+                "&:hover": {
+                  backgroundColor: "rgba(84, 84, 84, 0.05)",
+                },
               },
             },
           },
           MuiStack: {
             styleOverrides: {
               root: {
-                color: "rgba(255, 255, 255, 0.95)",
+                color: "#545454",
+              },
+            },
+          },
+          MuiPopover: {
+            styleOverrides: {
+              paper: {
+                backgroundColor: "#ffffff !important",
+                border: "none",
+              },
+            },
+          },
+          MuiMenu: {
+            styleOverrides: {
+              paper: {
+                backgroundColor: "#ffffff !important",
+                border: "none",
               },
             },
           },
@@ -580,77 +617,29 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
         </Flex>
       ) : !tasks || tasks.length === 0 ? (
         <Flex
-          width="100%"
+          width="90%"
           height="100%"
           align="center"
           justify="center"
           direction="column"
           gap="4"
         >
-          <Text size="4" mb="4" weight="medium" className="white">
-            Get started by adding your document
-          </Text>
-          <Flex direction="column" gap="4" align="center">
-            <UploadDialog
-              auth={auth}
-              onUploadComplete={() => {
-                refetch();
-              }}
-            />
-            {user && (
-              <ApiKeyDialog
-                user={user}
-                showApiKey={showApiKey}
-                setShowApiKey={setShowApiKey}
-              />
-            )}
-            <BetterButton onClick={() => window.open(DOCS_URL, "_blank")}>
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 25 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g clipPath="url(#clip0_113_1419)">
-                  <path
-                    d="M9.25 6.75H15.75"
-                    stroke="#FFF"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 15.75H19.75V21.25H8C6.48 21.25 5.25 20.02 5.25 18.5C5.25 16.98 6.48 15.75 8 15.75Z"
-                    stroke="#FFF"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M5.25 18.5V5.75C5.25 4.09315 6.59315 2.75 8.25 2.75H18.75C19.3023 2.75 19.75 3.19772 19.75 3.75V16"
-                    stroke="#FFF"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_113_1419">
-                    <rect
-                      width="24"
-                      height="24"
-                      fill="white"
-                      transform="translate(0.5)"
-                    />
-                  </clipPath>
-                </defs>
-              </svg>
-              <Text size="2" weight="medium" style={{ color: "#FFF" }}>
-                Help
-              </Text>
-            </BetterButton>
-          </Flex>
+          <Flex
+            width="85%"
+            height="85%"
+            style={{
+              backgroundImage: "url('/pipeline-background.png')",
+              backgroundSize: "cover",
+              backgroundPosition: "left",
+              backgroundRepeat: "no-repeat"
+            }}
+          />
+          <UploadDialog
+            auth={auth}
+            onUploadComplete={() => {
+              refetch();
+            }}
+          />
         </Flex>
       ) : (
         <ThemeProvider theme={tableTheme}>
@@ -712,27 +701,27 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                             xmlns="http://www.w3.org/2000/svg"
                           >
                             <g clipPath="url(#clip0_113_1439)">
-                              <path
-                                d="M9.25 15.25L15.75 8.75"
-                                stroke="#FFF"
-                                strokeWidth="1.5"
-                                strokeMiterlimit="10"
-                                strokeLinecap="round"
-                              />
-                              <path
-                                d="M15.75 15.25L9.25 8.75"
-                                stroke="#FFF"
-                                strokeWidth="1.5"
-                                strokeMiterlimit="10"
-                                strokeLinecap="round"
-                              />
-                              <path
-                                d="M12.5 21.25C17.6086 21.25 21.75 17.1086 21.75 12C21.75 6.89137 17.6086 2.75 12.5 2.75C7.39137 2.75 3.25 6.89137 3.25 12C3.25 17.1086 7.39137 21.25 12.5 21.25Z"
-                                stroke="#FFF"
-                                strokeWidth="1.5"
-                                strokeMiterlimit="10"
-                                strokeLinecap="round"
-                              />
+                                                          <path
+                              d="M9.25 15.25L15.75 8.75"
+                              stroke="#545454"
+                              strokeWidth="1.5"
+                              strokeMiterlimit="10"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M15.75 15.25L9.25 8.75"
+                              stroke="#545454"
+                              strokeWidth="1.5"
+                              strokeMiterlimit="10"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M12.5 21.25C17.6086 21.25 21.75 17.1086 21.75 12C21.75 6.89137 17.6086 2.75 12.5 2.75C7.39137 2.75 3.25 6.89137 3.25 12C3.25 17.1086 7.39137 21.25 12.5 21.25Z"
+                              stroke="#545454"
+                              strokeWidth="1.5"
+                              strokeMiterlimit="10"
+                              strokeLinecap="round"
+                            />
                             </g>
                             <defs>
                               <clipPath id="clip0_113_1439">
@@ -762,21 +751,21 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                             <g clipPath="url(#clip0_113_1417)">
                               <path
                                 d="M16.25 15.25H20.75V19.75"
-                                stroke="#FFF"
+                                stroke="#545454"
                                 strokeWidth="1.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                               <path
                                 d="M8.75 8.25H4.25V3.75"
-                                stroke="#FFF"
+                                stroke="#545454"
                                 strokeWidth="1.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                               <path
                                 d="M4.31523 8.25135C5.73695 5.15233 8.86701 3 12.4998 3C17.2006 3 21.0597 6.65439 21.4647 11.25M20.7508 15.6003C19.3619 18.7788 16.1902 21 12.4998 21C7.78048 21 3.90956 17.3676 3.53027 12.7462"
-                                stroke="#FFF"
+                                stroke="#545454"
                                 strokeWidth="1.5"
                                 strokeLinecap="round"
                               />
@@ -793,7 +782,7 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                             </defs>
                           </svg>
 
-                          <Text size="1">Retry Extracts</Text>
+                          <Text size="1">Retry Preplines</Text>
                         </BetterButton>
                       </Tooltip>
                     )}
@@ -808,47 +797,47 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                         >
                           <path
                             d="M4.25 4.75H20.75"
-                            stroke="#FFF"
+                            stroke="#545454"
                             strokeWidth="1.5"
                             strokeMiterlimit="10"
                             strokeLinecap="round"
                           />
                           <path
                             d="M12.5 2.75V4.75"
-                            stroke="#FFF"
+                            stroke="#545454"
                             strokeWidth="1.5"
                             strokeMiterlimit="10"
                             strokeLinecap="round"
                           />
                           <path
                             d="M14.2402 17.27V12.77"
-                            stroke="#FFF"
+                            stroke="#545454"
                             strokeWidth="1.5"
                             strokeMiterlimit="10"
                             strokeLinecap="round"
                           />
                           <path
                             d="M10.75 17.25V12.75"
-                            stroke="#FFF"
+                            stroke="#545454"
                             strokeWidth="1.5"
                             strokeMiterlimit="10"
                             strokeLinecap="round"
                           />
                           <path
                             d="M5.87012 8.75H19.1701"
-                            stroke="#FFF"
+                            stroke="#545454"
                             strokeWidth="1.5"
                             strokeMiterlimit="10"
                           />
                           <path
                             d="M15.91 21.25H9.09C8.07 21.25 7.21 20.48 7.1 19.47L5.5 4.75H19.5L17.9 19.47C17.79 20.48 16.93 21.25 15.91 21.25V21.25Z"
-                            stroke="#FFF"
+                            stroke="#545454"
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                         </svg>{" "}
-                        <Text size="1">Delete Extracts</Text>
+                        <Text size="1">Delete Preplines</Text>
                       </BetterButton>
                     </Tooltip>
                   </>
@@ -892,8 +881,8 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                     row.original.message === "Task succeeded" ||
                     (row.original.status !== Status.Failed &&
                       row.original.status !== Status.Succeeded)
-                      ? "rgba(255, 255, 255, 0.05) !important"
-                      : "rgb(2, 8, 9) !important",
+                      ? "#f8f8f8 !important"
+                      : "#ffffff !important",
                 },
                 "&.Mui-TableBodyCell-DetailPanel": {
                   height: 0,

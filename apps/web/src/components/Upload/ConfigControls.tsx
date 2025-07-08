@@ -185,9 +185,9 @@ export function SegmentProcessingControls({
         .filter((key) => key !== "Page")
         .sort() as (keyof SegmentProcessing)[]);
 
-  const defaultSegmentType = segmentTypes[0];
+  const defaultSegmentType = segmentTypes.length > 0 ? segmentTypes[0] : "Text";
   const [selectedType, setSelectedType] =
-    useState<keyof SegmentProcessing>(defaultSegmentType);
+    useState<keyof SegmentProcessing>(showOnlyPage ? "Page" : defaultSegmentType);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -198,6 +198,15 @@ export function SegmentProcessingControls({
       setSelectedType(defaultSegmentType);
     }
   }, [selectedType, showOnlyPage, defaultSegmentType]);
+
+  // Initialize selectedType when segmentTypes changes
+  useEffect(() => {
+    if (segmentTypes.length > 0) {
+      if (!segmentTypes.includes(selectedType) || !selectedType) {
+        setSelectedType(segmentTypes[0]);
+      }
+    }
+  }, [segmentTypes, selectedType]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -282,10 +291,10 @@ export function SegmentProcessingControls({
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           type="button"
         >
-          <Text size="2" weight="medium">
-            {selectedType}
+          <span style={{ color: '#545454' }}>
+            {selectedType || 'Select Type'}
             {isModified(selectedType) && " (Modified)"}
-          </Text>
+          </span>
           <svg
             width="12"
             height="12"
@@ -317,10 +326,10 @@ export function SegmentProcessingControls({
                 onClick={() => handleTypeSelect(type)}
                 type="button"
               >
-                <Text size="2" weight="medium">
+                <span>
                   {type}
                   {isModified(type) && " (Modified)"}
-                </Text>
+                </span>
               </button>
             ))}
           </div>
@@ -534,6 +543,9 @@ export function ChunkProcessingControls({
   // Determine the current tokenizer value and if it's custom
   const currentTokenizerValue = value.tokenizer?.Enum ?? Tokenizer.Word; // Get the value inside Enum, default to Word
   const isCustom = !predefined.find((p) => p.value === currentTokenizerValue);
+  
+  // Find the predefined option for display
+  const currentOption = predefined.find(p => p.value === currentTokenizerValue);
 
   // Handler for selecting a tokenizer
   const selectTokenizer = (tok: Tokenizer | string) => {
@@ -544,7 +556,7 @@ export function ChunkProcessingControls({
   return (
     <div
       className="chunk-processing-container config-card"
-      style={{ zIndex: 100, position: "relative", marginTop: "40px" }}
+      style={{ zIndex: 9997, position: "relative", marginTop: "40px" }}
     >
       {/* === Parent Header === */}
       <div className="config-card-header">
@@ -675,7 +687,10 @@ export function ChunkProcessingControls({
             >
               <Text size="1" weight="medium">
                 {/* Display based on the actual value */}
-                {isCustom ? "Custom…" : currentTokenizerValue}
+                {isCustom 
+                  ? "Custom…" 
+                  : `${currentOption?.label || currentTokenizerValue}${currentTokenizerValue === Tokenizer.Word ? " (Default)" : ""}`
+                }
               </Text>
               <svg
                 width="12"
@@ -696,7 +711,7 @@ export function ChunkProcessingControls({
               </svg>
             </button>
             {isTokOpen && (
-              <div className="segment-dropdown-menu" style={{ zIndex: 100 }}>
+              <div className="segment-dropdown-menu" style={{ zIndex: 9999 }}>
                 {predefined.map((opt) => (
                   <button
                     key={opt.value}
@@ -929,7 +944,7 @@ export function LlmProcessingControls({
         >
           <div className="config-card-header">
             <Text size="3" weight="bold" className="white">
-              Model
+              Primary Model
             </Text>
           </div>
           <div className="model-selector" ref={modelRef}>
@@ -1096,7 +1111,7 @@ export function LlmProcessingControls({
         <div className="config-card">
           <div className="config-card-header">
             <Text size="3" weight="bold" className="white">
-              Temperature
+              Temperature (Randomness)
             </Text>
           </div>
           <input
@@ -1116,7 +1131,7 @@ export function LlmProcessingControls({
         <div className="config-card">
           <div className="config-card-header">
             <Text size="3" weight="bold" className="white">
-              Max Completion Tokens
+              Max Token Limit
             </Text>
           </div>
           <input

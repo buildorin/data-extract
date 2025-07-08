@@ -6,8 +6,8 @@
   /* border: 2px solid #fff; */
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px);
-  border: 1.5px solid #bdbdbd !important;
+  /* backdrop-filter: blur(8px); */
+  border: 1.5px solid#545454 !important;
   cursor: pointer;
   opacity: 1;
   transition: background-color 0.2s ease-in-out;
@@ -27,16 +27,16 @@
 }
 
 .upload-container.is-drag-active {
-  border-color: #bdbdbd !important;
+  border-color:#545454 !important;
 }
 
 .upload-container.has-files {
   height: 200px;
-  border: 1.5px dashed #bdbdbd !important;
+  border: 1.5px dashed#545454 !important;
   transition: all 0.2s ease;
 }
 
 .upload-container.has-files:hover {
-  border-color: #bdbdbd !important;
+  border-color:#545454 !important;
   background: rgba(255, 255, 255, 0.06);
 }

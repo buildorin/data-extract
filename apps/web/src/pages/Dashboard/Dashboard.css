@@ -3,9 +3,9 @@
   max-width: 256px;
   gap: 26px;
   padding: 16px;
-  border-right: 1.5px solid #bdbdbd !important;
+  border-right: 1px solid #545454 !important;
   box-shadow: none !important;
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .dashboard-nav-container.closed {
@@ -60,7 +60,7 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .dashboard-nav-items::-webkit-scrollbar {
@@ -89,13 +89,13 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #bdbdbd !important;
+  color: #545454 !important;
   opacity: 1 !important;
 }
 
 .dashboard-nav-item:hover {
   background: #e0f7fa33 !important;
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .main-container {
@@ -104,7 +104,7 @@
   flex-direction: column;
   height: 100vh;
   min-width: 0;
-  border-left: 1.5px solid #bdbdbd !important;
+  border-left: 1px solid #545454 !important;
   border-top: none !important;
   border-bottom: none !important;
   border-right: none !important;
@@ -114,7 +114,7 @@
   width: 100%;
   padding: 16px 24px;
   height: fit-content;
-  border-bottom: 1.5px solid #bdbdbd !important;
+  border-bottom: 1px solid #545454 !important;
   justify-content: space-between;
   align-items: center;
 }
@@ -146,7 +146,7 @@
 .profile-menu {
   gap: 4px;
   padding: 8px 0;
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .profile-menu-item {
@@ -154,12 +154,12 @@
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .profile-menu-item:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .profile-info {
@@ -169,7 +169,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
   cursor: pointer;
-  border: 1.5px solid #bdbdbd !important;
+  border: 0.5px solid #545454 !important;
   background: #fff !important;
 }
 
@@ -199,7 +199,7 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  border: 1.5px solid #bdbdbd !important;
+  border: 1.5px solid #545454 !important;
   background: #fff !important;
 }
 
@@ -209,12 +209,12 @@
 }
 
 .dashboard-nav-item.selected svg path {
-  stroke: #06b6d4 !important;
+  stroke: #545454 !important;
 }
 
 .dashboard-nav-item:hover:not(.selected) {
   background: #e0f7fa33 !important;
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .profile-popup {
@@ -227,7 +227,7 @@
   border-radius: 6px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .profile-popup .profile-menu {
@@ -264,24 +264,24 @@
 }
 
 .card, .config-card, .dashboard-table, .profile-section {
-  border: 1.5px solid #bdbdbd !important;
+  border: 1.5px solid #545454 !important;
   background: #fff !important;
 }
 
 .profile-section, .profile-info, .profile-popup, .profile-name, .profile-menu, .profile-menu-item {
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 .profile-section:hover, .profile-info:hover, .profile-popup:hover, .profile-name:hover, .profile-menu:hover, .profile-menu-item:hover {
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }
 
 .dashboard-nav-item svg,
 .dashboard-nav-item .icon {
-  color: #bdbdbd !important;
-  fill: #bdbdbd !important;
+  color: #545454 !important;
+  fill:#545454 !important;
 }
 
 .dashboard-nav-footer,
 .dashboard-nav-footer * {
-  color: #bdbdbd !important;
+  color: #545454 !important;
 }

@@ -1,17 +1,16 @@
 .config-card {
-  background: rgba(2, 5, 6, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: white !important;
+  border: 1px solid #545454 !important;
   border-radius: 8px;
   padding: 20px;
   transition: all 0.2s ease;
-  backdrop-filter: blur(12px);
   box-shadow: 0px 4px 24px -8px rgba(0, 0, 0, 0.2),
     0px 3px 12px -4px rgba(0, 0, 0, 0.1), 0px 2px 3px -2px rgba(0, 0, 51, 0.06);
 }
 
 .config-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.03);
+  border-color: #545454 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
 }
 
 .config-card-header {
@@ -23,11 +22,11 @@
 }
 
 .config-card-header .white {
-  color: rgba(255, 255, 255, 0.9);
+  color: #000 !important;
 }
 
 .config-card-description {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(6, 182, 212, 0.7) !important;
   margin-top: 4px;
   font-size: 13px;
 }
@@ -44,74 +43,76 @@
 
 .toggle-button {
   flex: 1;
-  padding: 8px 16px;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  border-radius: 6px;
+  padding: 8px 16px !important;
+  border: 1px solid #545454 !important;
+  background: white !important;
+  color: #545454 !important;
+  border-radius: 6px !important;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 13px !important;
+  font-weight: 500 !important;
 }
 
 .toggle-button:hover {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.05);
+  color: #545454 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: #545454 !important;
 }
 
 .toggle-button.active {
-  background: rgba(255, 255, 255, 0.9);
-  color: rgba(2, 5, 6, 0.95);
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06);
+  background: #545454 !important;
+  color: white !important;
+  border: 1px solid #545454 !important;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.06) !important;
 }
 
 /* Number Input Styles */
 .number-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: white !important;
+  border: 1px solid #545454 !important;
   border-radius: 8px;
   padding: 10px 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #545454 !important;
   font-size: 12px;
   transition: all 0.2s ease;
 }
 
 .llm-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: white !important;
+  border: 1px solid #545454 !important;
   border-radius: 8px;
   padding: 10px 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #545454 !important;
   font-size: 12px;
   transition: all 0.2s ease;
   height: 45px;
 }
 
 .llm-input:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: #545454 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
 }
 
 .llm-input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-color: #545454 !important;
+  background: white !important;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .number-input:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: #545454 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
 }
 
 .number-input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-color: #545454 !important;
+  background: white !important;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .number-input.fit-content {
@@ -176,15 +177,16 @@
 .model-selector {
   position: relative;
   width: 100%;
+  z-index: 9998;
 }
 
 .model-selector-button {
   width: 100%;
   padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: white !important;
+  border: 1px solid #545454 !important;
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #545454 !important;
   font-size: 14px;
   font-weight: 500;
   text-align: left;
@@ -195,9 +197,13 @@
   align-items: center;
 }
 
+.model-selector-button * {
+  color: #545454 !important;
+}
+
 .model-selector-button:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: #545454 !important;
 }
 
 .segment-dropdown-menu {
@@ -210,14 +216,13 @@
   gap: 4px;
   max-height: 200px;
   overflow-y: auto;
-  background: rgba(2, 5, 6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: white !important;
+  border: 1px solid #545454 !important;
   border-radius: 8px;
   padding: 8px;
-  backdrop-filter: blur(12px);
   box-shadow: 0px 4px 24px -8px rgba(0, 0, 0, 0.2),
     0px 3px 12px -4px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  z-index: 9999;
 }
 
 .segment-dropdown-item {
@@ -227,28 +232,28 @@
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #545454 !important;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .segment-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(6, 182, 212, 0.1) !important;
+  color: #545454 !important;
 }
 
 .segment-dropdown-item.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 1);
+  background: #545454 !important;
+  color: white !important;
 }
 
 .segment-dropdown-item.modified {
-  color: rgba(255, 255, 255, 1);
-  background: rgba(255, 255, 255, 0.05);
+  color: #545454 !important;
+  background: rgba(6, 182, 212, 0.05) !important;
 }
 
 .segment-dropdown-item.modified:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(6, 182, 212, 0.15) !important;
 }
 
 .segment-config-grid {
@@ -312,7 +317,10 @@ textarea.number-input {
 
 select.number-input {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background: white !important;
+  border: 1px solid #545454 !important;
+  color: #545454 !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%2306b6d4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;

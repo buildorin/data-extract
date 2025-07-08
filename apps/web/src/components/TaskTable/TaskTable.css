@@ -20,7 +20,8 @@
 
 .MuiPopover-paper {
   height: unset !important;
-  background-color: rgb(30, 36, 37) !important;
+  background-color: #ffffff !important;
+  border: none !important;
 }
 
 .MuiStack-root > :last-child {
@@ -34,7 +35,7 @@
 }
 
 .MuiTableContainer-root {
-  background-color: rgb(2, 8, 9) !important;
+  background-color: #ffffff !important;
 
   /* Webkit browsers (Chrome, Safari, newer Edge) */
   &::-webkit-scrollbar {
@@ -47,21 +48,50 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(84, 84, 84, 0.2);
     border-radius: 4px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(84, 84, 84, 0.3);
   }
 
   /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-color: rgba(84, 84, 84, 0.2) transparent;
 }
 
 .MuiPopover-root > .MuiPaper-root {
-  background-color: rgb(30, 36, 37) !important;
+  background-color: #ffffff !important;
+  border: none !important;
+}
+
+/* Navigation icons styling */
+.MuiIconButton-root {
+  background-color: #545454 !important;
+  color: #ffffff !important;
+}
+
+.MuiIconButton-root:hover {
+  background-color: #545454 !important;
+}
+
+.MuiIconButton-root .MuiSvgIcon-root {
+  color: #ffffff !important;
+}
+
+/* Pagination navigation icons */
+.MuiTablePagination-root .MuiIconButton-root {
+  background-color: #545454 !important;
+  color: #ffffff !important;
+}
+
+.MuiTablePagination-root .MuiIconButton-root:hover {
+  background-color: #545454 !important;
+}
+
+.MuiTablePagination-root .MuiIconButton-root .MuiSvgIcon-root {
+  color: #ffffff !important;
 }
 
 @keyframes subtleGlow {
@@ -81,11 +111,78 @@
 
 .task-table-container {
   position: relative;
-  background: radial-gradient(
-    circle at bottom right,
-    rgba(64, 169, 255, 0.03) 0%,
-    transparent 70%
-  );
+  background: #ffffff;
   background-size: 100% 100%;
-  animation: subtleGlow 8s ease-in-out infinite;
+}
+
+/* Maximum specificity overrides for TaskTable icons only - Override global button styles */
+.task-table-container .MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiIconButton-root[aria-label]:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiToolbar-root .MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiTablePagination-root .MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container [data-testid*="icon"] .MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiTablePagination-toolbar .MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiTableHead-root .MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container button.MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item) {
+  background-color: #545454 !important;
+  background: #545454 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  border: none !important;
+}
+
+.task-table-container .MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiIconButton-root[aria-label]:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiToolbar-root .MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiTablePagination-root .MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container [data-testid*="icon"] .MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiTablePagination-toolbar .MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiTableHead-root .MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container button.MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item) {
+  background-color: #545454 !important;
+  background: #545454 !important;
+  color: #ffffff !important;
+}
+
+.task-table-container .MuiSvgIcon-root,
+.task-table-container .MuiIconButton-root .MuiSvgIcon-root,
+.task-table-container .MuiIconButton-root[aria-label] .MuiSvgIcon-root,
+.task-table-container .MuiToolbar-root .MuiIconButton-root .MuiSvgIcon-root,
+.task-table-container .MuiTablePagination-root .MuiIconButton-root .MuiSvgIcon-root,
+.task-table-container [data-testid*="icon"] .MuiIconButton-root .MuiSvgIcon-root,
+.task-table-container .MuiTablePagination-toolbar .MuiIconButton-root .MuiSvgIcon-root,
+.task-table-container .MuiTableHead-root .MuiIconButton-root .MuiSvgIcon-root {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Force override any global teal styles for TaskTable specifically */
+.task-table-container .MuiIconButton-root[style*="background"]:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .MuiIconButton-root[style*="color"]:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item) {
+  background-color: #545454 !important;
+  background: #545454 !important;
+  color: #ffffff !important;
+}
+
+.task-table-container .MuiIconButton-root[style*="background"]:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item) .MuiSvgIcon-root,
+.task-table-container .MuiIconButton-root[style*="color"]:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item) .MuiSvgIcon-root {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Additional overrides to counter global index.css button styles */
+.task-table-container button.MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .button-resting.MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .button-active.MuiIconButton-root:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item) {
+  background: #545454 !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.task-table-container button.MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .button-resting.MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item),
+.task-table-container .button-active.MuiIconButton-root:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item) {
+  background: #545454 !important;
+  color: #ffffff !important;
 }

@@ -256,20 +256,20 @@ export default function Dashboard() {
     switch (view) {
       case "usage":
         return {
-          title: "Usage",
+          title: "",
           component: (
             <Usage key="usage-view" customerId={user.data?.customer_id || ""} />
           ),
         };
       case "connectors":
         return {
-          title: "Application Connectors",
+          title: "",
           component: (
-            <div style={{ width: "100%", height: "100vh", background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "100%", height: "100vh", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #545454", boxSizing: "border-box" }}>
               <img
                 src="/connectors.png"
                 alt="Connectors"
-                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", borderRadius: 0 }}
               />
             </div>
           ),
@@ -315,7 +315,7 @@ export default function Dashboard() {
           };
         }
         return {
-          title: "Extract Documents",
+          title: "",
           component: (
             <TaskTable key={`task-table-${searchParams.toString()}`} context="extracts" />
           ),
@@ -466,28 +466,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Extracts" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Extract
-                </Text>
-              </Flex>
-              <Flex
-                className={`dashboard-nav-item ${selectedNav === "Flows" ? "selected" : ""}`}
-                onClick={() => handleNavigation("Flows")}
-              >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 22 22"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {navIcons.Flows}
-                </svg>
-                <Text
-                  size="3"
-                  weight="medium"
-                  style={{ color: selectedNav === "Flows" ? "rgb(2, 5, 6)" : "#111" }}
-                >
-                  Data Flows
+                  Preplines
                 </Text>
               </Flex>
               <Flex
@@ -789,7 +768,7 @@ export default function Dashboard() {
               </>
             )}
           </Flex>
-          <Flex gap="24px">
+          <Flex gap="24px" align="center">
             <UploadDialog
               auth={auth}
               onUploadComplete={() => {
@@ -797,79 +776,59 @@ export default function Dashboard() {
               }}
             />
             {user.data && (
-              <ApiKeyDialog
-                user={user.data}
-                showApiKey={showApiKey}
-                setShowApiKey={setShowApiKey}
-              />
-            )}
-            <BetterButton onClick={handleDocsNav}>
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 25 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+              <Flex 
+                align="center" 
+                gap="2" 
+                style={{ cursor: "pointer" }}
+                onClick={() => setShowApiKey(true)}
               >
-                <g clipPath="url(#clip0_113_1419)">
-                  <path
-                    d="M9.25 6.75H15.75"
-                    stroke="#FFF"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 15.75H19.75V21.25H8C6.48 21.25 5.25 20.02 5.25 18.5C5.25 16.98 6.48 15.75 8 15.75Z"
-                    stroke="#FFF"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M5.25 18.5V5.75C5.25 4.09315 6.59315 2.75 8.25 2.75H18.75C19.3023 2.75 19.75 3.19772 19.75 3.75V16"
-                    stroke="#FFF"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_113_1419">
-                    <rect
-                      width="24"
-                      height="24"
-                      fill="white"
-                      transform="translate(0.5)"
-                    />
-                  </clipPath>
-                </defs>
+                <Text 
+                  size="2" 
+                  weight="medium" 
+                  style={{ color: "#545454" }}
+                >
+                  &lt;/&gt; API Key
+                </Text>
+              </Flex>
+            )}
+            <Flex 
+              align="center" 
+              gap="2" 
+              style={{ cursor: "pointer" }}
+              onClick={handleDocsNav}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M14 2H6A2 2 0 0 0 4 4V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V8Z" stroke="#545454" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M14 2V8H20" stroke="#545454" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 13H8" stroke="#545454" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 17H8" stroke="#545454" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 9H8" stroke="#545454" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-
-              <Text size="2" weight="medium" style={{ color: "#FFF" }}>
+              <Text 
+                size="2" 
+                weight="medium" 
+                style={{ color: "#545454" }}
+              >
                 Help
               </Text>
-            </BetterButton>
-            <BetterButton onClick={handleGithubNav}>
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 192 192"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-              >
-                <path
-                  stroke="#FFFFFF"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="12"
-                  d="M120.755 170c.03-4.669.059-20.874.059-27.29 0-9.272-3.167-15.339-6.719-18.41 22.051-2.464 45.201-10.863 45.201-49.067 0-10.855-3.824-19.735-10.175-26.683 1.017-2.516 4.413-12.63-.987-26.32 0 0-8.296-2.672-27.202 10.204-7.912-2.213-16.371-3.308-24.784-3.352-8.414.044-16.872 1.14-24.785 3.352C52.457 19.558 44.162 22.23 44.162 22.23c-5.4 13.69-2.004 23.804-.987 26.32C36.824 55.498 33 64.378 33 75.233c0 38.204 23.149 46.603 45.2 49.067-3.551 3.071-6.719 9.138-6.719 18.41 0 6.416.03 22.621.059 27.29M27 130c9.939.703 15.67 9.735 15.67 9.735 8.834 15.199 23.178 23.178 10.803 28.815 8.265"
-                />
+            </Flex>
+            <Flex 
+              align="center" 
+              gap="2" 
+              style={{ cursor: "pointer" }}
+              onClick={handleGithubNav}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M9 19C4 20.5 4 16.5 2 16M22 22V18.13A3.37 3.37 0 0 0 21.24 15.5C21.24 15.5 21.07 15.5 20.68 15.5A5.59 5.59 0 0 1 22 10.42V6.57A3.87 3.87 0 0 0 21.07 3.5C20.6 3.5 20.4 3.5 20.05 3.64A7.72 7.72 0 0 0 16 5.5A7.72 7.72 0 0 0 11.95 3.64C11.6 3.5 11.4 3.5 10.93 3.5A3.87 3.87 0 0 0 10 6.57V10.42A5.59 5.59 0 0 1 11.32 15.5C10.93 15.5 10.76 15.5 10.76 15.5A3.37 3.37 0 0 0 10 18.13V22" stroke="#545454" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <Text size="2" weight="medium" style={{ color: "#FFF" }}>
+              <Text 
+                size="2" 
+                weight="medium" 
+                style={{ color: "#545454" }}
+              >
                 Github
               </Text>
-            </BetterButton>
+            </Flex>
           </Flex>
         </Flex>
         <Flex className="main-body">{auth && user && content.component}</Flex>

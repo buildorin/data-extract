@@ -86,14 +86,14 @@ body, #root, .main-container, .dashboard-nav-container, .main-header, .main-body
   color: #111 !important;
 }
 
-button, .button-resting, .button-active {
+button:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item), .button-resting, .button-active {
   background: #06b6d4 !important; /* Tailwind teal-500 */
   color: #fff !important;
   border: none !important;
   box-shadow: none !important;
 }
 
-button:hover, .button-resting:hover, .button-active:hover {
+button:hover:not(.model-selector-button):not(.toggle-button):not(.segment-dropdown-item), .button-resting:hover, .button-active:hover {
   background: #0891b2 !important; /* Tailwind teal-600 */
   color: #fff !important;
 }
@@ -116,7 +116,7 @@ input, select, textarea {
 .profile-section, .profile-info, .profile-popup, .profile-name, .profile-menu, .profile-menu-item {
   background: #fff !important;
   color: #111 !important;
-  border: 1.5px solid #bdbdbd !important;
+  border: 1.5px solid #545454 !important;
 }
 
 .dashboard-nav-item svg {

@@ -88,7 +88,7 @@ export default function UploadDialog({
             </defs>
           </svg>
           <Text size="3" weight="bold">
-            Extract Document
+            Create Prepline
           </Text>
         </BetterButton>
       </Dialog.Trigger>
