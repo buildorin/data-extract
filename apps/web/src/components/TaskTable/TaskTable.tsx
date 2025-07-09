@@ -317,7 +317,7 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           MuiSvgIcon: {
             styleOverrides: {
               root: {
-                color: "#ffffff",
+                color: "#222",
                 height: "20px",
                 width: "20px",
               },
@@ -383,9 +383,12 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
             styleOverrides: {
               root: {
                 borderRadius: "6px",
-                color: "#545454",
-                "&.Mui-checked": {
-                  color: "#545454",
+                color: "#222",
+                '&.Mui-checked': {
+                  color: "#222",
+                },
+                '& .MuiSvgIcon-root': {
+                  color: "#222",
                 },
               },
             },

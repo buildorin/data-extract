@@ -45,7 +45,7 @@ export function ToggleGroup({
           justify="end"
           className={docHover ? "docs-text" : "docs-text-hidden"}
         >
-          <Text size="1" weight="bold" className="white ">
+          <Text size="1" weight="bold" style={{ color: "#545454" }}>
             Help
           </Text>
           <svg
@@ -57,19 +57,19 @@ export function ToggleGroup({
           >
             <path
               d="M14.1625 18.4876L13.4417 19.2084C11.053 21.5971 7.18019 21.5971 4.79151 19.2084C2.40283 16.8198 2.40283 12.9469 4.79151 10.5583L5.51236 9.8374"
-              stroke="#FFFFFF"
+              stroke="#545454"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
               d="M9.8374 14.1625L14.1625 9.8374"
-              stroke="#FFFFFF"
+              stroke="#545454"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
               d="M9.8374 5.51236L10.5583 4.79151C12.9469 2.40283 16.8198 2.40283 19.2084 4.79151M18.4876 14.1625L19.2084 13.4417C20.4324 12.2177 21.0292 10.604 20.9988 9"
-              stroke="#FFFFFF"
+              stroke="#545454"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
@@ -125,7 +125,7 @@ export function NumberInput({
           justify="end"
           className={docHover ? "docs-text" : "docs-text-hidden"}
         >
-          <Text size="1" weight="bold" className="white ">
+          <Text size="1" weight="bold" style={{ color: "#545454" }}>
             Help
           </Text>
           <svg
@@ -137,19 +137,19 @@ export function NumberInput({
           >
             <path
               d="M14.1625 18.4876L13.4417 19.2084C11.053 21.5971 7.18019 21.5971 4.79151 19.2084C2.40283 16.8198 2.40283 12.9469 4.79151 10.5583L5.51236 9.8374"
-              stroke="#FFFFFF"
+              stroke="#545454"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
               d="M9.8374 14.1625L14.1625 9.8374"
-              stroke="#FFFFFF"
+              stroke="#545454"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
               d="M9.8374 5.51236L10.5583 4.79151C12.9469 2.40283 16.8198 2.40283 19.2084 4.79151M18.4876 14.1625L19.2084 13.4417C20.4324 12.2177 21.0292 10.604 20.9988 9"
-              stroke="#FFFFFF"
+              stroke="#545454"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
@@ -172,41 +172,37 @@ interface SegmentProcessingControlsProps {
   value: SegmentProcessing;
   onChange: (value: SegmentProcessing) => void;
   showOnlyPage?: boolean;
+  selectedType: keyof SegmentProcessing;
+  onTypeChange: (type: keyof SegmentProcessing) => void;
 }
 
 export function SegmentProcessingControls({
   value,
   onChange,
   showOnlyPage = false,
+  selectedType,
+  onTypeChange,
 }: SegmentProcessingControlsProps) {
   const segmentTypes = showOnlyPage
     ? (["Page"] as (keyof SegmentProcessing)[])
     : (Object.keys(value)
         .filter((key) => key !== "Page")
         .sort() as (keyof SegmentProcessing)[]);
-
   const defaultSegmentType = segmentTypes.length > 0 ? segmentTypes[0] : "Text";
-  const [selectedType, setSelectedType] =
-    useState<keyof SegmentProcessing>(showOnlyPage ? "Page" : defaultSegmentType);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Debug log for dropdown state
+  console.log('Dropdown Render:', { selectedType, segmentTypes, value });
+
   useEffect(() => {
     if (showOnlyPage && selectedType !== "Page") {
-      setSelectedType("Page");
+      onTypeChange("Page");
     } else if (!showOnlyPage && selectedType === "Page") {
-      setSelectedType(defaultSegmentType);
+      onTypeChange(defaultSegmentType);
     }
-  }, [selectedType, showOnlyPage, defaultSegmentType]);
-
-  // Initialize selectedType when segmentTypes changes
-  useEffect(() => {
-    if (segmentTypes.length > 0) {
-      if (!segmentTypes.includes(selectedType) || !selectedType) {
-        setSelectedType(segmentTypes[0]);
-      }
-    }
-  }, [segmentTypes, selectedType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showOnlyPage, defaultSegmentType]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -217,7 +213,6 @@ export function SegmentProcessingControls({
         setIsDropdownOpen(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -225,8 +220,8 @@ export function SegmentProcessingControls({
   }, []);
 
   const isModified = (type: keyof SegmentProcessing) => {
-    const defaultConfig = DEFAULT_SEGMENT_PROCESSING[type];
-    const currentConfig = value[type];
+    const defaultConfig = DEFAULT_SEGMENT_PROCESSING[type] || {};
+    const currentConfig = value[type] || {};
 
     const defaultSources = defaultConfig.embed_sources ?? [
       EmbedSource.MARKDOWN,
@@ -251,21 +246,22 @@ export function SegmentProcessingControls({
     onChange({
       ...value,
       [selectedType]: {
-        ...value[selectedType],
+        ...(value[selectedType] || {}),
         [field]: newValue,
       },
     });
   };
 
   const handleTypeSelect = (type: keyof SegmentProcessing) => {
-    setSelectedType(type);
+    onTypeChange(type);
     setIsDropdownOpen(false);
   };
 
   // derive the current embed_sources for this segment type:
-  const currentSources: EmbedSource[] = value[selectedType].embed_sources ?? [
-    EmbedSource.MARKDOWN,
-  ];
+  const currentConfig = value[selectedType];
+  const currentSources: EmbedSource[] = currentConfig && currentConfig.embed_sources 
+    ? currentConfig.embed_sources 
+    : [EmbedSource.MARKDOWN];
 
   // helper to add/remove a source
   const toggleEmbedSource = (src: EmbedSource) => {
@@ -273,14 +269,16 @@ export function SegmentProcessingControls({
     const newSources = has
       ? currentSources.filter((s) => s !== src)
       : [...currentSources, src];
-
-    onChange({
+    
+    // Ensure the selectedType exists in value before updating
+    const updatedValue = {
       ...value,
       [selectedType]: {
-        ...value[selectedType],
+        ...(value[selectedType] || {}),
         embed_sources: newSources,
       },
-    });
+    };
+    onChange(updatedValue);
   };
 
   return (
@@ -291,9 +289,8 @@ export function SegmentProcessingControls({
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           type="button"
         >
-          <span style={{ color: '#545454' }}>
-            {selectedType || 'Select Type'}
-            {isModified(selectedType) && " (Modified)"}
+          <span style={{ color: '#111' }}>
+            {selectedType}{isModified(selectedType) ? ' (Modified)' : ''}
           </span>
           <svg
             width="12"
@@ -368,13 +365,13 @@ export function SegmentProcessingControls({
               <button
                 key={option.value}
                 className={`toggle-button ${
-                  value[selectedType].markdown === option.value ? "active" : ""
+                  (value[selectedType]?.markdown || GenerationStrategy.Auto) === option.value ? "active" : ""
                 }`}
                 onClick={() =>
                   onChange({
                     ...value,
                     [selectedType]: {
-                      ...value[selectedType],
+                      ...(value[selectedType] || {}),
                       markdown: option.value,
                     },
                   })
@@ -420,13 +417,13 @@ export function SegmentProcessingControls({
               <button
                 key={option.value}
                 className={`toggle-button ${
-                  value[selectedType].html === option.value ? "active" : ""
+                  (value[selectedType]?.html || GenerationStrategy.Auto) === option.value ? "active" : ""
                 }`}
                 onClick={() =>
                   onChange({
                     ...value,
                     [selectedType]: {
-                      ...value[selectedType],
+                      ...(value[selectedType] || {}),
                       html: option.value,
                     },
                   })
@@ -467,12 +464,12 @@ export function SegmentProcessingControls({
             type="text"
             className="llm-input"
             placeholder="Enter custom prompt..."
-            value={value[selectedType].llm || ""}
+            value={value[selectedType]?.llm || ""}
             onChange={(e) =>
               onChange({
                 ...value,
                 [selectedType]: {
-                  ...value[selectedType],
+                  ...(value[selectedType] || {}),
                   llm: e.target.value,
                 },
               })
@@ -484,7 +481,7 @@ export function SegmentProcessingControls({
         <ToggleGroup
           docHover={false}
           label="Image Cropping"
-          value={value[selectedType].crop_image}
+          value={value[selectedType]?.crop_image}
           onChange={(v) => updateConfig("crop_image", v)}
           options={[
             { label: "Auto", value: CroppingStrategy.Auto },
@@ -496,7 +493,7 @@ export function SegmentProcessingControls({
         <ToggleGroup
           docHover={false}
           label="Extended Context"
-          value={value[selectedType].extended_context ? "ON" : "OFF"}
+          value={value[selectedType]?.extended_context ? "ON" : "OFF"}
           onChange={(v) => updateConfig("extended_context", v === "ON")}
           options={[
             { label: "ON", value: "ON" },
@@ -571,28 +568,28 @@ export function ChunkProcessingControls({
             <g clipPath="url(#clip0_305_31854)">
               <path
                 d="M9.25 16C9.25 14.2051 7.79493 12.75 6 12.75C4.20507 12.75 2.75 14.2051 2.75 16C2.75 17.7949 4.20507 19.25 6 19.25C7.79493 19.25 9.25 17.7949 9.25 16Z"
-                stroke="#FFF"
+                stroke="#222"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M16.8699 4.75L8.85994 17.55L8.68994 17.82"
-                stroke="#FFF"
+                stroke="#222"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M14.75 16C14.75 17.7949 16.2051 19.25 18 19.25C19.7949 19.25 21.25 17.7949 21.25 16C21.25 14.2051 19.7949 12.75 18 12.75C16.2051 12.75 14.75 14.2051 14.75 16Z"
-                stroke="#FFF"
+                stroke="#222"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M15.3099 17.82L15.1399 17.55L7.12988 4.75"
-                stroke="#FFF"
+                stroke="#222"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -629,19 +626,19 @@ export function ChunkProcessingControls({
             >
               <path
                 d="M14.1625 18.4876L13.4417 19.2084C11.053 21.5971 7.18019 21.5971 4.79151 19.2084C2.40283 16.8198 2.40283 12.9469 4.79151 10.5583L5.51236 9.8374"
-                stroke="#FFFFFF"
+                stroke="#545454"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
               <path
                 d="M9.8374 14.1625L14.1625 9.8374"
-                stroke="#FFFFFF"
+                stroke="#545454"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
               <path
                 d="M9.8374 5.51236L10.5583 4.79151C12.9469 2.40283 16.8198 2.40283 19.2084 4.79151M18.4876 14.1625L19.2084 13.4417C20.4324 12.2177 21.0292 10.604 20.9988 9"
-                stroke="#FFFFFF"
+                stroke="#545454"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
@@ -686,7 +683,6 @@ export function ChunkProcessingControls({
               onClick={() => setIsTokOpen((o) => !o)}
             >
               <Text size="1" weight="medium">
-                {/* Display based on the actual value */}
                 {isCustom 
                   ? "Custom…" 
                   : `${currentOption?.label || currentTokenizerValue}${currentTokenizerValue === Tokenizer.Word ? " (Default)" : ""}`
@@ -838,8 +834,11 @@ export function LlmProcessingControls({
   const selectedModelId = value.model_id ?? defaultModelId;
 
   // Show "Default" in the button label when the default model is selected
-  const selectedModelDisplayText =
-    selectedModelId + (selectedModelId === defaultModelId ? " (Default)" : "");
+  const selectedModelDisplayText = selectedModelId 
+    ? selectedModelId + (selectedModelId === defaultModelId ? " (Default)" : "")
+    : models.length > 0 
+      ? `${models[0].id} (Default)`
+      : "Loading models...";
 
   // --- Updated Fallback Logic ---
   // Get the type (key) and model ID (value) from the fallback_strategy object
@@ -860,9 +859,13 @@ export function LlmProcessingControls({
   // Determine the text to display for the fallback button
   let fallbackDisplayText = "";
   if (currentFallbackType === FallbackStrategyType.Default) {
-    fallbackDisplayText = `${defaultFallbackId} (Default)`;
+    fallbackDisplayText = defaultFallbackId 
+      ? `${defaultFallbackId} (Default)`
+      : models.length > 0 
+        ? `${models.find(m => m.fallback)?.id || models[0].id} (Default)`
+        : "Loading models...";
   } else if (currentFallbackType === FallbackStrategyType.Model) {
-    fallbackDisplayText = currentFallbackId;
+    fallbackDisplayText = currentFallbackId || "Select model";
   } else {
     // FallbackStrategyType.None or unexpected
     fallbackDisplayText = "None"; // Or handle other cases as needed
@@ -882,7 +885,7 @@ export function LlmProcessingControls({
           >
             <path
               d="M19 3V7M17 5H21M19 17V21M17 19H21M10 5L8.53001 8.72721C8.3421 9.20367 8.24814 9.4419 8.10427 9.64278C7.97675 9.82084 7.82084 9.97675 7.64278 10.1043C7.4419 10.2481 7.20367 10.3421 6.72721 10.53L3 12L6.72721 13.47C7.20367 13.6579 7.4419 13.7519 7.64278 13.8957C7.82084 14.0233 7.97675 14.1792 8.10427 14.3572C8.24814 14.5581 8.3421 14.7963 8.53001 15.2728L10 19L11.47 15.2728C11.6579 14.7963 11.7519 14.5581 11.8957 14.3572C12.0233 14.1792 12.1792 14.0233 12.3572 13.8957C12.5581 13.7519 12.7963 13.6579 13.2728 13.47L17 12L13.2728 10.53C12.7963 10.3421 12.5581 10.2481 12.3572 10.1043C12.1792 9.97675 12.0233 9.82084 11.8957 9.64278C11.7519 9.4419 11.6579 9.20367 11.47 8.72721L10 5Z"
-              stroke="#FFF"
+              stroke="#222"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -913,19 +916,19 @@ export function LlmProcessingControls({
             >
               <path
                 d="M14.1625 18.4876L13.4417 19.2084C11.053 21.5971 7.18019 21.5971 4.79151 19.2084C2.40283 16.8198 2.40283 12.9469 4.79151 10.5583L5.51236 9.8374"
-                stroke="#FFFFFF"
+                stroke="#545454"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
               <path
                 d="M9.8374 14.1625L14.1625 9.8374"
-                stroke="#FFFFFF"
+                stroke="#545454"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
               <path
                 d="M9.8374 5.51236L10.5583 4.79151C12.9469 2.40283 16.8198 2.40283 19.2084 4.79151M18.4876 14.1625L19.2084 13.4417C20.4324 12.2177 21.0292 10.604 20.9988 9"
-                stroke="#FFFFFF"
+                stroke="#545454"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />

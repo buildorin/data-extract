@@ -165,12 +165,10 @@
 .profile-info {
   padding: 12px;
   border-radius: 6px;
-  background: rgba(2, 5, 6, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
   cursor: pointer;
-  border: 0.5px solid #545454 !important;
-  background: #fff !important;
+  background: none !important;
+  border: none !important;
 }
 
 .profile-info:hover {

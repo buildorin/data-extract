@@ -377,34 +377,13 @@ export default function Dashboard() {
             onClick={() => navigate("/")}
             style={{ cursor: "pointer" }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
-              viewBox="0 0 22 22"
-              fill="none"
-            >
-              <path
-                d="M5.39 8.965C5.88975 9.16504 6.43722 9.21401 6.96454 9.10584C7.49186 8.99767 7.97584 8.73711 8.35648 8.35648C8.73711 7.97584 8.99767 7.49186 9.10584 6.96454C9.21401 6.43722 9.16504 5.88975 8.965 5.39C9.54645 5.23345 10.0604 4.89038 10.4281 4.41346C10.7957 3.93655 10.9966 3.35215 11 2.75C12.6317 2.75 14.2267 3.23385 15.5835 4.14038C16.9402 5.0469 17.9976 6.33537 18.622 7.84286C19.2464 9.35035 19.4098 11.0092 19.0915 12.6095C18.7732 14.2098 17.9874 15.6798 16.8336 16.8336C15.6798 17.9874 14.2098 18.7732 12.6095 19.0915C11.0092 19.4098 9.35035 19.2464 7.84286 18.622C6.33537 17.9976 5.0469 16.9402 4.14038 15.5835C3.23385 14.2267 2.75 12.6317 2.75 11C3.35215 10.9966 3.93655 10.7957 4.41346 10.4281C4.89038 10.0604 5.23345 9.54645 5.39 8.965Z"
-                stroke="url(#paint0_linear_293_747)"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <defs>
-                <linearGradient
-                  id="paint0_linear_293_747"
-                  x1="11"
-                  y1="2.75"
-                  x2="11"
-                  y2="19.25"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop stopColor="white" />
-                  <stop offset="1" stopColor="#DCE4DD" />
-                </linearGradient>
-              </defs>
-            </svg>
+            <img
+              src="/logo-orin.png"
+              alt="Orin Logo"
+              width={36}
+              height={36}
+              style={{ verticalAlign: "middle" }}
+            />
             <Text size="5" weight="bold" mb="2px" style={{ color: "#111" }}>
               Orin
             </Text>
@@ -548,13 +527,13 @@ export default function Dashboard() {
                       >
                         <path
                           d="M12 21.25C17.1086 21.25 21.25 17.1086 21.25 12C21.25 6.89137 17.1086 2.75 12 2.75C6.89137 2.75 2.75 6.89137 2.75 12C2.75 17.1086 6.89137 21.25 12 21.25Z"
-                          stroke="#FFFFFF"
+                          stroke="#111"
                           strokeWidth="1.5"
                           strokeMiterlimit="10"
                         />
                         <path
                           d="M9.88012 14.36C9.88012 15.53 10.8301 16.25 12.0001 16.25C13.1701 16.25 14.1201 15.53 14.1201 14.36C14.1201 13.19 13.3501 12.75 11.5301 11.66C10.6701 11.15 9.87012 10.82 9.87012 9.64C9.87012 8.46 10.8201 7.75 11.9901 7.75C13.1601 7.75 14.1101 8.7 14.1101 9.87"
-                          stroke="#FFFFFF"
+                          stroke="#111"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -581,14 +560,14 @@ export default function Dashboard() {
                         <g clipPath="url(#clip0_305_31838)">
                           <path
                             d="M20.25 4.75H3.75C3.19772 4.75 2.75 5.19771 2.75 5.75V18.25C2.75 18.8023 3.19772 19.25 3.75 19.25H20.25C20.8023 19.25 21.25 18.8023 21.25 18.25V5.75C21.25 5.19772 20.8023 4.75 20.25 4.75Z"
-                            stroke="#FFF"
+                            stroke="#111"
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                           <path
                             d="M21.25 7.25L13.9625 13.5527C12.8356 14.5273 11.1644 14.5273 10.0375 13.5527L2.75 7.25"
-                            stroke="#FFF"
+                            stroke="#111"
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -620,21 +599,21 @@ export default function Dashboard() {
                         <g clipPath="url(#clip0_305_31814)">
                           <path
                             d="M19.2499 14.93V18.23C19.2499 19.46 18.1599 20.4 16.9399 20.23C9.59991 19.21 3.78991 13.4 2.76991 6.06C2.59991 4.84 3.53991 3.75 4.76991 3.75H8.06991C8.55991 3.75 8.97991 4.1 9.05991 4.58L9.44991 6.77C9.58991 7.54 9.26991 8.32 8.62991 8.77L7.73991 9.4C9.16991 11.81 11.1999 13.82 13.6199 15.24L14.2299 14.37C14.6799 13.73 15.4599 13.41 16.2299 13.55L18.4199 13.94C18.8999 14.03 19.2499 14.44 19.2499 14.93V14.93Z"
-                            stroke="#FFF"
+                            stroke="#111"
                             strokeWidth="1"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                           <path
                             d="M15.75 3.75H20.25V8.25"
-                            stroke="#FFF"
+                            stroke="#111"
                             strokeWidth="1"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                           <path
                             d="M20.22 3.77979L14.75 9.24979"
-                            stroke="#FFF"
+                            stroke="#111"
                             strokeWidth="1"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -664,21 +643,21 @@ export default function Dashboard() {
                         <g clipPath="url(#clip0_305_27927)">
                           <path
                             d="M16 16.25L20.25 12L16 7.75"
-                            stroke="#FFFFFF"
+                            stroke="#111"
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                           <path
                             d="M20.25 12H8.75"
-                            stroke="#FFFFFF"
+                            stroke="#111"
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                           <path
                             d="M13.25 20.25H5.75C4.65 20.25 3.75 19.35 3.75 18.25V5.75C3.75 4.65 4.65 3.75 5.75 3.75H13.25"
-                            stroke="#FFFFFF"
+                            stroke="#111"
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -833,6 +812,13 @@ export default function Dashboard() {
         </Flex>
         <Flex className="main-body">{auth && user && content.component}</Flex>
       </Flex>
+      {user.data && (
+        <ApiKeyDialog
+          user={user.data}
+          showApiKey={showApiKey}
+          setShowApiKey={setShowApiKey}
+        />
+      )}
     </Flex>
   );
 }

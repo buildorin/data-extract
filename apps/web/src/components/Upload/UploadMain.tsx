@@ -1,5 +1,5 @@
 import { Flex, Text } from "@radix-ui/themes";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   UploadFormData,
   OcrStrategy,
@@ -82,6 +82,9 @@ export default function UploadMain({
   const [config, setConfig] = useState<UploadFormData>(DEFAULT_UPLOAD_CONFIG);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [selectedSegmentType, setSelectedSegmentType] = useState<
+    keyof typeof DEFAULT_SEGMENT_PROCESSING
+  >("Text");
 
   const handleFileChange = (ufs: File[]) => {
     setFiles((prev) => [...prev, ...ufs]);
@@ -103,6 +106,20 @@ export default function UploadMain({
     }
     return current.segment_processing || DEFAULT_SEGMENT_PROCESSING;
   };
+
+  // Compute available segment types
+  const segmentTypes = config.segmentation_strategy === SegmentationStrategy.Page
+    ? ["Page"]
+    : Object.keys(config.segment_processing || DEFAULT_SEGMENT_PROCESSING).filter(k => k !== "Page");
+
+  // Keep selectedSegmentType in sync with available types
+  useEffect(() => {
+    if (!selectedSegmentType || !segmentTypes.includes(selectedSegmentType)) {
+      const defaultType = segmentTypes.length > 0 ? segmentTypes[0] : "Text";
+      setSelectedSegmentType(defaultType as keyof typeof DEFAULT_SEGMENT_PROCESSING);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [segmentTypes.join(","), selectedSegmentType]);
 
   const handleSubmit = useCallback(async () => {
     if (files.length === 0) return;
@@ -205,10 +222,10 @@ export default function UploadMain({
                         fill="none"
                       >
                         <path
-                          fill="#FFF"
-                          fill-rule="evenodd"
+                          fill="#222"
+                          fillRule="evenodd"
                           d="M2.75 2.5A1.75 1.75 0 001 4.25v1C1 6.216 1.784 7 2.75 7h1a1.75 1.75 0 001.732-1.5H6.5a.75.75 0 01.75.75v3.5A2.25 2.25 0 009.5 12h1.018c.121.848.85 1.5 1.732 1.5h1A1.75 1.75 0 0015 11.75v-1A1.75 1.75 0 0013.25 9h-1a1.75 1.75 0 00-1.732 1.5H9.5a.75.75 0 01-.75-.75v-3.5A2.25 2.25 0 006.5 4H5.482A1.75 1.75 0 003.75 2.5h-1zM2.5 4.25A.25.25 0 012.75 4h1a.25.25 0 01.25.25v1a.25.25 0 01-.25.25h-1a.25.25 0 01-.25-.25v-1zm9.75 6.25a.25.25 0 00-.25.25v1c0 .138.112.25.25.25h1a.25.25 0 00.25-.25v-1a.25.25 0 00-.25-.25h-1z"
-                          clip-rule="evenodd"
+                          clipRule="evenodd"
                         />
                       </svg>
                       <span>OCR Technology</span>
@@ -245,15 +262,15 @@ export default function UploadMain({
                     >
                       <path
                         d="M12 13.75V9.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
-                      <circle cx="12" cy="17" r="1" fill="#FFF" />
+                      <circle cx="12" cy="17" r="1" fill="#222" />
                       <path
                         d="M4.39877 20.25C3.64805 20.25 3.16502 19.4536 3.51196 18.7879L11.1132 4.20171C11.4869 3.48456 12.5131 3.48456 12.8868 4.20171L20.488 18.7879C20.835 19.4536 20.352 20.25 19.6012 20.25H4.39877Z"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -287,7 +304,7 @@ export default function UploadMain({
                         cx="12"
                         cy="12"
                         r="9.25"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
@@ -295,7 +312,7 @@ export default function UploadMain({
                         cx="12"
                         cy="12"
                         r="5.25"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
@@ -328,7 +345,7 @@ export default function UploadMain({
                         cx="12"
                         cy="5.5"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -337,7 +354,7 @@ export default function UploadMain({
                         cx="5.5"
                         cy="5.5"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -346,7 +363,7 @@ export default function UploadMain({
                         cx="18.5"
                         cy="5.5"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -355,7 +372,7 @@ export default function UploadMain({
                         cx="12"
                         cy="18.5"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -364,7 +381,7 @@ export default function UploadMain({
                         cx="5.5"
                         cy="18.5"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -373,7 +390,7 @@ export default function UploadMain({
                         cx="18.5"
                         cy="18.5"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -382,7 +399,7 @@ export default function UploadMain({
                         cx="12"
                         cy="12"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -391,7 +408,7 @@ export default function UploadMain({
                         cx="5.5"
                         cy="12"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -400,7 +417,7 @@ export default function UploadMain({
                         cx="18.5"
                         cy="12"
                         r="1.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeMiterlimit="10"
                         strokeLinecap="round"
@@ -437,14 +454,14 @@ export default function UploadMain({
                       <g clipPath="url(#clip0_305_27919)">
                         <path
                           d="M7.75 20.25V8.75C7.75 8.2 8.2 7.75 8.75 7.75H20.25"
-                          stroke="#FFF"
+                          stroke="#222"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                         <path
                           d="M16.25 3.75V15.25C16.25 15.8 15.8 16.25 15.25 16.25H3.75"
-                          stroke="#FFF"
+                          stroke="#222"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -489,13 +506,13 @@ export default function UploadMain({
                     >
                       <path
                         d="M21.25 12C21.25 17.1086 17.1086 21.25 12 21.25M2.75 12C2.75 6.89137 6.89137 2.75 12 2.75"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
                       <path
                         d="M17.25 12C17.25 9.10051 14.8995 6.75 12 6.75M12 17.25C9.10051 17.25 6.75 14.8995 6.75 12"
-                        stroke="#FFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
@@ -530,19 +547,19 @@ export default function UploadMain({
                     >
                       <path
                         d="M14.1625 18.4876L13.4417 19.2084C11.053 21.5971 7.18019 21.5971 4.79151 19.2084C2.40283 16.8198 2.40283 12.9469 4.79151 10.5583L5.51236 9.8374"
-                        stroke="#FFFFFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
                       <path
                         d="M9.8374 14.1625L14.1625 9.8374"
-                        stroke="#FFFFFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
                       <path
                         d="M9.8374 5.51236L10.5583 4.79151C12.9469 2.40283 16.8198 2.40283 19.2084 4.79151M18.4876 14.1625L19.2084 13.4417C20.4324 12.2177 21.0292 10.604 20.9988 9"
-                        stroke="#FFFFFF"
+                        stroke="#222"
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
@@ -551,7 +568,12 @@ export default function UploadMain({
                 </div>
 
                 <SegmentProcessingControls
-                  value={config.segment_processing || DEFAULT_SEGMENT_PROCESSING}
+                  value={
+                    config.segment_processing && 
+                    Object.keys(config.segment_processing).length > 0 
+                      ? config.segment_processing 
+                      : DEFAULT_SEGMENT_PROCESSING
+                  }
                   onChange={(value) =>
                     setConfig({
                       ...config,
@@ -561,6 +583,8 @@ export default function UploadMain({
                   showOnlyPage={
                     config.segmentation_strategy === SegmentationStrategy.Page
                   }
+                  selectedType={selectedSegmentType}
+                  onTypeChange={setSelectedSegmentType}
                 />
                 <Flex direction="row" mt="4" align="center">
                   <Text
@@ -581,7 +605,12 @@ export default function UploadMain({
               <div style={{ marginTop: "0px" }}>
                 <ChunkProcessingControls
                 docsUrl={`${DOCS_URL}/docs/features/chunking`}
-                value={config.chunk_processing || DEFAULT_CHUNK_PROCESSING}
+                value={
+                  config.chunk_processing && 
+                  Object.keys(config.chunk_processing).length > 0
+                    ? config.chunk_processing 
+                    : DEFAULT_CHUNK_PROCESSING
+                }
                 onChange={(value) =>
                   setConfig({
                     ...config,

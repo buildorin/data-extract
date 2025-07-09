@@ -19,69 +19,11 @@ export default function ApiKeyDialog({
 }: ApiKeyDialogProps) {
   return (
     <Dialog.Root open={showApiKey} onOpenChange={setShowApiKey}>
-      <Dialog.Trigger>
-        {phone ? (
-          <Text size="2" weight="regular" mt="2px" style={{ color: "#000000" }}>
-            API Key
-          </Text>
-        ) : (
-          <BetterButton>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 25 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <g clipPath="url(#clip0_113_1449)">
-                <path
-                  d="M17.25 7.75L21.75 12.08L17.25 16.25"
-                  stroke="#FFFFFF"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M7.75 16.25L3.25 11.92L7.75 7.75"
-                  stroke="#FFFFFF"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M10.75 19.25L14.25 4.75"
-                  stroke="#FFFFFF"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-              <defs>
-                <clipPath id="clip0_113_1449">
-                  <rect
-                    width="24"
-                    height="24"
-                    fill="white"
-                    transform="translate(0.5)"
-                  />
-                </clipPath>
-              </defs>
-            </svg>
-            <Text
-              size="2"
-              weight="medium"
-              style={{ color: "hsla(0, 0%, 100%)" }}
-            >
-              API Key
-            </Text>
-          </BetterButton>
-        )}
-      </Dialog.Trigger>
       <Dialog.Content
         style={{
-          backgroundColor: "#020809",
-          boxShadow: "0 0 0 1px hsla(0, 0%, 100%, 0.1)",
-          border: "1px solid hsla(0, 0%, 100%, 0.1)",
+          backgroundColor: "#181A1B",
+          boxShadow: "0 0 0 1px #232627",
+          border: "1px solid #232627",
           outline: "none",
           borderRadius: "8px",
           width: "fit-content",
@@ -120,8 +62,9 @@ export default function ApiKeyDialog({
             gap="4"
             p="4"
             style={{
-              border: "1px solid hsla(0, 0%, 100%, 0.2)",
+              border: "1px solid #232627",
               borderRadius: "4px",
+              background: "#232627",
             }}
           >
             <Text
