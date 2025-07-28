@@ -7,6 +7,11 @@ import {
 } from "material-react-table";
 import { IconButton, Tooltip, createTheme, ThemeProvider } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import FolderIcon from "@mui/icons-material/Folder";
+import DescriptionIcon from "@mui/icons-material/Description";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { useSearchParams } from "react-router-dom";
 import { TaskResponse } from "../../models/taskResponse.model";
 import { useTasksQuery } from "../../hooks/useTaskQuery";
@@ -23,9 +28,20 @@ import ReactJson from "react-json-view";
 import UploadDialog from "../Upload/UploadDialog";
 import Loader from "../../pages/Loader/Loader";
 
+// Extended interface for folder-like structure
+interface PackageItem {
+  id: string;
+  type: 'package' | 'files' | 'records';
+  packageName?: string;
+  task?: TaskResponse;
+  isExpanded?: boolean;
+  parentId?: string;
+}
+
 const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [expandedPackages, setExpandedPackages] = useState<Record<string, boolean>>({});
 
   // Set default values if params don't exist
   if (!searchParams.has("tablePageIndex"))
@@ -77,6 +93,53 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
     refetch,
   } = useTasksQuery(pagination.pageIndex + 1, pagination.pageSize);
 
+  // Transform tasks into hierarchical package structure
+  const packageItems = useMemo(() => {
+    if (!tasks) return [];
+    
+    const items: PackageItem[] = [];
+    
+    tasks.forEach((task) => {
+      const packageName = task.output?.file_name || `Package ${task.task_id.substring(0, 8)}`;
+      const packageId = `package-${task.task_id}`;
+      
+      // Add package row
+      items.push({
+        id: packageId,
+        type: 'package',
+        packageName,
+        task,
+        isExpanded: expandedPackages[packageId] || false,
+      });
+      
+      // Add sub-items if package is expanded
+      if (expandedPackages[packageId]) {
+        items.push({
+          id: `${packageId}-files`,
+          type: 'files',
+          task,
+          parentId: packageId,
+        });
+        
+        items.push({
+          id: `${packageId}-records`,
+          type: 'records',
+          task,
+          parentId: packageId,
+        });
+      }
+    });
+    
+    return items;
+  }, [tasks, expandedPackages]);
+
+  const togglePackage = (packageId: string) => {
+    setExpandedPackages(prev => ({
+      ...prev,
+      [packageId]: !prev[packageId]
+    }));
+  };
+
   const handleTaskClick = (task: TaskResponse) => {
     const newParams = new URLSearchParams(searchParams);
     if (context === "flows") {
@@ -91,140 +154,222 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
     setSearchParams(newParams, { replace: true });
   };
 
-  const columns = useMemo<MRT_ColumnDef<TaskResponse>[]>(
+  const columns = useMemo<MRT_ColumnDef<PackageItem>[]>(
     () => [
       {
-        accessorKey: "output.file_name",
-        header: context === "flows" ? "Flow Name" : "File Name",
-        Cell: ({ cell }) => (
-          <Tooltip arrow title={cell.getValue<string>()}>
-            <div
-              style={{
-                maxWidth: "200px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {cell.getValue<string>()}
-            </div>
-          </Tooltip>
-        ),
-      },
-      {
-        accessorKey: "task_id",
-        header: context === "flows" ? "Flow ID" : "Prep ID",
-        Cell: ({ cell }) => {
-          const fullId = cell.getValue<string>();
-          return (
-            <Tooltip arrow title={fullId}>
-              <div>{fullId.substring(0, 8)}...</div>
-            </Tooltip>
-          );
+        accessorKey: "packageName",
+        header: context === "flows" ? "Flow Name" : "Name",
+        Cell: ({ row }) => {
+          const item = row.original;
+          const paddingLeft = item.type === 'package' ? 0 : 32;
+          
+          if (item.type === 'package') {
+            return (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePackage(item.id);
+                  }}
+                  sx={{ p: 0.5 }}
+                >
+                  {item.isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+                </IconButton>
+                <FolderIcon sx={{ color: "#f39c12", fontSize: 20 }} />
+                <Tooltip arrow title={item.packageName}>
+                  <div
+                    style={{
+                      maxWidth: "200px",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {item.packageName}
+                  </div>
+                </Tooltip>
+              </Box>
+            );
+          } else if (item.type === 'files') {
+            return (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, pl: `${paddingLeft}px` }}>
+                <DescriptionIcon sx={{ color: "#3498db", fontSize: 18 }} />
+                <Text size="2">Borrower Files</Text>
+              </Box>
+            );
+          } else if (item.type === 'records') {
+            return (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, pl: `${paddingLeft}px` }}>
+                <AccountBalanceIcon sx={{ color: "#27ae60", fontSize: 18 }} />
+                <Text size="2">Transaction Records</Text>
+              </Box>
+            );
+          }
+          return null;
         },
       },
       {
-        accessorKey: "output.page_count",
+        accessorKey: "task.task_id",
+        header: context === "flows" ? "Flow ID" : "Package Id",
+        Cell: ({ row }) => {
+          const item = row.original;
+          if (item.type === 'package' && item.task) {
+            const fullId = item.task.task_id;
+            return (
+              <Tooltip arrow title={fullId}>
+                <div>{fullId.substring(0, 8)}...</div>
+              </Tooltip>
+            );
+          }
+          return item.type === 'package' ? null : '-';
+        },
+      },
+      {
+        accessorKey: "task.output.page_count",
         header: context === "flows" ? "Components" : "Pages",
         Cell: ({ row }) => {
-          if (context === "flows") {
-            return 8;
+          const item = row.original;
+          if (item.type === 'package') {
+            if (context === "flows") {
+              return 8;
+            }
+            return item.task?.output?.page_count || 0;
+          } else if (item.type === 'files') {
+            return item.task?.output?.page_count || 0;
+          } else if (item.type === 'records') {
+            return 'Integration Data';
           }
-          return row.original.output?.page_count || 0;
+          return null;
         },
       },
       {
-        accessorKey: "status",
+        accessorKey: "task.status",
         header: "Status",
-        Cell: ({ row }) => (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                backgroundColor:
-                  row.original.status === Status.Starting
-                    ? "#3498db" // blue
-                    : row.original.status === Status.Processing
-                    ? "#f39c12" // orange
-                    : row.original.status === Status.Failed
-                    ? "#e74c3c" // red
-                    : "transparent",
-                display:
-                  row.original.status === Status.Succeeded ? "none" : "block",
-              }}
-            />
-            {row.original.status}
-          </Box>
-        ),
+        Cell: ({ row }) => {
+          const item = row.original;
+          if (item.type === 'package' && item.task) {
+            return (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    backgroundColor:
+                      item.task.status === Status.Starting
+                        ? "#3498db" // blue
+                        : item.task.status === Status.Processing
+                        ? "#f39c12" // orange
+                        : item.task.status === Status.Failed
+                        ? "#e74c3c" // red
+                        : "transparent",
+                    display:
+                      item.task.status === Status.Succeeded ? "none" : "block",
+                  }}
+                />
+                {item.task.status}
+              </Box>
+            );
+          } else if (item.type === 'files') {
+            return 'Available';
+          } else if (item.type === 'records') {
+            return 'Connected';
+          }
+          return null;
+        },
       },
       {
-        accessorKey: "message",
-        header: "Message",
-        Cell: ({ cell }) => cell.getValue<string>(),
-      },
-      {
-        accessorKey: "created_at",
+        accessorKey: "task.created_at",
         header: "Created At",
-        Cell: ({ cell }) => new Date(cell.getValue<string>()).toLocaleString(),
-      },
-      {
-        accessorKey: "started_at",
-        header: "Started At",
-        Cell: ({ cell }) => {
-          const dateValue = cell.getValue<string>();
-          return dateValue ? new Date(dateValue).toLocaleString() : "N/A";
+        Cell: ({ row }) => {
+          const item = row.original;
+          if (item.type === 'package' && item.task) {
+            return new Date(item.task.created_at).toLocaleString();
+          }
+          return item.type === 'package' ? null : '-';
         },
       },
       {
-        accessorKey: "finished_at",
+        accessorKey: "task.finished_at",
         header: "Finished At",
-        Cell: ({ row, cell }) => {
-          const dateValue = cell.getValue<string>();
-          return (row.original.status === Status.Succeeded ||
-            row.original.status === Status.Failed) &&
-            dateValue
-            ? new Date(dateValue).toLocaleString()
-            : "N/A";
+        Cell: ({ row }) => {
+          const item = row.original;
+          if (item.type === 'package' && item.task) {
+            const dateValue = item.task.finished_at;
+            return (item.task.status === Status.Succeeded ||
+              item.task.status === Status.Failed) &&
+              dateValue
+              ? new Date(dateValue).toLocaleString()
+              : "N/A";
+          }
+          return item.type === 'package' ? null : '-';
         },
       },
       {
-        accessorKey: "expires_at",
+        accessorKey: "task.expires_at",
         header: "Expires At",
-        Cell: ({ cell }) => {
-          const dateValue = cell.getValue<string>();
-          return dateValue && dateValue !== "Null"
-            ? new Date(dateValue).toLocaleString()
-            : "N/A";
+        Cell: ({ row }) => {
+          const item = row.original;
+          if (item.type === 'package' && item.task) {
+            const dateValue = item.task.expires_at;
+            return dateValue && dateValue !== "Null"
+              ? new Date(dateValue).toLocaleString()
+              : "N/A";
+          }
+          return item.type === 'package' ? null : '-';
         },
       },
     ],
-    [context]
+    [context, togglePackage]
   );
 
-  const renderDetailPanel = ({ row }: { row: MRT_Row<TaskResponse> }) => (
-    <div
-      style={{
-        padding: "16px",
-        backgroundColor: "rgb(255, 255, 255, 0.05)",
-      }}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-    >
-      <ReactJson
-        src={row.original.configuration}
-        theme="monokai"
-        displayDataTypes={false}
-        enableClipboard={false}
-        style={{ backgroundColor: "transparent" }}
-        collapsed={1}
-        name={false}
-      />
-    </div>
-  );
+  const renderDetailPanel = ({ row }: { row: MRT_Row<PackageItem> }) => {
+    const item = row.original;
+    if (item.type === 'package' && item.task) {
+      return (
+        <div
+          style={{
+            padding: "16px",
+            backgroundColor: "rgb(255, 255, 255, 0.05)",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <ReactJson
+            src={item.task.configuration}
+            theme="monokai"
+            displayDataTypes={false}
+            enableClipboard={false}
+            style={{ backgroundColor: "transparent" }}
+            collapsed={1}
+            name={false}
+          />
+        </div>
+      );
+    } else if (item.type === 'records') {
+      return (
+        <div
+          style={{
+            padding: "16px",
+            backgroundColor: "rgb(255, 255, 255, 0.05)",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <Text size="2" style={{ color: "#666" }}>
+            Integration records pulled from finance systems would be displayed here.
+            This includes data from selected providers like Plaid, Experian, Pinwheel, etc.
+          </Text>
+        </div>
+      );
+    }
+    return null;
+  };
 
   const tableTheme = useMemo(
     () =>
@@ -443,59 +588,76 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
   );
 
   const handleDeleteSelected = async () => {
-    const selectedTaskIds = Object.keys(rowSelection);
-    if (selectedTaskIds.length === 0) return;
+    const selectedItemIds = Object.keys(rowSelection);
+    if (selectedItemIds.length === 0) return;
 
-    const deletableTaskIds = selectedTaskIds.filter((taskId) => {
-      const task = tasks?.find((t) => t.task_id === taskId);
-      return (
-        task?.status === Status.Succeeded ||
-        task?.status === Status.Failed ||
-        task?.status === Status.Cancelled
-      );
-    });
+    const deletableTaskIds = selectedItemIds
+      .map((itemId) => {
+        const item = packageItems.find((item) => item.id === itemId);
+        return item?.type === 'package' && item.task ? item.task.task_id : null;
+      })
+      .filter((taskId): taskId is string => taskId !== null)
+      .filter((taskId) => {
+        const task = tasks?.find((t) => t.task_id === taskId);
+        return (
+          task?.status === Status.Succeeded ||
+          task?.status === Status.Failed ||
+          task?.status === Status.Cancelled
+        );
+      });
 
     if (deletableTaskIds.length === 0) {
-      toast.error("Only Succeeded, Failed, or Cancelled tasks can be deleted.");
+      toast.error("Only Succeeded, Failed, or Cancelled packages can be deleted.");
       return;
     }
 
-    const nonDeletableCount = selectedTaskIds.length - deletableTaskIds.length;
+    const nonDeletableCount = selectedItemIds.length - deletableTaskIds.length;
 
     try {
       setRowSelection({});
       await deleteTasks(deletableTaskIds);
 
       toast.success(
-        `Successfully deleted ${deletableTaskIds.length} task${
+        `Successfully deleted ${deletableTaskIds.length} package${
           deletableTaskIds.length === 1 ? "" : "s"
         }` +
           (nonDeletableCount > 0
-            ? `. ${nonDeletableCount} task${
+            ? `. ${nonDeletableCount} item${
                 nonDeletableCount === 1 ? " was" : "s were"
               } skipped as ${
                 nonDeletableCount === 1 ? "it wasn't" : "they weren't"
-              } completed.`
+              } a completed package.`
             : "")
       );
 
       refetch();
     } catch (error) {
-      console.error("Error deleting tasks:", error);
-      toast.error("Failed to delete tasks. Please try again.");
+      console.error("Error deleting packages:", error);
+      toast.error("Failed to delete packages. Please try again.");
     }
   };
 
   const handleCancelSelected = async () => {
-    const selectedTaskIds = Object.keys(rowSelection);
-    if (selectedTaskIds.length === 0) return;
+    const selectedItemIds = Object.keys(rowSelection);
+    if (selectedItemIds.length === 0) return;
 
-    const cancellableTaskIds = selectedTaskIds.filter((taskId) => {
-      const task = tasks?.find((t) => t.task_id === taskId);
-      return task?.status === Status.Starting;
-    });
+    const cancellableTaskIds = selectedItemIds
+      .map((itemId) => {
+        const item = packageItems.find((item) => item.id === itemId);
+        return item?.type === 'package' && item.task ? item.task.task_id : null;
+      })
+      .filter((taskId): taskId is string => taskId !== null)
+      .filter((taskId) => {
+        const task = tasks?.find((t) => t.task_id === taskId);
+        return task?.status === Status.Starting;
+      });
 
-    const nonCancellableTaskDetails = selectedTaskIds
+    const nonCancellableTaskDetails = selectedItemIds
+      .map((itemId) => {
+        const item = packageItems.find((item) => item.id === itemId);
+        return item?.type === 'package' && item.task ? item.task.task_id : null;
+      })
+      .filter((taskId): taskId is string => taskId !== null)
       .filter((taskId) => !cancellableTaskIds.includes(taskId))
       .map((taskId) => {
         const task = tasks?.find((t) => t.task_id === taskId);
@@ -509,9 +671,9 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           : "already completed";
       toast.error(
         `Cannot cancel ${
-          selectedTaskIds.length === 1 ? "this task" : "these tasks"
+          selectedItemIds.length === 1 ? "this package" : "these packages"
         } as ${
-          selectedTaskIds.length === 1 ? "it is" : "they are"
+          selectedItemIds.length === 1 ? "it is" : "they are"
         } ${statusMessage}.`
       );
       return;
@@ -522,11 +684,11 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
       setRowSelection({});
 
       toast.success(
-        `Successfully cancelled ${cancellableTaskIds.length} task${
+        `Successfully cancelled ${cancellableTaskIds.length} package${
           cancellableTaskIds.length === 1 ? "" : "s"
         }` +
           (nonCancellableTaskDetails.length > 0
-            ? `. ${nonCancellableTaskDetails.length} task${
+            ? `. ${nonCancellableTaskDetails.length} package${
                 nonCancellableTaskDetails.length === 1 ? " was" : "s were"
               } skipped as ${
                 nonCancellableTaskDetails.length === 1 ? "it was" : "they were"
@@ -536,26 +698,32 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
 
       refetch();
     } catch (error) {
-      console.error("Error cancelling tasks:", error);
-      toast.error("Failed to cancel tasks. Please try again.");
+      console.error("Error cancelling packages:", error);
+      toast.error("Failed to cancel packages. Please try again.");
     }
   };
 
   const handleRetrySelected = async () => {
-    const selectedTaskIds = Object.keys(rowSelection);
-    if (selectedTaskIds.length === 0) return;
+    const selectedItemIds = Object.keys(rowSelection);
+    if (selectedItemIds.length === 0) return;
 
-    const retryableTaskIds = selectedTaskIds.filter((taskId) => {
-      const task = tasks?.find((t) => t.task_id === taskId);
-      return task?.status === Status.Failed;
-    });
+    const retryableTaskIds = selectedItemIds
+      .map((itemId) => {
+        const item = packageItems.find((item) => item.id === itemId);
+        return item?.type === 'package' && item.task ? item.task.task_id : null;
+      })
+      .filter((taskId): taskId is string => taskId !== null)
+      .filter((taskId) => {
+        const task = tasks?.find((t) => t.task_id === taskId);
+        return task?.status === Status.Failed;
+      });
 
     if (retryableTaskIds.length === 0) {
-      toast.error("No tasks can be retried. Only Failed tasks can be retried.");
+      toast.error("No packages can be retried. Only Failed packages can be retried.");
       return;
     }
 
-    const nonRetryableCount = selectedTaskIds.length - retryableTaskIds.length;
+    const nonRetryableCount = selectedItemIds.length - retryableTaskIds.length;
 
     try {
       setRowSelection({});
@@ -566,36 +734,44 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
       await Promise.all(retryPromises);
 
       toast.success(
-        `Successfully initiated retry for ${retryableTaskIds.length} task${
+        `Successfully initiated retry for ${retryableTaskIds.length} package${
           retryableTaskIds.length === 1 ? "" : "s"
         }` +
           (nonRetryableCount > 0
-            ? `. ${nonRetryableCount} task${
+            ? `. ${nonRetryableCount} item${
                 nonRetryableCount === 1 ? " was" : "s were"
               } skipped as ${
                 nonRetryableCount === 1 ? "it wasn't" : "they weren't"
-              } in a Failed state.`
+              } a Failed package.`
             : "")
       );
 
       refetch();
     } catch (error) {
-      console.error("Error retrying tasks:", error);
-      toast.error("Failed to retry tasks. Please try again.");
+      console.error("Error retrying packages:", error);
+      toast.error("Failed to retry packages. Please try again.");
     }
   };
 
   const hasSelectedCancellableTasks = () => {
-    return Object.keys(rowSelection).some((taskId) => {
-      const task = tasks?.find((t) => t.task_id === taskId);
-      return task?.status === Status.Starting;
+    return Object.keys(rowSelection).some((itemId) => {
+      const item = packageItems.find((item) => item.id === itemId);
+      if (item?.type === 'package' && item.task) {
+        const task = tasks?.find((t) => t.task_id === item.task.task_id);
+        return task?.status === Status.Starting;
+      }
+      return false;
     });
   };
 
   const hasSelectedFailedTasks = () => {
-    return Object.keys(rowSelection).some((taskId) => {
-      const task = tasks?.find((t) => t.task_id === taskId);
-      return task?.status === Status.Failed;
+    return Object.keys(rowSelection).some((itemId) => {
+      const item = packageItems.find((item) => item.id === itemId);
+      if (item?.type === 'package' && item.task) {
+        const task = tasks?.find((t) => t.task_id === item.task.task_id);
+        return task?.status === Status.Failed;
+      }
+      return false;
     });
   };
 
@@ -648,7 +824,7 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
         <ThemeProvider theme={tableTheme}>
           <MaterialReactTable
             columns={columns}
-            data={tasks || []}
+            data={packageItems}
             enableColumnPinning
             enableRowSelection
             enablePagination
@@ -737,12 +913,12 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                               </clipPath>
                             </defs>
                           </svg>
-                          <Text size="1">Cancel Extracts</Text>
+                          <Text size="1">Cancel Packages</Text>
                         </BetterButton>
                       </Tooltip>
                     )}
                     {hasSelectedFailedTasks() && (
-                      <Tooltip arrow title="Retry Selected Failed Extracts">
+                      <Tooltip arrow title="Retry Selected Failed Packages">
                         <BetterButton onClick={handleRetrySelected}>
                           <svg
                             width="20"
@@ -785,7 +961,7 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                             </defs>
                           </svg>
 
-                          <Text size="1">Retry Preplines</Text>
+                          <Text size="1">Retry Package Creation</Text>
                         </BetterButton>
                       </Tooltip>
                     )}
@@ -840,7 +1016,7 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                             strokeLinejoin="round"
                           />
                         </svg>{" "}
-                        <Text size="1">Delete Preplines</Text>
+                        <Text size="1">Delete Package</Text>
                       </BetterButton>
                     </Tooltip>
                   </>
@@ -849,52 +1025,56 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
             )}
             enableExpanding
             renderDetailPanel={renderDetailPanel}
-            muiTableBodyRowProps={({ row }) => ({
-              onClick: (event) => {
-                if (
-                  !(event.target as HTMLElement)
-                    .closest(".MuiTableCell-root")
-                    ?.classList.contains("MuiTableCell-paddingNone")
-                ) {
-                  if (context === "flows") {
-                    handleTaskClick(row.original);
-                  } else {
-                    if (row.original.message === "Task succeeded") {
-                      handleTaskClick(row.original);
-                    } else if (
-                      row.original.status !== Status.Failed &&
-                      row.original.status !== Status.Succeeded
-                    ) {
-                      refetch();
+            muiTableBodyRowProps={({ row }) => {
+              const item = row.original;
+              const isClickable = 
+                item.type === 'package' ||
+                (item.type === 'files' && item.task?.message === "Task succeeded") ||
+                item.type === 'records';
+
+              return {
+                onClick: (event) => {
+                  if (
+                    !(event.target as HTMLElement)
+                      .closest(".MuiTableCell-root")
+                      ?.classList.contains("MuiTableCell-paddingNone")
+                  ) {
+                    if (item.type === 'package') {
+                      // Toggle expansion for package rows
+                      togglePackage(item.id);
+                    } else if (item.type === 'files' && item.task) {
+                      // Navigate to Document Extract for Files
+                      if (context === "flows" || item.task.message === "Task succeeded") {
+                        handleTaskClick(item.task);
+                      } else if (
+                        item.task.status !== Status.Failed &&
+                        item.task.status !== Status.Succeeded
+                      ) {
+                        refetch();
+                      }
+                    } else if (item.type === 'records') {
+                      // Show records detail panel
+                      console.log('Show integration records from finance systems');
                     }
                   }
-                }
-              },
-              sx: {
-                cursor:
-                  context === "flows" ||
-                  row.original.message === "Task succeeded" ||
-                  (row.original.status !== Status.Failed &&
-                    row.original.status !== Status.Succeeded)
-                    ? "pointer"
-                    : "default",
-                "&:hover": {
-                  backgroundColor:
-                    context === "flows" ||
-                    row.original.message === "Task succeeded" ||
-                    (row.original.status !== Status.Failed &&
-                      row.original.status !== Status.Succeeded)
+                },
+                sx: {
+                  cursor: isClickable ? "pointer" : "default",
+                  backgroundColor: item.type !== 'package' ? 'rgba(0,0,0,0.02)' : 'inherit',
+                  "&:hover": {
+                    backgroundColor: isClickable
                       ? "#f8f8f8 !important"
                       : "#ffffff !important",
-                },
-                "&.Mui-TableBodyCell-DetailPanel": {
-                  height: 0,
-                  "& > td": {
-                    padding: 0,
+                  },
+                  "&.Mui-TableBodyCell-DetailPanel": {
+                    height: 0,
+                    "& > td": {
+                      padding: 0,
+                    },
                   },
                 },
-              },
-            })}
+              };
+            }}
             onRowSelectionChange={setRowSelection}
           />
         </ThemeProvider>

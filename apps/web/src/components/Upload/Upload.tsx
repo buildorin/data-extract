@@ -112,7 +112,7 @@ export default function Upload({
               ? `${files.length} ${
                   files.length === 1 ? "File" : "Files"
                 } Uploaded`
-              : "Add Documents"}
+              : "Extract & Verify"}
           </Text>
           <Text
             size="4"
@@ -124,7 +124,7 @@ export default function Upload({
               ? `${files.length} ${
                   files.length === 1 ? "file" : "files"
                 } selected`
-              : "Drop files or Click here"}
+              : "Add Document(s) here"}
           </Text>
           <Flex direction="column" gap="1" wrap="wrap" mt="8px">
             <Flex direction="row" gap="2" wrap="wrap">

@@ -120,15 +120,29 @@ export const PDF = memo(
         <Document
           file={inputFileUrl}
           onLoadSuccess={(document: pdfjs.PDFDocumentProxy) => {
+            console.log("PDF loaded successfully:", inputFileUrl, "Pages:", document.numPages);
             setNumPages(document.numPages);
             onLoadSuccess?.(document.numPages);
+          }}
+          onLoadError={(error) => {
+            console.error("PDF load error:", error, "URL:", inputFileUrl);
           }}
           loading={
             <div style={{ width: "100%", height: "calc(100vh - 132px)" }}>
               <Loader />
             </div>
           }
-          error={<div className="error">Failed to load PDF</div>}
+          error={
+            <div className="error" style={{ padding: "20px", textAlign: "center" }}>
+              <div>Failed to load PDF</div>
+              <div style={{ fontSize: "12px", marginTop: "8px", opacity: 0.7 }}>
+                URL: {inputFileUrl}
+              </div>
+              <div style={{ fontSize: "12px", marginTop: "4px", opacity: 0.7 }}>
+                Check browser console for details
+              </div>
+            </div>
+          }
           options={options}
         >
           <Flex

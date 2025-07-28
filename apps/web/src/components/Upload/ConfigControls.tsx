@@ -220,7 +220,7 @@ export function SegmentProcessingControls({
   }, []);
 
   const isModified = (type: keyof SegmentProcessing) => {
-    const defaultConfig = DEFAULT_SEGMENT_PROCESSING[type] || {};
+    const defaultConfig = DEFAULT_SEGMENT_PROCESSING[type];
     const currentConfig = value[type] || {};
 
     const defaultSources = defaultConfig.embed_sources ?? [
@@ -437,46 +437,6 @@ export function SegmentProcessingControls({
           </div>
         </div>
 
-        {/** ==== Custom LLM ==== **/}
-        <div className="config-card">
-          <div
-            className="config-card-header"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text size="3" weight="bold" className="white">
-              Custom LLM
-            </Text>
-
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={currentSources.includes(EmbedSource.LLM)}
-                onChange={() => toggleEmbedSource(EmbedSource.LLM)}
-              />
-            </label>
-          </div>
-
-          <input
-            type="text"
-            className="llm-input"
-            placeholder="Enter custom prompt..."
-            value={value[selectedType]?.llm || ""}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                [selectedType]: {
-                  ...(value[selectedType] || {}),
-                  llm: e.target.value,
-                },
-              })
-            }
-          />
-        </div>
-
         {/** ==== Image Cropping ==== **/}
         <ToggleGroup
           docHover={false}
@@ -509,10 +469,12 @@ export function ChunkProcessingControls({
   value,
   onChange,
   docsUrl,
+  hideTokenizer = false,
 }: {
   value: ChunkProcessing;
   onChange: (value: ChunkProcessing) => void;
   docsUrl?: string;
+  hideTokenizer?: boolean;
 }) {
   // Dropdown state for Tokenizer picker
   const [isTokOpen, setIsTokOpen] = useState(false);
@@ -568,28 +530,28 @@ export function ChunkProcessingControls({
             <g clipPath="url(#clip0_305_31854)">
               <path
                 d="M9.25 16C9.25 14.2051 7.79493 12.75 6 12.75C4.20507 12.75 2.75 14.2051 2.75 16C2.75 17.7949 4.20507 19.25 6 19.25C7.79493 19.25 9.25 17.7949 9.25 16Z"
-                stroke="#222"
+                stroke="#FFF"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M16.8699 4.75L8.85994 17.55L8.68994 17.82"
-                stroke="#222"
+                stroke="#FFF"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M14.75 16C14.75 17.7949 16.2051 19.25 18 19.25C19.7949 19.25 21.25 17.7949 21.25 16C21.25 14.2051 19.7949 12.75 18 12.75C16.2051 12.75 14.75 14.2051 14.75 16Z"
-                stroke="#222"
+                stroke="#FFF"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M15.3099 17.82L15.1399 17.55L7.12988 4.75"
-                stroke="#222"
+                stroke="#FFF"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -668,6 +630,7 @@ export function ChunkProcessingControls({
         </div>
 
         {/* 2) Tokenizer sub–card */}
+        {!hideTokenizer && (
         <div className="config-card">
           <div className="config-card-header">
             <Text size="3" weight="bold" className="white">
@@ -751,6 +714,7 @@ export function ChunkProcessingControls({
             />
           )}
         </div>
+        )}
 
         {/* 3) Ignore Headers & Footers sub–card */}
         <ToggleGroup
@@ -885,7 +849,7 @@ export function LlmProcessingControls({
           >
             <path
               d="M19 3V7M17 5H21M19 17V21M17 19H21M10 5L8.53001 8.72721C8.3421 9.20367 8.24814 9.4419 8.10427 9.64278C7.97675 9.82084 7.82084 9.97675 7.64278 10.1043C7.4419 10.2481 7.20367 10.3421 6.72721 10.53L3 12L6.72721 13.47C7.20367 13.6579 7.4419 13.7519 7.64278 13.8957C7.82084 14.0233 7.97675 14.1792 8.10427 14.3572C8.24814 14.5581 8.3421 14.7963 8.53001 15.2728L10 19L11.47 15.2728C11.6579 14.7963 11.7519 14.5581 11.8957 14.3572C12.0233 14.1792 12.1792 14.0233 12.3572 13.8957C12.5581 13.7519 12.7963 13.6579 13.2728 13.47L17 12L13.2728 10.53C12.7963 10.3421 12.5581 10.2481 12.3572 10.1043C12.1792 9.97675 12.0233 9.82084 11.8957 9.64278C11.7519 9.4419 11.6579 9.20367 11.47 8.72721L10 5Z"
-              stroke="#222"
+              stroke="#FFF"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"

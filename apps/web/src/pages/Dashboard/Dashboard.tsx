@@ -445,7 +445,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Extracts" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Preplines
+                  Packages
                 </Text>
               </Flex>
               <Flex

@@ -46,6 +46,13 @@
   padding: 4px 0px;
 }
 
+.config-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  padding: 4px 0px;
+}
+
 .config-card, .card, .upload-form-container .config-card {
   background: white !important;
   color: #000 !important;
