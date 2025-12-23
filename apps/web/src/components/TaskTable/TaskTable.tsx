@@ -5,13 +5,14 @@ import {
   type MRT_PaginationState,
   type MRT_Row,
 } from "material-react-table";
-import { IconButton, Tooltip, createTheme, ThemeProvider } from "@mui/material";
+import { IconButton, Tooltip, createTheme, ThemeProvider, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import FolderIcon from "@mui/icons-material/Folder";
 import DescriptionIcon from "@mui/icons-material/Description";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import { useSearchParams } from "react-router-dom";
 import { TaskResponse } from "../../models/taskResponse.model";
 import { useTasksQuery } from "../../hooks/useTaskQuery";
@@ -31,7 +32,7 @@ import Loader from "../../pages/Loader/Loader";
 // Extended interface for folder-like structure
 interface PackageItem {
   id: string;
-  type: 'package' | 'files' | 'records';
+  type: 'package' | 'files' | 'records' | 'credit-risk';
   packageName?: string;
   task?: TaskResponse;
   isExpanded?: boolean;
@@ -42,6 +43,7 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
   const [searchParams, setSearchParams] = useSearchParams();
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [expandedPackages, setExpandedPackages] = useState<Record<string, boolean>>({});
+  const [showCreditRiskGraph, setShowCreditRiskGraph] = useState<string | null>(null);
 
   // Set default values if params don't exist
   if (!searchParams.has("tablePageIndex"))
@@ -100,7 +102,12 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
     const items: PackageItem[] = [];
     
     tasks.forEach((task) => {
-      const packageName = task.output?.file_name || `Package ${task.task_id.substring(0, 8)}`;
+      let packageName = task.output?.file_name || `Package ${task.task_id.substring(0, 8)}`;
+      // Trim file extension from package name
+      const lastDotIndex = packageName.lastIndexOf('.');
+      if (lastDotIndex > 0) {
+        packageName = packageName.substring(0, lastDotIndex);
+      }
       const packageId = `package-${task.task_id}`;
       
       // Add package row
@@ -124,6 +131,13 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
         items.push({
           id: `${packageId}-records`,
           type: 'records',
+          task,
+          parentId: packageId,
+        });
+        
+        items.push({
+          id: `${packageId}-credit-risk`,
+          type: 'credit-risk',
           task,
           parentId: packageId,
         });
@@ -172,9 +186,13 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                     e.stopPropagation();
                     togglePackage(item.id);
                   }}
-                  sx={{ p: 0.5 }}
+                  sx={{ 
+                    p: 0.5,
+                    transform: item.isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }}
                 >
-                  {item.isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+                  <ChevronRightIcon />
                 </IconButton>
                 <FolderIcon sx={{ color: "#f39c12", fontSize: 20 }} />
                 <Tooltip arrow title={item.packageName}>
@@ -194,15 +212,22 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           } else if (item.type === 'files') {
             return (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, pl: `${paddingLeft}px` }}>
-                <DescriptionIcon sx={{ color: "#3498db", fontSize: 18 }} />
+                <DescriptionIcon className="sub-item-icon" />
                 <Text size="2">Borrower Files</Text>
               </Box>
             );
           } else if (item.type === 'records') {
             return (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, pl: `${paddingLeft}px` }}>
-                <AccountBalanceIcon sx={{ color: "#27ae60", fontSize: 18 }} />
+                <AccountBalanceIcon className="sub-item-icon" />
                 <Text size="2">Transaction Records</Text>
+              </Box>
+            );
+          } else if (item.type === 'credit-risk') {
+            return (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, pl: `${paddingLeft}px` }}>
+                <AssessmentIcon className="sub-item-icon" />
+                <Text size="2">Credit Risk Models</Text>
               </Box>
             );
           }
@@ -238,7 +263,9 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           } else if (item.type === 'files') {
             return item.task?.output?.page_count || 0;
           } else if (item.type === 'records') {
-            return 'Integration Data';
+            return 'Integration Records';
+          } else if (item.type === 'credit-risk') {
+            return 'AI Risk Analysis';
           }
           return null;
         },
@@ -272,9 +299,65 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
               </Box>
             );
           } else if (item.type === 'files') {
-            return 'Available';
+            return (
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  fontSize: '11px',
+                  padding: '4px 12px',
+                  minWidth: '70px',
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: '#45a049'
+                  }
+                }}
+              >
+                Verify
+              </Button>
+            );
           } else if (item.type === 'records') {
-            return 'Connected';
+            return (
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  backgroundColor: '#2196F3',
+                  color: 'white',
+                  fontSize: '11px',
+                  padding: '4px 12px',
+                  minWidth: '70px',
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: '#1976D2'
+                  }
+                }}
+              >
+                Live
+              </Button>
+            );
+          } else if (item.type === 'credit-risk') {
+            return (
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  backgroundColor: '#FF9800',
+                  color: 'white',
+                  fontSize: '11px',
+                  padding: '4px 8px',
+                  minWidth: '70px',
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: '#F57C00'
+                  }
+                }}
+              >
+                Score
+              </Button>
+            );
           }
           return null;
         },
@@ -364,6 +447,24 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           <Text size="2" style={{ color: "#666" }}>
             Integration records pulled from finance systems would be displayed here.
             This includes data from selected providers like Plaid, Experian, Pinwheel, etc.
+          </Text>
+        </div>
+      );
+    } else if (item.type === 'credit-risk') {
+      return (
+        <div
+          style={{
+            padding: "16px",
+            backgroundColor: "rgb(255, 255, 255, 0.05)",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <Text size="2" style={{ color: "#666" }}>
+            Credit risk models and analytics would be displayed here.
+            This includes risk scores, probability models, and credit assessment data.
           </Text>
         </div>
       );
@@ -465,6 +566,10 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                 color: "#222",
                 height: "20px",
                 width: "20px",
+                "&.sub-item-icon": {
+                  color: "#000000 !important",
+                  fontSize: "18px !important"
+                }
               },
             },
           },
@@ -1023,14 +1128,14 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                 )}
               </Flex>
             )}
-            enableExpanding
-            renderDetailPanel={renderDetailPanel}
+            enableExpanding={false}
             muiTableBodyRowProps={({ row }) => {
               const item = row.original;
               const isClickable = 
                 item.type === 'package' ||
                 (item.type === 'files' && item.task?.message === "Task succeeded") ||
-                item.type === 'records';
+                item.type === 'records' ||
+                item.type === 'credit-risk';
 
               return {
                 onClick: (event) => {
@@ -1055,6 +1160,9 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
                     } else if (item.type === 'records') {
                       // Show records detail panel
                       console.log('Show integration records from finance systems');
+                    } else if (item.type === 'credit-risk') {
+                      // Show credit risk graph
+                      setShowCreditRiskGraph(item.task?.task_id || 'default');
                     }
                   }
                 },
@@ -1079,6 +1187,228 @@ const TaskTable = ({ context = "extracts" }: { context?: "extracts" | "flows" })
           />
         </ThemeProvider>
       )}
+      
+      {/* Credit Risk Graph Dialog */}
+      <Dialog
+        open={showCreditRiskGraph !== null}
+        onClose={() => setShowCreditRiskGraph(null)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Credit Risk Analysis</DialogTitle>
+        <DialogContent>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            {/* Home-Equity Credit Risk Heat Map Dashboard */}
+            <svg width="1000" height="700" viewBox="0 0 1000 700" style={{ border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: '#f8f9fa' }}>
+              <defs>
+                {/* Risk Level Gradients */}
+                <linearGradient id="criticalRisk" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#dc2626" stopOpacity="0.9"/>
+                  <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.8"/>
+                </linearGradient>
+                <linearGradient id="highRisk" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ea580c" stopOpacity="0.9"/>
+                  <stop offset="100%" stopColor="#c2410c" stopOpacity="0.8"/>
+                </linearGradient>
+                <linearGradient id="mediumRisk" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#eab308" stopOpacity="0.9"/>
+                  <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.8"/>
+                </linearGradient>
+                <linearGradient id="lowRisk" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#16a34a" stopOpacity="0.9"/>
+                  <stop offset="100%" stopColor="#15803d" stopOpacity="0.8"/>
+                </linearGradient>
+                <linearGradient id="minimalRisk" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0284c7" stopOpacity="0.9"/>
+                  <stop offset="100%" stopColor="#0369a1" stopOpacity="0.8"/>
+                </linearGradient>
+                
+                {/* Shadow Filter */}
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="black" floodOpacity="0.2"/>
+                </filter>
+              </defs>
+              
+              {/* Title */}
+              <text x="500" y="35" textAnchor="middle" fontSize="22" fill="#1f2937" fontWeight="bold">
+                Home-Equity Credit Risk Assessment Matrix
+              </text>
+              <text x="500" y="55" textAnchor="middle" fontSize="14" fill="#6b7280">
+                HELOC Underwriting Dashboard - LTV vs DTI Risk Analysis
+              </text>
+              
+              {/* Main Heat Map Grid */}
+              <g transform="translate(80,80)">
+                {/* Y-axis Label */}
+                <text x="-40" y="200" fontSize="14" fill="#374151" fontWeight="bold" transform="rotate(-90, -40, 200)">
+                  Debt-to-Income Ratio (DTI %)
+                </text>
+                
+                {/* X-axis Label */}
+                <text x="350" y="450" fontSize="14" fill="#374151" fontWeight="bold" textAnchor="middle">
+                  Loan-to-Value Ratio (LTV %)
+                </text>
+                
+                {/* DTI Labels (Y-axis) */}
+                <text x="-15" y="75" fontSize="12" fill="#6b7280" textAnchor="end">50%+</text>
+                <text x="-15" y="145" fontSize="12" fill="#6b7280" textAnchor="end">43%</text>
+                <text x="-15" y="215" fontSize="12" fill="#6b7280" textAnchor="end">36%</text>
+                <text x="-15" y="285" fontSize="12" fill="#6b7280" textAnchor="end">28%</text>
+                <text x="-15" y="355" fontSize="12" fill="#6b7280" textAnchor="end">≤20%</text>
+                
+                {/* LTV Labels (X-axis) */}
+                <text x="70" y="430" fontSize="12" fill="#6b7280" textAnchor="middle">≤60%</text>
+                <text x="175" y="430" fontSize="12" fill="#6b7280" textAnchor="middle">70%</text>
+                <text x="280" y="430" fontSize="12" fill="#6b7280" textAnchor="middle">80%</text>
+                <text x="385" y="430" fontSize="12" fill="#6b7280" textAnchor="middle">85%</text>
+                <text x="490" y="430" fontSize="12" fill="#6b7280" textAnchor="middle">90%+</text>
+                
+                {/* Heat Map Cells */}
+                {/* Row 1: DTI 50%+ */}
+                <rect x="35" y="50" width="70" height="50" fill="url(#lowRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="70" y="80" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">8.2%</text>
+                
+                <rect x="140" y="50" width="70" height="50" fill="url(#mediumRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="175" y="80" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">12.4%</text>
+                
+                <rect x="245" y="50" width="70" height="50" fill="url(#highRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="280" y="80" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">18.7%</text>
+                
+                <rect x="350" y="50" width="70" height="50" fill="url(#criticalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="385" y="80" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">28.9%</text>
+                
+                <rect x="455" y="50" width="70" height="50" fill="url(#criticalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="490" y="80" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">35.2%</text>
+                
+                {/* Row 2: DTI 43% */}
+                <rect x="35" y="120" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="70" y="150" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">4.8%</text>
+                
+                <rect x="140" y="120" width="70" height="50" fill="url(#lowRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="175" y="150" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">7.1%</text>
+                
+                <rect x="245" y="120" width="70" height="50" fill="url(#mediumRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="280" y="150" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">11.3%</text>
+                
+                <rect x="350" y="120" width="70" height="50" fill="url(#highRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="385" y="150" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">19.6%</text>
+                
+                <rect x="455" y="120" width="70" height="50" fill="url(#criticalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="490" y="150" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">31.4%</text>
+                
+                {/* Row 3: DTI 36% */}
+                <rect x="35" y="190" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="70" y="220" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">3.2%</text>
+                
+                <rect x="140" y="190" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="175" y="220" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">4.9%</text>
+                
+                <rect x="245" y="190" width="70" height="50" fill="url(#lowRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="280" y="220" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">8.1%</text>
+                
+                <rect x="350" y="190" width="70" height="50" fill="url(#mediumRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="385" y="220" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">14.2%</text>
+                
+                <rect x="455" y="190" width="70" height="50" fill="url(#highRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="490" y="220" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">22.8%</text>
+                
+                {/* Row 4: DTI 28% */}
+                <rect x="35" y="260" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="70" y="290" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">2.1%</text>
+                
+                <rect x="140" y="260" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="175" y="290" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">3.4%</text>
+                
+                <rect x="245" y="260" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="280" y="290" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">5.7%</text>
+                
+                <rect x="350" y="260" width="70" height="50" fill="url(#lowRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="385" y="290" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">9.8%</text>
+                
+                <rect x="455" y="260" width="70" height="50" fill="url(#mediumRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="490" y="290" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">16.3%</text>
+                
+                {/* Row 5: DTI ≤20% */}
+                <rect x="35" y="330" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="70" y="360" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">1.2%</text>
+                
+                <rect x="140" y="330" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="175" y="360" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">1.8%</text>
+                
+                <rect x="245" y="330" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="280" y="360" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">2.9%</text>
+                
+                <rect x="350" y="330" width="70" height="50" fill="url(#minimalRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="385" y="360" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">4.6%</text>
+                
+                <rect x="455" y="330" width="70" height="50" fill="url(#lowRisk)" filter="url(#shadow)" rx="4"/>
+                <text x="490" y="360" fontSize="11" fill="white" fontWeight="bold" textAnchor="middle">7.4%</text>
+              </g>
+              
+              {/* Legend */}
+              <g transform="translate(650,120)">
+                <rect x="0" y="0" width="250" height="220" fill="white" stroke="#d1d5db" strokeWidth="1" rx="8"/>
+                <text x="125" y="25" textAnchor="middle" fontSize="16" fill="#1f2937" fontWeight="bold">Risk Assessment Scale</text>
+                
+                <rect x="20" y="45" width="25" height="15" fill="url(#criticalRisk)" rx="2"/>
+                <text x="55" y="57" fontSize="12" fill="#1f2937">Critical Risk (25%+)</text>
+                <text x="55" y="70" fontSize="10" fill="#6b7280">Manual review required</text>
+                
+                <rect x="20" y="85" width="25" height="15" fill="url(#highRisk)" rx="2"/>
+                <text x="55" y="97" fontSize="12" fill="#1f2937">High Risk (15-25%)</text>
+                <text x="55" y="110" fontSize="10" fill="#6b7280">Enhanced documentation</text>
+                
+                <rect x="20" y="125" width="25" height="15" fill="url(#mediumRisk)" rx="2"/>
+                <text x="55" y="137" fontSize="12" fill="#1f2937">Medium Risk (8-15%)</text>
+                <text x="55" y="150" fontSize="10" fill="#6b7280">Standard processing</text>
+                
+                <rect x="20" y="165" width="25" height="15" fill="url(#lowRisk)" rx="2"/>
+                <text x="55" y="177" fontSize="12" fill="#1f2937">Low Risk (4-8%)</text>
+                <text x="55" y="190" fontSize="10" fill="#6b7280">Preferred rates eligible</text>
+                
+                <rect x="20" y="205" width="25" height="15" fill="url(#minimalRisk)" rx="2"/>
+                <text x="55" y="217" fontSize="12" fill="#1f2937">Minimal Risk (≤4%)</text>
+                <text x="55" y="230" fontSize="10" fill="#6b7280">Premium rates eligible</text>
+              </g>
+              
+              {/* Key Metrics Dashboard */}
+              <g transform="translate(650,360)">
+                <rect x="0" y="0" width="250" height="170" fill="white" stroke="#d1d5db" strokeWidth="1" rx="8"/>
+                <text x="125" y="25" textAnchor="middle" fontSize="16" fill="#1f2937" fontWeight="bold">Portfolio Metrics</text>
+                
+                <text x="20" y="50" fontSize="12" fill="#1f2937" fontWeight="medium">HELOC Volume (2024):</text>
+                <text x="20" y="68" fontSize="11" fill="#6b7280">• $359.9B nationwide (+8% YoY)</text>
+                <text x="20" y="83" fontSize="11" fill="#6b7280">• Avg balance: $45,157</text>
+                
+                <text x="20" y="110" fontSize="12" fill="#1f2937" fontWeight="medium">Model Performance:</text>
+                <text x="20" y="128" fontSize="11" fill="#6b7280">• Accuracy: 92.4%</text>
+                <text x="20" y="143" fontSize="11" fill="#6b7280">• AUC Score: 0.89</text>
+                <text x="20" y="158" fontSize="11" fill="#6b7280">• Model stability: High</text>
+              </g>
+              
+              {/* Risk Factors */}
+              <g transform="translate(60,560)">
+                <text x="0" y="25" fontSize="14" fill="#1f2937" fontWeight="bold">Critical Risk Factors:</text>
+                <text x="0" y="48" fontSize="12" fill="#374151">• LTV &gt; 85% combined with DTI &gt; 43% shows 28-35% default probability</text>
+                <text x="0" y="66" fontSize="12" fill="#374151">• Credit scores &lt; 620 increase risk by 40-60% across all LTV/DTI combinations</text>
+                <text x="0" y="84" fontSize="12" fill="#374151">• Geographic concentration in declining markets adds 15-25% risk premium</text>
+                <text x="0" y="102" fontSize="12" fill="#374151">• Property type: Condos and rural properties carry 20% higher risk than SFR</text>
+                
+                <text x="480" y="25" fontSize="14" fill="#1f2937" fontWeight="bold">Approval Guidelines (2024):</text>
+                <text x="480" y="48" fontSize="12" fill="#374151">• Maximum LTV: 85% (primary residence)</text>
+                <text x="480" y="66" fontSize="12" fill="#374151">• Maximum DTI: 43% (preferred ≤36%)</text>
+                <text x="480" y="84" fontSize="12" fill="#374151">• Minimum credit score: 620 (optimal 700+)</text>
+                <text x="480" y="102" fontSize="12" fill="#374151">• Property occupancy: Owner-occupied required</text>
+              </g>
+            </svg>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowCreditRiskGraph(null)} variant="contained" sx={{ backgroundColor: '#545454' }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Flex>
   );
 };

@@ -192,7 +192,7 @@ export default function UploadMain({
         <section
           className={`config-section ${!isAuthenticated ? "disabled" : ""}`}
         >
-          <TabControls tabLabels={["User Files", "Finance Records"]} title="Data Package">
+          <TabControls tabLabels={["User Files", "Finance Records"]} title="Loan Package">
             {/* Extract Tab */}
             <div>
               <div className="upload-section">
