@@ -53,7 +53,8 @@ async fn get_decoding_key() -> &'static DecodingKey {
             DecodingKey::from_rsa_components(
                 rs256_key["n"].as_str().expect("Missing 'n'"),
                 rs256_key["e"].as_str().expect("Missing 'e'"),
-            ).expect("Invalid RSA public key")
+            )
+            .expect("Invalid RSA public key")
         })
         .await
 }
