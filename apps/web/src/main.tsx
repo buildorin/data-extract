@@ -16,6 +16,7 @@ import Auth from "./auth/Auth.tsx";
 import AuthGuard from "./auth/AuthGuard.tsx";
 import store from "./store/store";
 import Dashboard from "./pages/Dashboard/Dashboard.tsx";
+import Landing from "./pages/Landing/Landing.tsx";
 import Checkout from "./pages/Checkout/Checkout";
 import { env } from "./config/env";
 
@@ -52,11 +53,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: (
-          <AuthGuard>
-            <Dashboard />
-          </AuthGuard>
-        ),
+        element: <Landing />,
       },
       {
         path: "dashboard",

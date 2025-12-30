@@ -105,26 +105,27 @@ export default function Upload({
           px="32px"
           style={{ border: "1px dashed hsla(0, 0%, 100%, 0.2)" }}
         >
-          <Text size="7" weight="bold" className="white">
+          <Text size="6" weight="medium" className="white">
             {isUploading
               ? "Processing Files..."
               : files.length > 0
               ? `${files.length} ${
                   files.length === 1 ? "File" : "Files"
                 } Uploaded`
-              : "Extract & Verify"}
+              : "AI Extract & Verify"}
           </Text>
           <Text
             size="4"
             className="white"
-            weight="medium"
+            weight="light"
             style={{ marginTop: "8px" }}
           >
             {files.length > 0
               ? `${files.length} ${
                   files.length === 1 ? "file" : "files"
                 } selected`
-              : "Add Document(s) here"}
+              : "Upload lease agreements, mortgage statements, and rent rolls to auto fill your capital package"}
+              <br />
           </Text>
           <Flex direction="column" gap="1" wrap="wrap" mt="8px">
             <Flex direction="row" gap="2" wrap="wrap">
