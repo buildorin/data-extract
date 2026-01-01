@@ -88,7 +88,7 @@ export default function UploadDialog({
             </defs>
           </svg>
           <Text size="3" weight="bold">
-            Loan Package
+            Deal Room
           </Text>
         </BetterButton>
       </Dialog.Trigger>

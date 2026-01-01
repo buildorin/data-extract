@@ -192,7 +192,7 @@ export default function UploadMain({
         <section
           className={`config-section ${!isAuthenticated ? "disabled" : ""}`}
         >
-          <TabControls tabLabels={["User Files", "Finance Records"]} title="Loan Package">
+          <TabControls tabLabels={["Property Assets", "Founder Financials"]} title="Verification Vault">
             {/* Extract Tab */}
             <div>
               <div className="upload-section">
@@ -965,7 +965,7 @@ export default function UploadMain({
                         />
                       </svg>
                       <Text size="3" weight="bold" className="white">
-                        Bank Transactions
+                        Bank Connections
                       </Text>
                     </Flex>
                   </div>
@@ -1089,7 +1089,7 @@ export default function UploadMain({
                         />
                       </svg>
                       <Text size="3" weight="bold" className="white">
-                        Income/Payroll
+                        Cashflow Analysis
                       </Text>
                     </Flex>
                   </div>

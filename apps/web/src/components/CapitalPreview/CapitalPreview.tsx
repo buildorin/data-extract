@@ -43,9 +43,9 @@ export default function CapitalPreview() {
           width: "100%",
         }}
       >
-        <Flex direction="column" gap="40px">
+        <Flex direction="column" gap="48px">
           {/* PROJECTED FUNDING CAPACITY */}
-          <Flex direction="column" gap="16px">
+          <Flex direction="column" gap="16px" style={{ marginTop: "12px" }}>
             <Text size="5" weight="bold" style={{ color: "#111" }}>
               PROJECTED FUNDING CAPACITY
             </Text>
@@ -53,11 +53,11 @@ export default function CapitalPreview() {
               Based on what you've shared, you may be able to access:
             </Text>
             <Text
-              size="8"
+              size="7"
               weight="bold"
               style={{ color: "#4CAF50", marginTop: "8px" }}
             >
-              $250k – $420k
+              $250K – $420K
             </Text>
             <Text size="3" style={{ color: "#666", marginTop: "8px" }}>
               Available immediately. No refinancing. No loss of control.
@@ -65,7 +65,7 @@ export default function CapitalPreview() {
           </Flex>
 
           {/* DEAL READINESS */}
-          <Flex direction="column" gap="16px">
+          <Flex direction="column" gap="16px" style={{ marginTop: "12px" }}>
             <Text size="5" weight="bold" style={{ color: "#111" }}>
               DEAL READINESS: 66%
             </Text>
@@ -129,7 +129,7 @@ export default function CapitalPreview() {
           </Flex>
 
           {/* YOUR NEXT STEPS */}
-          <Flex direction="column" gap="16px">
+          <Flex direction="column" gap="16px" style={{ marginTop: "12px" }}>
             <Text size="5" weight="bold" style={{ color: "#111" }}>
               YOUR NEXT STEPS
             </Text>

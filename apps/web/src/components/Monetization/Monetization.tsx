@@ -47,7 +47,7 @@ export default function Monetization() {
           }}
         >
           <Flex direction="column" gap="16px">
-            <Text size="7" weight="bold" style={{ color: "#111" }}>
+            <Text size="7" weight="medium" style={{ color: "#111" }}>
               Plan Your Strategy
             </Text>
             <Text size="3" style={{ color: "#666" }}>
@@ -104,7 +104,7 @@ export default function Monetization() {
           }}
         >
           <Flex direction="column" gap="16px">
-            <Text size="7" weight="bold" style={{ color: "#111" }}>
+            <Text size="7" weight="medium" style={{ color: "#111" }}>
               Unlock the Deal Room
             </Text>
             <Text size="3" style={{ color: "#666" }}>
@@ -116,7 +116,7 @@ export default function Monetization() {
                   🚀
                 </Text>
                 <Text size="3" style={{ color: "#111", lineHeight: "1.6" }}>
-                  <Text weight="bold">One-Click Data Room:</Text> Generate a compliant, shareable investor packet.
+                  <Text weight="bold">One-Click Data Room:</Text> Create a compliant, shareable packet for equity partners and lenders.
                 </Text>
               </Flex>
               <Flex align="start" gap="12px">
@@ -124,7 +124,7 @@ export default function Monetization() {
                   📄
                 </Text>
                 <Text size="3" style={{ color: "#111", lineHeight: "1.6" }}>
-                  <Text weight="bold">Automated Underwriting:</Text> Auto-draft term sheets and offering docs.
+                  <Text weight="bold">Automated Underwriting:</Text> Verify offering documents and auto-draft term sheets.
                 </Text>
               </Flex>
               <Flex align="start" gap="12px">
@@ -132,7 +132,7 @@ export default function Monetization() {
                   💰
                 </Text>
                 <Text size="3" style={{ color: "#111", lineHeight: "1.6" }}>
-                  <Text weight="bold">Capital Match:</Text> Get connected to our network of vetted partners.
+                  <Text weight="bold">Capital Raise:</Text> Open access to vetted partner network and investor pool.
                 </Text>
               </Flex>
             </Flex>
@@ -141,7 +141,7 @@ export default function Monetization() {
       </Flex>
 
       {/* Get Started Button */}
-      <Flex direction="column" align="center" gap="12px">
+      <Flex direction="column" align="center" gap="12px" style={{ marginTop: "24px" }}>
         <Button
           size="4"
           onClick={handleGetStarted}

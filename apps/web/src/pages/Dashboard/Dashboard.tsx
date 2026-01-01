@@ -2,6 +2,7 @@ import { Flex, Text } from "@radix-ui/themes";
 import "./Dashboard.css";
 import BetterButton from "../../components/BetterButton/BetterButton";
 import TaskTable from "../../components/TaskTable/TaskTable";
+import TaskCards from "../../components/TaskCards/TaskCards";
 import { useAuth } from "react-oidc-context";
 import useUser from "../../hooks/useUser";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -317,7 +318,7 @@ export default function Dashboard() {
         return {
           title: "",
           component: (
-            <TaskTable key={`task-table-${searchParams.toString()}`} context="extracts" />
+            <TaskCards key={`task-cards-${searchParams.toString()}`} context="extracts" />
           ),
         };
     }
@@ -445,7 +446,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Extracts" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Packages
+                  My Deals
                 </Text>
               </Flex>
               <Flex
@@ -466,7 +467,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Connectors" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Connectors
+                  Partners
                 </Text>
               </Flex>
               <Flex
@@ -487,7 +488,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Usage" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Usage
+                  Analytics
                 </Text>
               </Flex>
             </Flex>
@@ -542,7 +543,7 @@ export default function Dashboard() {
                       <Text size="2" weight="medium" style={{ color: "#111" }}>
                         {user?.data?.tier === "Free"
                           ? "Upgrade Plan"
-                          : "Manage Billing"}
+                          : "Manage Account"}
                       </Text>
                     </Flex>
                     <Flex
@@ -789,23 +790,6 @@ export default function Dashboard() {
                 style={{ color: "#545454" }}
               >
                 Help
-              </Text>
-            </Flex>
-            <Flex 
-              align="center" 
-              gap="2" 
-              style={{ cursor: "pointer" }}
-              onClick={handleGithubNav}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M9 19C4 20.5 4 16.5 2 16M22 22V18.13A3.37 3.37 0 0 0 21.24 15.5C21.24 15.5 21.07 15.5 20.68 15.5A5.59 5.59 0 0 1 22 10.42V6.57A3.87 3.87 0 0 0 21.07 3.5C20.6 3.5 20.4 3.5 20.05 3.64A7.72 7.72 0 0 0 16 5.5A7.72 7.72 0 0 0 11.95 3.64C11.6 3.5 11.4 3.5 10.93 3.5A3.87 3.87 0 0 0 10 6.57V10.42A5.59 5.59 0 0 1 11.32 15.5C10.93 15.5 10.76 15.5 10.76 15.5A3.37 3.37 0 0 0 10 18.13V22" stroke="#545454" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <Text 
-                size="2" 
-                weight="medium" 
-                style={{ color: "#545454" }}
-              >
-                Github
               </Text>
             </Flex>
           </Flex>

@@ -62,11 +62,11 @@ export default function Landing() {
           <img
             src="/logo-orin.png"
             alt="Orin Logo"
-            width={36}
-            height={36}
+            width={38}
+            height={38}
             style={{ verticalAlign: "middle" }}
           />
-          <Text size="5" weight="bold" style={{ color: "#111" }}>
+          <Text size="6" weight="bold" style={{ color: "#111" }}>
             Orin
           </Text>
         </Flex>
@@ -103,7 +103,7 @@ export default function Landing() {
       >
         <Text
           size="9"
-          weight="medium"
+          weight="bold"
           style={{
             color: "#111",
             marginBottom: "32px",
@@ -111,7 +111,7 @@ export default function Landing() {
             maxWidth: "900px",
           }}
         >
-          Turn your real assets into startup runway
+          Asset-Backed Working Capital for Founders
         </Text>
         <Flex
           direction="column"
@@ -137,7 +137,7 @@ export default function Landing() {
               lineHeight: "1.6",
             }}
           >
-            Keep your low-rate mortgage. Skip the VC roadshow. Funded in days.
+            Retain equity control. Access liquidity without the 6-month fundraising cycle.
           </Text>
         </Flex>
         <Flex gap="16px" align="center" wrap="wrap" justify="center">
@@ -187,7 +187,7 @@ export default function Landing() {
         }}
       >
         <Flex
-          gap="24px"
+          gap="48px"
           wrap="wrap"
           justify="center"
           style={{ maxWidth: "1200px", width: "100%" }}
@@ -212,7 +212,7 @@ export default function Landing() {
               e.currentTarget.style.transform = "translateY(0)";
               e.currentTarget.style.boxShadow = "none";
             }}
-            onClick={() => handleCardClick("I want to seedstrap my growth and secure capital on my own terms")}
+            onClick={() => handleCardClick("I want to seedstrap my growth and get capital on my own terms")}
           >
             <Text size="6" style={{ marginBottom: "16px", display: "block" }}>
               🤖
@@ -222,10 +222,10 @@ export default function Landing() {
               weight="bold"
               style={{ color: "#111", marginBottom: "8px", display: "block" }}
             >
-              Seedstrap your growth
+              Seedstrap Your Growth
             </Text>
             <Text size="3" style={{ color: "#666", lineHeight: "1.5" }}>
-              Secure the capital you need on your own terms
+            Use real-estate equity and cashflow to raise capital on your own terms
             </Text>
           </Card>
           <Card
@@ -261,7 +261,7 @@ export default function Landing() {
               Bridge to Next Round
             </Text>
             <Text size="3" style={{ color: "#666", lineHeight: "1.5" }}>
-              Use your real-estate equity to safely support your raise.
+              Safely support your next acquisition, property upgrade
             </Text>
           </Card>
           <Card
@@ -297,7 +297,7 @@ export default function Landing() {
               Launch Deal Room
             </Text>
             <Text size="3" style={{ color: "#666", lineHeight: "1.5" }}>
-              Generate one compliant link for any investor
+            Create one compliant link to investor pool
             </Text>
           </Card>
         </Flex>
