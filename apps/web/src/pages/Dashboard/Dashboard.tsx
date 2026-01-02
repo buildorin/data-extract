@@ -446,7 +446,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Extracts" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  My Deals
+                  Deal Vault
                 </Text>
               </Flex>
               <Flex
@@ -467,7 +467,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Connectors" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Partners
+                  Underwriting Model
                 </Text>
               </Flex>
               <Flex
@@ -488,7 +488,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Usage" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Analytics
+                  Investment Package
                 </Text>
               </Flex>
             </Flex>
