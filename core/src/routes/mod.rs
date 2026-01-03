@@ -1,3 +1,4 @@
+pub mod deal;
 pub mod github;
 pub mod health;
 pub mod llm;

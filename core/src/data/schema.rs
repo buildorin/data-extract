@@ -18,6 +18,51 @@ diesel::table! {
 }
 
 diesel::table! {
+    deals (deal_id) {
+        deal_id -> Text,
+        user_id -> Text,
+        deal_name -> Text,
+        status -> Text,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        metadata -> Jsonb,
+    }
+}
+
+diesel::table! {
+    documents (document_id) {
+        document_id -> Text,
+        deal_id -> Text,
+        file_name -> Text,
+        document_type -> Text,
+        status -> Text,
+        storage_location -> Nullable<Text>,
+        page_count -> Nullable<Int4>,
+        ocr_output -> Nullable<Jsonb>,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    facts (fact_id) {
+        fact_id -> Text,
+        document_id -> Text,
+        deal_id -> Text,
+        fact_type -> Text,
+        label -> Text,
+        value -> Text,
+        unit -> Nullable<Text>,
+        source_citation -> Jsonb,
+        status -> Text,
+        confidence_score -> Nullable<Float8>,
+        approved_at -> Nullable<Timestamptz>,
+        approved_by -> Nullable<Text>,
+        locked -> Bool,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
     discounts (user_id, usage_type) {
         user_id -> Text,
         usage_type -> Text,
@@ -138,7 +183,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    usage_limits (id) {Hobby
+    usage_limits (id) {
         id -> Int4,
         usage_type -> Text,
         tier -> Text,
@@ -172,9 +217,17 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(deals -> users (user_id));
+diesel::joinable!(documents -> deals (deal_id));
+diesel::joinable!(facts -> deals (deal_id));
+diesel::joinable!(facts -> documents (document_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     api_keys,
+    deals,
     discounts,
+    documents,
+    facts,
     invoices,
     monthly_usage,
     pre_applied_free_pages,

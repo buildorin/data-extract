@@ -24,10 +24,16 @@ pub mod middleware;
 pub mod models;
 pub mod pipeline;
 pub mod routes;
+pub mod services;
 pub mod utils;
 
 use jobs::init::init_jobs;
 use middleware::auth::AuthMiddlewareFactory;
+use routes::deal::{
+    approve_facts_route, calculate_underwriting_route, create_deal_route, get_deal_documents,
+    get_deal_facts, get_deal_route, get_deals_route, reset_facts_route, update_fact_route,
+    upload_deal_documents,
+};
 use routes::github::get_github_repo_info;
 use routes::health::health_check;
 use routes::llm::get_models_ids;
@@ -197,6 +203,19 @@ pub fn main() -> std::io::Result<()> {
             let api_scope = web::scope("/api/v1")
                 .wrap(AuthMiddlewareFactory)
                 .route("/user", web::get().to(get_or_create_user))
+                .service(
+                    web::scope("/deals")
+                        .route("", web::post().to(create_deal_route))
+                        .route("", web::get().to(get_deals_route))
+                        .route("/{deal_id}", web::get().to(get_deal_route))
+                        .route("/{deal_id}/documents", web::post().to(upload_deal_documents))
+                        .route("/{deal_id}/documents", web::get().to(get_deal_documents))
+                        .route("/{deal_id}/facts", web::get().to(get_deal_facts))
+                        .route("/{deal_id}/facts/{fact_id}", web::patch().to(update_fact_route))
+                        .route("/{deal_id}/facts/approve", web::post().to(approve_facts_route))
+                        .route("/{deal_id}/facts/reset", web::post().to(reset_facts_route))
+                        .route("/{deal_id}/underwrite", web::post().to(calculate_underwriting_route)),
+                )
                 .service(
                     web::scope("/task")
                         .route("", web::post().to(create_task_route_multipart))

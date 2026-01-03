@@ -1,9 +1,7 @@
-import { useMemo } from "react";
 import { Flex, Text, Card } from "@radix-ui/themes";
 import { useSearchParams } from "react-router-dom";
 import { TaskResponse, Status } from "../../models/taskResponse.model";
 import { useTasksQuery } from "../../hooks/useTaskQuery";
-import useUser from "../../hooks/useUser";
 import { useAuth } from "react-oidc-context";
 import Loader from "../../pages/Loader/Loader";
 import UploadDialog from "../Upload/UploadDialog";
@@ -16,15 +14,12 @@ interface TaskCardsProps {
 export default function TaskCards({ context = "extracts" }: TaskCardsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const auth = useAuth();
-  const { data: user } = useUser();
 
   const pageIndex = parseInt(searchParams.get("tablePageIndex") || "0");
   const pageSize = parseInt(searchParams.get("tablePageSize") || "20");
 
   const {
     data: tasks,
-    isError,
-    isRefetching,
     isLoading,
     refetch,
   } = useTasksQuery(pageIndex + 1, pageSize);
@@ -35,7 +30,11 @@ export default function TaskCards({ context = "extracts" }: TaskCardsProps) {
       newParams.set("view", "flows");
     }
     newParams.set("taskId", task.task_id);
-    if (context === "extracts") {
+    
+    // If task is completed, go to fact review step
+    if (context === "extracts" && task.status === "Succeeded") {
+      newParams.set("step", "review");
+    } else if (context === "extracts") {
       newParams.set("pageCount", (task.output?.page_count || 10).toString());
     }
     setSearchParams(newParams, { replace: true });
@@ -72,23 +71,11 @@ export default function TaskCards({ context = "extracts" }: TaskCardsProps) {
   };
 
   const getDocumentType = (task: TaskResponse): string => {
-    // Extract document type from file name or use default
+    // Return document name for REIT-specific naming
     const fileName = task.output?.file_name || "";
-    if (fileName.toLowerCase().includes("rental") || fileName.toLowerCase().includes("1098")) {
-      return "Startup Runway";
-    }
-    if (fileName.toLowerCase().includes("tax")) {
-      return "Startup Runway";
-    }
-    if (fileName.toLowerCase().includes("mortgage")) {
-      return "Startup Runway";
-    }
-    return "Startup Runway";
-  };
-
-  const getDisplayFileName = (task: TaskResponse): string => {
-    const fileName = task.output?.file_name || `Document ${task.task_id.substring(0, 8)}`;
-    // Remove file extension for display
+    if (!fileName) return "Document";
+    
+    // Remove file extension and return as document type
     const lastDotIndex = fileName.lastIndexOf(".");
     if (lastDotIndex > 0) {
       return fileName.substring(0, lastDotIndex);
@@ -154,7 +141,6 @@ export default function TaskCards({ context = "extracts" }: TaskCardsProps) {
         style={{ width: "100%" }}
       >
         {tasks.map((task) => {
-          const fileName = getDisplayFileName(task);
           const documentType = getDocumentType(task);
           const statusColor = getStatusColor(task.status);
           const statusText = getStatusText(task.status);
@@ -186,22 +172,13 @@ export default function TaskCards({ context = "extracts" }: TaskCardsProps) {
               }}
               onClick={() => handleCardClick(task)}
             >
-              <Flex direction="column" gap="12px">
+              <Flex direction="column" gap="8px">
                 <Text
-                  size="5"
+                  size="4"
                   weight="bold"
                   style={{
                     color: "#111",
                     lineHeight: "1.3",
-                  }}
-                >
-                  {fileName}
-                </Text>
-                <Text
-                  size="3"
-                  style={{
-                    color: "#666",
-                    lineHeight: "1.4",
                   }}
                 >
                   {documentType}

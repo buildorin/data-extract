@@ -1,0 +1,75 @@
+.fact-review-container {
+  max-width: 100%;
+}
+
+.fact-card {
+  transition: all 0.2s ease;
+}
+
+.fact-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.fact-card input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #111;
+}
+
+/* Compact text fields */
+.fact-card .rt-TextFieldRoot {
+  font-size: 13px;
+}
+
+.fact-card .rt-TextFieldInput {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+/* Compact badges */
+.fact-card .rt-Badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  height: 20px;
+  line-height: 16px;
+}
+
+/* Compact buttons */
+.fact-card .rt-Button {
+  font-size: 12px;
+  padding: 4px 12px;
+  height: 28px;
+}
+
+/* Source text styling */
+.fact-card .rt-Text[data-size="1"] {
+  line-height: 1.4;
+}
+
+/* Dialog styling */
+.rt-DialogContent {
+  padding: 20px;
+}
+
+.rt-DialogTitle {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.rt-DialogDescription {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .fact-card {
+    padding: 10px 12px;
+  }
+  
+  .fact-card .rt-TextFieldRoot {
+    width: 100% !important;
+  }
+}
+

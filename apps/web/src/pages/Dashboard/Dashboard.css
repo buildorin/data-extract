@@ -50,7 +50,7 @@
 
 .profile-name {
   width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: none;
   padding: 16px;
 }
 
@@ -104,7 +104,7 @@
   flex-direction: column;
   height: 100vh;
   min-width: 0;
-  border-left: 1px solid #545454 !important;
+  border-left: none !important;
   border-top: none !important;
   border-bottom: none !important;
   border-right: none !important;
@@ -120,11 +120,11 @@
 }
 
 .main-header-text {
-  color: rgba(255, 255, 255, 0.9);
+  color: #111;
 }
 
 .main-header-text:hover {
-  color: rgba(255, 255, 255, 1);
+  color: #111;
 }
 
 .header-task-tag {

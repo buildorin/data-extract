@@ -1,8 +1,8 @@
-import { Flex, Text } from "@radix-ui/themes";
+import { Flex, Text, Button, Dialog, TextField } from "@radix-ui/themes";
 import "./Dashboard.css";
-import BetterButton from "../../components/BetterButton/BetterButton";
 import TaskTable from "../../components/TaskTable/TaskTable";
 import TaskCards from "../../components/TaskCards/TaskCards";
+import FactReview from "../../components/FactReview/FactReview";
 import { useAuth } from "react-oidc-context";
 import useUser from "../../hooks/useUser";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -16,6 +16,14 @@ import { useTasksQuery } from "../../hooks/useTaskQuery";
 import ApiKeyDialog from "../../components/ApiDialog/ApiKeyDialog";
 import { toast } from "react-hot-toast";
 import { getBillingPortalSession } from "../../services/stripeService";
+import { useMutation, useQueryClient } from "react-query";
+import { createDeal } from "../../services/dealApi";
+import DealCards from "../../components/DealCards/DealCards";
+import DealUploadFlow from "../../components/DealUpload/DealUploadFlow";
+import FactReviewDeal from "../../components/FactReview/FactReviewDeal";
+import UnderwritingDashboard from "../../components/Underwriting/UnderwritingDashboard";
+import UnderwritingModels from "../../components/Underwriting/UnderwritingModels";
+import InvestorPackage from "../../components/InvestorPackage/InvestorPackage";
 
 // Lazy load components
 const Viewer = lazy(() => import("../../components/Viewer/Viewer"));
@@ -30,6 +38,9 @@ export default function Dashboard() {
   const profileRef = useRef<HTMLDivElement>(null);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showNewDealDialog, setShowNewDealDialog] = useState(false);
+  const [newDealName, setNewDealName] = useState("");
+  const queryClient = useQueryClient();
 
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -47,7 +58,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!searchParams.has("view")) {
       const params = new URLSearchParams(searchParams);
-      params.set("view", "extracts");
+      params.set("view", "deals");
       navigate({
         pathname: "/dashboard",
         search: params.toString(),
@@ -73,7 +84,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (location.pathname === "/dashboard") {
-      setSelectedNav("Extracts");
+      setSelectedNav("Deals");
     }
   }, [location.pathname]);
 
@@ -94,6 +105,18 @@ export default function Dashboard() {
         <line x1="9" y1="13" x2="13" y2="13" stroke="#222" strokeWidth="1.2" />
         <path d="M11 15V11" stroke="#222" strokeWidth="1.5" strokeLinecap="round" />
         <path d="M9.5 13.5L11 15L12.5 13.5" stroke="#222" strokeWidth="1.5" strokeLinecap="round" />
+      </g>
+    ),
+    Deals: (
+      <g>
+        <rect x="4" y="6" width="14" height="12" rx="1.5" stroke="#222" strokeWidth="1.5" fill="none" />
+        <path d="M4 9H18" stroke="#222" strokeWidth="1.5" />
+        <circle cx="8" cy="12" r="0.5" fill="#222" />
+        <circle cx="11" cy="12" r="0.5" fill="#222" />
+        <circle cx="14" cy="12" r="0.5" fill="#222" />
+        <circle cx="8" cy="15" r="0.5" fill="#222" />
+        <circle cx="11" cy="15" r="0.5" fill="#222" />
+        <circle cx="14" cy="15" r="0.5" fill="#222" />
       </g>
     ),
     Flows: (
@@ -203,12 +226,37 @@ export default function Dashboard() {
     const view = searchParams.get("view");
     if (view === "usage") {
       setSelectedNav("Usage");
-    } else if (view === "extracts") {
-      setSelectedNav("Extracts");
     } else if (view === "flows") {
       setSelectedNav("Flows");
+    } else if (view === "deals") {
+      setSelectedNav("Deals");
+    } else {
+      setSelectedNav("Deals"); // Default to Deals
     }
   }, [searchParams]);
+
+  // New Deal creation mutation
+  const createDealMutation = useMutation({
+    mutationFn: (dealName: string) => createDeal(dealName),
+    onSuccess: (deal) => {
+      toast.success("Deal created successfully!");
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      setShowNewDealDialog(false);
+      setNewDealName("");
+      // Navigate to new deal
+      const params = new URLSearchParams();
+      params.set("view", "deals");
+      params.set("dealId", deal.deal_id);
+      params.set("step", "upload");
+      navigate({
+        pathname: "/dashboard",
+        search: params.toString(),
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create deal");
+    },
+  });
 
   const handleHeaderNavigation = useCallback(() => {
     const params = new URLSearchParams();
@@ -232,10 +280,6 @@ export default function Dashboard() {
     setSelectedNav("Extracts");
   }, [searchParams, navigate]);
 
-  const handleGithubNav = useCallback(() => {
-    window.open("https://github.com/buildorin/data-extract", "_blank");
-  }, []);
-
   const handleDocsNav = useCallback(() => {
     window.open(DOCS_URL, "_blank");
   }, []);
@@ -253,27 +297,90 @@ export default function Dashboard() {
 
   const content = useMemo(() => {
     const view = searchParams.get("view");
+    const dealId = searchParams.get("dealId");
+    const step = searchParams.get("step");
+
+    // Deal flow routing
+    if (view === "deals") {
+      if (dealId) {
+        if (step === "upload") {
+          return {
+            title: "Upload Documents",
+            component: (
+              <DealUploadFlow
+                key={`deal-upload-${dealId}`}
+                dealId={dealId}
+                onComplete={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set("step", "review");
+                  navigate({
+                    pathname: "/dashboard",
+                    search: params.toString(),
+                  });
+                }}
+              />
+            ),
+          };
+        } else if (step === "review") {
+          return {
+            title: "Deal Data Review",
+            component: (
+              <FactReviewDeal
+                key={`fact-review-${dealId}`}
+                dealId={dealId}
+                onFactsApproved={() => {
+                  toast.success("Facts extracted and verfied!");
+                  const params = new URLSearchParams(searchParams);
+                  params.set("step", "underwrite");
+                  navigate({
+                    pathname: "/dashboard",
+                    search: params.toString(),
+                  });
+                }}
+              />
+            ),
+          };
+        } else if (step === "underwrite") {
+          return {
+            title: "Underwriting",
+            component: (
+              <UnderwritingDashboard key={`underwriting-${dealId}`} dealId={dealId} />
+            ),
+          };
+        }
+        // Default deal view - go to review step
+        return {
+          title: "Deal Details",
+          component: (
+            <FactReviewDeal
+              key={`fact-review-${dealId}`}
+              dealId={dealId}
+              onFactsApproved={() => {
+                toast.success("Facts extracted and verfied!");
+              }}
+            />
+          ),
+        };
+      }
+      // No dealId - show list
+      return {
+        title: "Deals",
+        component: <DealCards key="deal-cards" />,
+      };
+    }
 
     switch (view) {
       case "usage":
+      case "investment-package":
         return {
-          title: "",
-          component: (
-            <Usage key="usage-view" customerId={user.data?.customer_id || ""} />
-          ),
+          title: "Investment Package",
+          component: <InvestorPackage key="investor-package" />,
         };
       case "connectors":
+      case "underwriting-models":
         return {
-          title: "",
-          component: (
-            <div style={{ width: "100%", height: "100vh", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #545454", boxSizing: "border-box" }}>
-              <img
-                src="/connectors.png"
-                alt="Connectors"
-                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", borderRadius: 0 }}
-              />
-            </div>
-          ),
+          title: "Underwriting Analysis",
+          component: <UnderwritingModels />,
         };
       case "flows":
         if (taskId) {
@@ -300,6 +407,71 @@ export default function Dashboard() {
       case "extracts":
       default:
         if (taskId) {
+          const step = searchParams.get("step");
+          
+          // Step 2: Fact Extraction & Review
+          if (step === "review" && taskResponse) {
+            return {
+              title: taskResponse?.output?.file_name || taskId,
+              component: (
+                <Suspense fallback={<Loader />}>
+                  {isLoading ? (
+                    <Loader />
+                  ) : taskResponse ? (
+                    <FactReview
+                      key={`fact-review-${taskId}`}
+                      task={taskResponse}
+                      onFactsApproved={() => {
+                        // Navigate to next step or show success
+                        toast.success("Facts extracted and verfied!");
+                      }}
+                    />
+                  ) : null}
+                </Suspense>
+              ),
+            };
+          }
+          
+          // Document Extract view (one level down)
+          if (step === "document" && taskResponse) {
+            return {
+              title: taskResponse?.output?.file_name || taskId,
+              component: (
+                <Suspense fallback={<Loader />}>
+                  {isLoading ? (
+                    <Loader />
+                  ) : taskResponse?.output &&
+                    taskResponse?.output?.pdf_url &&
+                    taskResponse?.output ? (
+                    <Viewer key={`viewer-${taskId}`} task={taskResponse} />
+                  ) : null}
+                </Suspense>
+              ),
+            };
+          }
+          
+          // Default: Show fact review if task is completed, otherwise show viewer
+          if (taskResponse?.status === "Succeeded") {
+            return {
+              title: taskResponse?.output?.file_name || taskId,
+              component: (
+                <Suspense fallback={<Loader />}>
+                  {isLoading ? (
+                    <Loader />
+                  ) : taskResponse ? (
+                    <FactReview
+                      key={`fact-review-${taskId}`}
+                      task={taskResponse}
+                      onFactsApproved={() => {
+                        toast.success("Facts extracted and verfied!");
+                      }}
+                    />
+                  ) : null}
+                </Suspense>
+              ),
+            };
+          }
+          
           return {
             title: `Extract > ${taskResponse?.output?.file_name || taskId}`,
             component: (
@@ -429,8 +601,8 @@ export default function Dashboard() {
           <Flex direction="column">
             <Flex className="dashboard-nav-items" direction="column">
               <Flex
-                className={`dashboard-nav-item ${selectedNav === "Extracts" ? "selected" : ""}`}
-                onClick={() => handleNavigation("Extracts")}
+                className={`dashboard-nav-item ${selectedNav === "Deals" ? "selected" : ""}`}
+                onClick={() => handleNavigation("Deals")}
               >
                 <svg
                   width="22"
@@ -439,12 +611,12 @@ export default function Dashboard() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  {navIcons.Extracts}
+                  {navIcons.Deals}
                 </svg>
                 <Text
                   size="3"
                   weight="medium"
-                  style={{ color: selectedNav === "Extracts" ? "rgb(2, 5, 6)" : "#111" }}
+                  style={{ color: selectedNav === "Deals" ? "rgb(2, 5, 6)" : "#111" }}
                 >
                   Deal Vault
                 </Text>
@@ -467,7 +639,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Connectors" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Underwriting Model
+                  Underwriting
                 </Text>
               </Flex>
               <Flex
@@ -488,7 +660,7 @@ export default function Dashboard() {
                   weight="medium"
                   style={{ color: selectedNav === "Usage" ? "rgb(2, 5, 6)" : "#111" }}
                 >
-                  Investment Package
+                  Investor Package
                 </Text>
               </Flex>
             </Flex>
@@ -720,41 +892,31 @@ export default function Dashboard() {
               style={{ cursor: "pointer" }}
             >
               <Text size="5" weight="bold" className="main-header-text" style={{ color: "#111" }}>
-                {taskId ? "Document Extract" : content.title}
+                {taskId && taskResponse?.output?.file_name 
+                  ? taskResponse.output.file_name 
+                  : taskId 
+                    ? "Document Extract" 
+                    : content.title}
               </Text>
             </Flex>
-            {taskId && taskResponse?.output?.file_name && (
-              <>
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M9 6L15 12L9 18"
-                    stroke="#FFFFFF"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <Flex className="header-task-tag">
-                  <Text size="2" weight="medium" style={{ color: "#FFF" }}>
-                    {taskResponse?.output?.file_name || taskId}
-                  </Text>
-                </Flex>
-              </>
-            )}
           </Flex>
-          <Flex gap="24px" align="center">
-            <UploadDialog
-              auth={auth}
-              onUploadComplete={() => {
-                refetchTasks();
-              }}
-            />
+          <Flex gap="24px" align="center" >
+            {(selectedNav === "Deals" || selectedNav === "Underwriting Model") ? (
+              <Button
+                size="3"
+                onClick={() => setShowNewDealDialog(true)}
+                style={{ cursor: "pointer" }}
+              >
+                + New Deal
+              </Button>
+            ) : (
+              <UploadDialog
+                auth={auth}
+                onUploadComplete={() => {
+                  refetchTasks();
+                }}
+              />
+            )}
             {user.data && (
               <Flex 
                 align="center" 
@@ -803,6 +965,48 @@ export default function Dashboard() {
           setShowApiKey={setShowApiKey}
         />
       )}
+      
+      {/* New Deal Dialog */}
+      <Dialog.Root open={showNewDealDialog} onOpenChange={setShowNewDealDialog}>
+        <Dialog.Content style={{ maxWidth: 450 }}>
+          <Dialog.Title>Create New Deal</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
+            Enter a name for your new underwriting deal.
+          </Dialog.Description>
+
+          <Flex direction="column" gap="3">
+            <label>
+              <Text as="div" size="2" mb="1" weight="bold">
+                Deal Name
+              </Text>
+              <TextField.Root
+                value={newDealName}
+                onChange={(e) => setNewDealName(e.target.value)}
+                placeholder="e.g., 123 Main St Portfolio"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newDealName.trim()) {
+                    createDealMutation.mutate(newDealName);
+                  }
+                }}
+              />
+            </label>
+          </Flex>
+
+          <Flex gap="3" mt="4" justify="end">
+            <Dialog.Close>
+              <Button variant="soft" color="gray">
+                Cancel
+              </Button>
+            </Dialog.Close>
+            <Button
+              onClick={() => createDealMutation.mutate(newDealName)}
+              disabled={!newDealName.trim() || createDealMutation.isLoading}
+            >
+              {createDealMutation.isLoading ? "Creating..." : "Create Deal"}
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
     </Flex>
   );
 }
