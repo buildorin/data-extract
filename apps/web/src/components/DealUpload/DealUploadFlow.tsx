@@ -19,6 +19,9 @@ const DealUploadFlow = ({ dealId, onComplete }: DealUploadFlowProps) => {
     mutationFn: (data: { dealId: string; files: File[]; documentType: string }) =>
       uploadDealDocuments(data.dealId, data.files, data.documentType),
     onSuccess: () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DealUploadFlow.tsx:21',message:'Upload success',data:{dealId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       toast.success("Documents uploaded successfully");
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
@@ -26,6 +29,9 @@ const DealUploadFlow = ({ dealId, onComplete }: DealUploadFlowProps) => {
       if (onComplete) onComplete();
     },
     onError: (error: any) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DealUploadFlow.tsx:28',message:'Upload error',data:{dealId,errorMessage:error.message,errorCode:error.code,errorStatus:error.response?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1-H2-H4'})}).catch(()=>{});
+      // #endregion
       toast.error(error.message || "Failed to upload documents");
     },
   });
@@ -37,6 +43,10 @@ const DealUploadFlow = ({ dealId, onComplete }: DealUploadFlowProps) => {
   };
 
   const handleUpload = () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DealUploadFlow.tsx:39',message:'handleUpload called',data:{dealId,fileCount:files.length,documentType,fileNames:files.map(f=>f.name)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1-H3'})}).catch(()=>{});
+    // #endregion
+    
     if (files.length === 0) {
       toast.error("Please select at least one file");
       return;
@@ -47,6 +57,10 @@ const DealUploadFlow = ({ dealId, onComplete }: DealUploadFlowProps) => {
       return;
     }
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DealUploadFlow.tsx:50',message:'Calling uploadMutation.mutate',data:{dealId,fileCount:files.length,documentType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
+    
     uploadMutation.mutate({ dealId, files, documentType });
   };
 

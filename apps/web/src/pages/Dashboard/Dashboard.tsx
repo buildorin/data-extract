@@ -373,7 +373,7 @@ export default function Dashboard() {
       case "usage":
       case "investment-package":
         return {
-          title: "Investment Package",
+          title: "Investor Package",
           component: <InvestorPackage key="investor-package" />,
         };
       case "connectors":
@@ -901,7 +901,7 @@ export default function Dashboard() {
             </Flex>
           </Flex>
           <Flex gap="24px" align="center" >
-            {(selectedNav === "Deals" || selectedNav === "Underwriting Model") ? (
+            {(selectedNav === "Deals" || selectedNav === "Connectors" || selectedNav === "Usage") ? (
               <Button
                 size="3"
                 onClick={() => setShowNewDealDialog(true)}

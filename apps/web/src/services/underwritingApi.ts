@@ -57,6 +57,49 @@ const USE_MOCK_DATA = true; // Set to false to use real API
 
 // Mock underwriting data
 const MOCK_UNDERWRITING_DATA: Record<string, UnderwritingResult> = {
+  "deal-002-mockdata": {
+    noi: 320000, // Gross Scheduled Rent (480,000) - Operating Expenses (160,000)
+    dscr: 1.60, // NOI (320,000) / Debt Service (200,000)
+    cash_flow_after_debt: 120000, // NOI (320,000) - Debt Service (200,000)
+    cap_rate: undefined,
+    ltv: undefined,
+    gross_rent_multiplier: undefined,
+    audit_trail: [
+      {
+        metric: "Net Operating Income (NOI)",
+        formula: "Gross Scheduled Rent - Operating Expenses",
+        inputs: [
+          ["Gross Scheduled Rent", 480000],
+          ["Operating Expenses", 160000],
+        ],
+        result: 320000,
+        sources: ["fact-downtown-003"],
+      },
+      {
+        metric: "Debt Service Coverage Ratio (DSCR)",
+        formula: "Net Operating Income (NOI) / Annual Debt Service",
+        inputs: [
+          ["Net Operating Income (NOI)", 320000],
+          ["Annual Debt Service", 200000],
+        ],
+        result: 1.60,
+        sources: [],
+      },
+      {
+        metric: "Cash Flow After Debt Service",
+        formula: "Net Operating Income (NOI) - Annual Debt Service",
+        inputs: [
+          ["Net Operating Income (NOI)", 320000],
+          ["Annual Debt Service", 200000],
+        ],
+        result: 120000,
+        sources: [],
+      },
+    ],
+    warnings: [
+      "Commercial property occupancy at 91.7% - monitor tenant retention",
+    ],
+  },
   "deal-003-mockdata": {
     noi: 70000, // Gross Scheduled Rent (120,000) - Operating Expenses (50,000)
     dscr: 1.75, // NOI (70,000) / Debt Service (40,000)

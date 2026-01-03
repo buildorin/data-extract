@@ -122,9 +122,6 @@ const InvestorPackage = () => {
       style={{ overflowY: "auto", height: "100%", maxHeight: "calc(100vh - 200px)" }}
       className="investor-package-container"
     >
-      <Text size="6" weight="bold">
-        Investor Package
-      </Text>
       <Text size="3" color="gray">
         Investor-ready deal summaries and investment memorandums
       </Text>
@@ -165,6 +162,7 @@ const InvestorPackage = () => {
                   <Text size="4" weight="bold" mb="2">
                     Executive Summary
                   </Text>
+                  <br />
                   <Text size="3" style={{ lineHeight: "1.6" }}>
                     {memo.executiveSummary}
                   </Text>
@@ -174,32 +172,36 @@ const InvestorPackage = () => {
                 <Flex gap="4" wrap="wrap">
                   <Card style={{ flex: 1, minWidth: "200px", padding: "16px" }}>
                     <Text size="2" color="gray" mb="1">
-                      Property Type :
+                      Property Type:
                     </Text>
+                    <br />
                     <Text size="3" weight="medium">
                       {memo.propertyDetails.propertyType}
                     </Text>
                   </Card>
                   <Card style={{ flex: 1, minWidth: "200px", padding: "16px" }}>
                     <Text size="2" color="gray" mb="1">
-                      Units :
+                      Units:
                     </Text>
+                    <br />
                     <Text size="3" weight="medium">
                       {memo.propertyDetails.units}
                     </Text>
                   </Card>
                   <Card style={{ flex: 1, minWidth: "200px", padding: "16px" }}>
                     <Text size="2" color="gray" mb="1">
-                      Year Built :
+                      Year Built:
                     </Text>
+                    <br />
                     <Text size="3" weight="medium">
                       {memo.propertyDetails.yearBuilt}
                     </Text>
                   </Card>
                   <Card style={{ flex: 1, minWidth: "200px", padding: "16px" }}>
                     <Text size="2" color="gray" mb="1">
-                      Location :
+                      Location:
                     </Text>
+                    <br />
                     <Text size="2" weight="medium">
                       {memo.propertyDetails.address}
                     </Text>
@@ -290,6 +292,7 @@ const InvestorPackage = () => {
                   <Text size="4" weight="bold" mb="2">
                     Use of Proceeds
                   </Text>
+                  <br />
                   <Text size="3" style={{ lineHeight: "1.6" }}>
                     {memo.useOfProceeds}
                   </Text>
@@ -300,6 +303,7 @@ const InvestorPackage = () => {
                   <Text size="4" weight="bold" mb="2">
                     Investment Timeline
                   </Text>
+                  <br />
                   <Text size="3" style={{ lineHeight: "1.6" }}>
                     {memo.timeline}
                   </Text>

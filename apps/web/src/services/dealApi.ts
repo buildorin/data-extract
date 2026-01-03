@@ -30,8 +30,8 @@ export interface DocumentResponse {
   storage_location?: string;
   page_count?: number;
   created_at: string;
-  fact_count?: number;
-  url?: string; // URL to view/download the document
+  updated_at: string;
+  extracted_at?: string;
 }
 
 export interface FactResponse {
@@ -64,7 +64,6 @@ export interface FactResponse {
 // Create a new deal
 export const createDeal = async (dealName: string): Promise<DealResponse> => {
   if (USE_MOCK_DATA) {
-    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 500));
     const newDeal = createMockDeal(dealName);
     console.log("Created mock deal:", newDeal);
@@ -80,11 +79,7 @@ export const createDeal = async (dealName: string): Promise<DealResponse> => {
 // Get all deals for the current user
 export const getDeals = async (): Promise<DealResponse[]> => {
   if (USE_MOCK_DATA) {
-    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 300));
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dealApi.ts:getDeals',message:'Returning mock deals',data:{dealCount:MOCK_DEALS.length,deals:MOCK_DEALS.map(d=>({id:d.deal_id,name:d.deal_name,status:d.status,factCount:d.fact_count}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     return MOCK_DEALS;
   }
   
@@ -95,7 +90,6 @@ export const getDeals = async (): Promise<DealResponse[]> => {
 // Get a specific deal by ID
 export const getDeal = async (dealId: string): Promise<DealResponse> => {
   if (USE_MOCK_DATA && isMockDeal(dealId)) {
-    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 200));
     const deal = MOCK_DEALS.find((d) => d.deal_id === dealId);
     if (!deal) throw new Error("Deal not found");
@@ -112,6 +106,35 @@ export const uploadDealDocuments = async (
   files: File[],
   documentType: string
 ): Promise<DocumentResponse[]> => {
+  if (USE_MOCK_DATA && isMockDeal(dealId)) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    const mockDocuments: DocumentResponse[] = files.map((file, index) => ({
+      document_id: `doc-${Date.now()}-${index}-mockdata`,
+      deal_id: dealId,
+      file_name: file.name,
+      document_type: documentType,
+      status: "processing",
+      storage_location: `/mock-documents/${file.name}`,
+      page_count: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      extracted_at: undefined,
+    }));
+    
+    MOCK_DOCUMENTS.push(...mockDocuments);
+    
+    const deal = MOCK_DEALS.find(d => d.deal_id === dealId);
+    if (deal) {
+      deal.document_count = (deal.document_count || 0) + files.length;
+      deal.status = "processing_documents";
+      deal.updated_at = new Date().toISOString();
+    }
+    
+    console.log("Created mock documents:", mockDocuments);
+    return mockDocuments;
+  }
+  
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
   formData.append("document_type", documentType);
@@ -125,6 +148,7 @@ export const uploadDealDocuments = async (
       },
     }
   );
+  
   return response.data;
 };
 
@@ -133,9 +157,8 @@ export const getDealDocuments = async (
   dealId: string
 ): Promise<DocumentResponse[]> => {
   if (USE_MOCK_DATA && isMockDeal(dealId)) {
-    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 300));
-    return MOCK_DOCUMENTS;
+    return MOCK_DOCUMENTS.filter((d) => d.deal_id === dealId);
   }
   
   const response = await axiosInstance.get(`/api/v1/deals/${dealId}/documents`);
@@ -145,62 +168,101 @@ export const getDealDocuments = async (
 // Get facts for a deal
 export const getDealFacts = async (dealId: string): Promise<FactResponse[]> => {
   if (USE_MOCK_DATA && isMockDeal(dealId)) {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return MOCK_FACTS;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    return MOCK_FACTS.filter((f) => f.deal_id === dealId);
   }
   
   const response = await axiosInstance.get(`/api/v1/deals/${dealId}/facts`);
   return response.data;
 };
 
-// Update a fact value
-export const updateFact = async (
+// Approve a single fact
+export const approveFact = async (
   dealId: string,
-  factId: string,
-  value: string,
-  unit?: string
-): Promise<void> => {
+  factId: string
+): Promise<FactResponse> => {
   if (USE_MOCK_DATA && isMockDeal(dealId)) {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    console.log("Updated mock fact:", factId, value);
-    return;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const fact = MOCK_FACTS.find((f) => f.fact_id === factId);
+    if (!fact) throw new Error("Fact not found");
+    fact.status = "approved";
+    fact.locked = true;
+    return fact;
   }
   
-  await axiosInstance.patch(`/api/v1/deals/${dealId}/facts/${factId}`, {
-    value,
-    unit,
-  });
+  const response = await axiosInstance.patch(
+    `/api/v1/deals/${dealId}/facts/${factId}/approve`
+  );
+  return response.data;
 };
 
-// Approve facts (lock them)
+// Approve multiple facts
 export const approveFacts = async (
   dealId: string,
   factIds: string[]
-): Promise<void> => {
+): Promise<FactResponse[]> => {
   if (USE_MOCK_DATA && isMockDeal(dealId)) {
-    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 300));
-    console.log("Approved mock facts:", factIds);
-    return;
+    const approvedFacts: FactResponse[] = [];
+    factIds.forEach(factId => {
+      const fact = MOCK_FACTS.find((f) => f.fact_id === factId);
+      if (fact) {
+        fact.status = "approved";
+        fact.locked = true;
+        approvedFacts.push(fact);
+      }
+    });
+    return approvedFacts;
   }
   
-  await axiosInstance.post(`/api/v1/deals/${dealId}/facts/approve`, {
-    fact_ids: factIds,
-  });
+  const response = await axiosInstance.post(
+    `/api/v1/deals/${dealId}/facts/approve-batch`,
+    { fact_ids: factIds }
+  );
+  return response.data;
 };
 
-// Reset all facts to editable
-export const resetFacts = async (dealId: string): Promise<void> => {
+// Reset facts
+export const resetFacts = async (
+  dealId: string,
+  factIds?: string[]
+): Promise<void> => {
   if (USE_MOCK_DATA && isMockDeal(dealId)) {
-    // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 200));
-    console.log("Reset mock facts for deal:", dealId);
+    MOCK_FACTS.forEach(fact => {
+      if (fact.deal_id === dealId) {
+        fact.status = "pending_approval";
+        fact.locked = false;
+      }
+    });
     return;
   }
   
-  await axiosInstance.post(`/api/v1/deals/${dealId}/facts/reset`);
+  await axiosInstance.post(
+    `/api/v1/deals/${dealId}/facts/reset`,
+    { fact_ids: factIds || [] }
+  );
+};
+
+// Update a fact
+export const updateFact = async (
+  dealId: string,
+  factId: string,
+  updates: Partial<FactResponse>
+): Promise<FactResponse> => {
+  if (USE_MOCK_DATA && isMockDeal(dealId)) {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    const fact = MOCK_FACTS.find((f) => f.fact_id === factId);
+    if (!fact) throw new Error("Fact not found");
+    Object.assign(fact, updates);
+    return fact;
+  }
+  
+  const response = await axiosInstance.patch(
+    `/api/v1/deals/${dealId}/facts/${factId}`,
+    updates
+  );
+  return response.data;
 };
 
 // Update deal status
@@ -208,28 +270,14 @@ export const updateDealStatus = async (
   dealId: string,
   status: string
 ): Promise<void> => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dealApi.ts:updateDealStatus',message:'updateDealStatus called',data:{dealId,status,useMockData:USE_MOCK_DATA},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
   if (USE_MOCK_DATA && isMockDeal(dealId)) {
-    // Update mock deal status
     const deal = MOCK_DEALS.find((d) => d.deal_id === dealId);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dealApi.ts:updateDealStatus',message:'Finding deal in mock data',data:{dealId,dealFound:!!deal,currentStatus:deal?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     if (deal) {
-      const oldStatus = deal.status;
       deal.status = status;
       deal.updated_at = new Date().toISOString();
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dealApi.ts:updateDealStatus',message:'Updated deal status',data:{dealId,dealName:deal.deal_name,oldStatus,newStatus:deal.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      console.log("Updated mock deal status:", dealId, status);
     }
-    await new Promise((resolve) => setTimeout(resolve, 200));
     return;
   }
 
   await axiosInstance.patch(`/api/v1/deals/${dealId}`, { status });
 };
-
