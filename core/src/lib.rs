@@ -179,7 +179,7 @@ pub fn main() -> std::io::Result<()> {
                     Cors::default()
                         .allow_any_origin()
                         .allow_any_method()
-                        .allow_any_header()
+                        .allow_any_header(),
                 )
                 .wrap(Logger::default())
                 .wrap(Logger::new("%a %{User-Agent}i"))
@@ -208,13 +208,25 @@ pub fn main() -> std::io::Result<()> {
                         .route("", web::post().to(create_deal_route))
                         .route("", web::get().to(get_deals_route))
                         .route("/{deal_id}", web::get().to(get_deal_route))
-                        .route("/{deal_id}/documents", web::post().to(upload_deal_documents))
+                        .route(
+                            "/{deal_id}/documents",
+                            web::post().to(upload_deal_documents),
+                        )
                         .route("/{deal_id}/documents", web::get().to(get_deal_documents))
                         .route("/{deal_id}/facts", web::get().to(get_deal_facts))
-                        .route("/{deal_id}/facts/{fact_id}", web::patch().to(update_fact_route))
-                        .route("/{deal_id}/facts/approve", web::post().to(approve_facts_route))
+                        .route(
+                            "/{deal_id}/facts/{fact_id}",
+                            web::patch().to(update_fact_route),
+                        )
+                        .route(
+                            "/{deal_id}/facts/approve",
+                            web::post().to(approve_facts_route),
+                        )
                         .route("/{deal_id}/facts/reset", web::post().to(reset_facts_route))
-                        .route("/{deal_id}/underwrite", web::post().to(calculate_underwriting_route)),
+                        .route(
+                            "/{deal_id}/underwrite",
+                            web::post().to(calculate_underwriting_route),
+                        ),
                 )
                 .service(
                     web::scope("/task")

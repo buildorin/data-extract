@@ -47,9 +47,9 @@ fn check_missing_documents(facts: &[Fact]) -> Vec<AgentRecommendation> {
     // Check for critical fact types
     let has_collected_rent = facts.iter().any(|f| f.fact_type == "collected_rent");
     let has_operating_expenses = facts.iter().any(|f| f.fact_type == "operating_expenses");
-    let has_mortgage = facts.iter().any(|f| {
-        f.fact_type == "mortgage_balance" || f.fact_type == "debt_service"
-    });
+    let has_mortgage = facts
+        .iter()
+        .any(|f| f.fact_type == "mortgage_balance" || f.fact_type == "debt_service");
     let has_property_value = facts.iter().any(|f| f.fact_type == "property_value");
     let has_unit_count = facts.iter().any(|f| f.fact_type == "unit_count");
     let has_occupancy = facts.iter().any(|f| f.fact_type == "occupancy_rate");
@@ -113,7 +113,9 @@ fn check_missing_documents(facts: &[Fact]) -> Vec<AgentRecommendation> {
             category: "Missing Data".to_string(),
             message: "No unit count information found".to_string(),
             recommended_action: Some("Ensure rent roll includes total unit count".to_string()),
-            details: Some("Unit count helps assess property size and per-unit economics".to_string()),
+            details: Some(
+                "Unit count helps assess property size and per-unit economics".to_string(),
+            ),
         });
     }
 
@@ -124,7 +126,8 @@ fn check_missing_documents(facts: &[Fact]) -> Vec<AgentRecommendation> {
             message: "No occupancy rate found".to_string(),
             recommended_action: Some("Include occupancy percentage in rent roll".to_string()),
             details: Some(
-                "Occupancy rate is important for understanding property performance and risk".to_string(),
+                "Occupancy rate is important for understanding property performance and risk"
+                    .to_string(),
             ),
         });
     }
@@ -185,9 +188,13 @@ fn analyze_underwriting_metrics(uw: &UnderwritingResult) -> Vec<AgentRecommendat
         recommendations.push(AgentRecommendation {
             severity: Severity::Critical,
             category: "Operating Performance".to_string(),
-            message: format!("Negative NOI of ${:.2} indicates operating loss", uw.noi.abs()),
+            message: format!(
+                "Negative NOI of ${:.2} indicates operating loss",
+                uw.noi.abs()
+            ),
             recommended_action: Some(
-                "Review operating expenses for reduction opportunities or increase rents".to_string(),
+                "Review operating expenses for reduction opportunities or increase rents"
+                    .to_string(),
             ),
             details: Some(
                 "Property is not generating positive operating income after expenses".to_string(),
@@ -220,7 +227,8 @@ fn analyze_underwriting_metrics(uw: &UnderwritingResult) -> Vec<AgentRecommendat
                     "Consider stress testing for rent decreases or expense increases".to_string(),
                 ),
                 details: Some(
-                    "Low cash flow leaves little buffer for unexpected expenses or vacancies".to_string(),
+                    "Low cash flow leaves little buffer for unexpected expenses or vacancies"
+                        .to_string(),
                 ),
             });
         }
@@ -248,7 +256,8 @@ fn analyze_underwriting_metrics(uw: &UnderwritingResult) -> Vec<AgentRecommendat
                     "Investigate property condition, location, and tenant quality".to_string(),
                 ),
                 details: Some(
-                    "Cap rates above 10% often reflect higher risk properties or markets".to_string(),
+                    "Cap rates above 10% often reflect higher risk properties or markets"
+                        .to_string(),
                 ),
             });
         }
@@ -280,7 +289,9 @@ fn analyze_leverage_ratios(uw: &UnderwritingResult) -> Vec<AgentRecommendation> 
                 severity: Severity::Info,
                 category: "Leverage".to_string(),
                 message: format!("LTV of {:.2}% is above 80%", ltv),
-                recommended_action: Some("Monitor property value and maintain cash reserves".to_string()),
+                recommended_action: Some(
+                    "Monitor property value and maintain cash reserves".to_string(),
+                ),
                 details: Some("LTV above 80% may require PMI or higher interest rates".to_string()),
             });
         } else if ltv < 60.0 {
@@ -289,9 +300,13 @@ fn analyze_leverage_ratios(uw: &UnderwritingResult) -> Vec<AgentRecommendation> 
                 category: "Leverage".to_string(),
                 message: format!("Conservative LTV of {:.2}%", ltv),
                 recommended_action: Some(
-                    "Consider if higher leverage could improve returns without excessive risk".to_string(),
+                    "Consider if higher leverage could improve returns without excessive risk"
+                        .to_string(),
                 ),
-                details: Some("Low LTV provides strong equity position but may limit returns on equity".to_string()),
+                details: Some(
+                    "Low LTV provides strong equity position but may limit returns on equity"
+                        .to_string(),
+                ),
             });
         }
     }
@@ -328,15 +343,11 @@ fn check_fact_quality(facts: &[Fact]) -> Vec<AgentRecommendation> {
         recommendations.push(AgentRecommendation {
             severity: Severity::Info,
             category: "Data Quality".to_string(),
-            message: format!(
-                "{} facts have low confidence scores",
-                low_confidence.len()
-            ),
-            recommended_action: Some(
-                "Manually verify facts with confidence below 70%".to_string(),
-            ),
+            message: format!("{} facts have low confidence scores", low_confidence.len()),
+            recommended_action: Some("Manually verify facts with confidence below 70%".to_string()),
             details: Some(
-                "Low confidence scores may indicate OCR errors or ambiguous source data".to_string(),
+                "Low confidence scores may indicate OCR errors or ambiguous source data"
+                    .to_string(),
             ),
         });
     }
@@ -366,8 +377,7 @@ mod tests {
 
         assert!(recommendations
             .iter()
-            .any(|r| matches!(r.severity, Severity::Warning)
-                && r.category == "Debt Coverage"));
+            .any(|r| matches!(r.severity, Severity::Warning) && r.category == "Debt Coverage"));
     }
 
     #[test]
@@ -390,4 +400,3 @@ mod tests {
             .any(|r| matches!(r.severity, Severity::Critical) && r.category == "Cash Flow"));
     }
 }
-

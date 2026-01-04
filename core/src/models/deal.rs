@@ -59,7 +59,7 @@ impl DealStatus {
             DealStatus::Complete => "complete",
         }
     }
-    
+
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "draft" => Some(DealStatus::Draft),
@@ -105,4 +105,3 @@ impl From<Deal> for DealResponse {
         }
     }
 }
-

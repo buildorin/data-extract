@@ -81,7 +81,7 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
     // Calculate DSCR if debt service is available
     let dscr = input.debt_service.map(|ds| {
         let ratio = if ds > 0.0 { noi / ds } else { 0.0 };
-        
+
         audit_trail.push(CalculationStep {
             metric: "DSCR (Debt Service Coverage Ratio)".to_string(),
             formula: "NOI / Annual Debt Service".to_string(),
@@ -92,20 +92,26 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
             result: ratio,
             sources: vec![],
         });
-        
+
         if ratio < 1.0 {
-            warnings.push(format!("Critical: DSCR of {:.2} is below 1.0 - property cannot cover debt service", ratio));
+            warnings.push(format!(
+                "Critical: DSCR of {:.2} is below 1.0 - property cannot cover debt service",
+                ratio
+            ));
         } else if ratio < 1.25 {
-            warnings.push(format!("Warning: DSCR of {:.2} is below recommended 1.25 threshold", ratio));
+            warnings.push(format!(
+                "Warning: DSCR of {:.2} is below recommended 1.25 threshold",
+                ratio
+            ));
         }
-        
+
         ratio
     });
 
     // Calculate cash flow after debt
     let cash_flow_after_debt = input.debt_service.map(|ds| {
         let cash_flow = noi - ds;
-        
+
         audit_trail.push(CalculationStep {
             metric: "Cash Flow After Debt".to_string(),
             formula: "NOI - Annual Debt Service".to_string(),
@@ -116,18 +122,25 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
             result: cash_flow,
             sources: vec![],
         });
-        
+
         if cash_flow < 0.0 {
-            warnings.push(format!("Critical: Negative cash flow of ${:.2}", cash_flow.abs()));
+            warnings.push(format!(
+                "Critical: Negative cash flow of ${:.2}",
+                cash_flow.abs()
+            ));
         }
-        
+
         cash_flow
     });
 
     // Calculate cap rate if property value is available
     let cap_rate = input.property_value.map(|value| {
-        let rate = if value > 0.0 { (noi / value) * 100.0 } else { 0.0 };
-        
+        let rate = if value > 0.0 {
+            (noi / value) * 100.0
+        } else {
+            0.0
+        };
+
         audit_trail.push(CalculationStep {
             metric: "Cap Rate".to_string(),
             formula: "(NOI / Property Value) * 100".to_string(),
@@ -138,13 +151,16 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
             result: rate,
             sources: vec![],
         });
-        
+
         if rate < 4.0 {
             warnings.push(format!("Note: Cap rate of {:.2}% is relatively low", rate));
         } else if rate > 12.0 {
-            warnings.push(format!("Note: Cap rate of {:.2}% is relatively high - may indicate higher risk", rate));
+            warnings.push(format!(
+                "Note: Cap rate of {:.2}% is relatively high - may indicate higher risk",
+                rate
+            ));
         }
-        
+
         rate
     });
 
@@ -152,7 +168,7 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
     let ltv = match (input.mortgage_balance, input.property_value) {
         (Some(mortgage), Some(value)) if value > 0.0 => {
             let ratio = (mortgage / value) * 100.0;
-            
+
             audit_trail.push(CalculationStep {
                 metric: "LTV (Loan-to-Value)".to_string(),
                 formula: "(Mortgage Balance / Property Value) * 100".to_string(),
@@ -163,11 +179,11 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
                 result: ratio,
                 sources: vec![],
             });
-            
+
             if ratio > 80.0 {
                 warnings.push(format!("Warning: LTV of {:.2}% is above 80%", ratio));
             }
-            
+
             Some(ratio)
         }
         _ => None,
@@ -177,7 +193,7 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
     let gross_rent_multiplier = match (input.gross_scheduled_rent, input.property_value) {
         (Some(gsr), Some(value)) if gsr > 0.0 => {
             let grm = value / gsr;
-            
+
             audit_trail.push(CalculationStep {
                 metric: "Gross Rent Multiplier".to_string(),
                 formula: "Property Value / Gross Scheduled Rent".to_string(),
@@ -188,7 +204,7 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
                 result: grm,
                 sources: vec![],
             });
-            
+
             Some(grm)
         }
         _ => None,
@@ -199,7 +215,9 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
         warnings.push("Note: Debt service not provided - DSCR cannot be calculated".to_string());
     }
     if input.property_value.is_none() {
-        warnings.push("Note: Property value not provided - Cap Rate and LTV cannot be calculated".to_string());
+        warnings.push(
+            "Note: Property value not provided - Cap Rate and LTV cannot be calculated".to_string(),
+        );
     }
 
     UnderwritingResult {
@@ -217,7 +235,7 @@ pub fn calculate_underwriting(input: UnderwritingInput) -> UnderwritingResult {
 /// Apply stress test scenarios to underwriting results
 pub fn apply_stress_test(input: StressTestInput) -> StressTestResult {
     let base = &input.base_result;
-    
+
     // Get base values
     let mut collected_rent = 0.0;
     let mut operating_expenses = 0.0;
@@ -360,7 +378,7 @@ mod tests {
         let stress_input = StressTestInput {
             base_result: base_result.clone(),
             occupancy_adjustment: None,
-            rent_adjustment: Some(-10.0), // 10% rent decrease
+            rent_adjustment: Some(-10.0),  // 10% rent decrease
             expense_adjustment: Some(5.0), // 5% expense increase
             interest_rate_adjustment: None,
         };
@@ -371,4 +389,3 @@ mod tests {
         assert!(stress_result.comparison.noi_change < 0.0);
     }
 }
-
