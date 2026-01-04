@@ -1,0 +1,18 @@
+.landing-chat {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fff;
+}
+
+.hero-section {
+  animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

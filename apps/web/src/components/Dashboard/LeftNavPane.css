@@ -1,0 +1,15 @@
+.left-nav-pane {
+  width: 240px;
+  height: 100vh;
+  border-right: 1px solid #e0e0e0;
+  background-color: #fff;
+}
+
+.deal-item:hover {
+  background-color: #f8f9fa !important;
+}
+
+.deal-item:active {
+  background-color: #e9ecef !important;
+}
+

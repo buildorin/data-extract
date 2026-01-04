@@ -1,0 +1,328 @@
+import { useState, useRef, useEffect } from "react";
+import { Flex, Text, TextField, Button, Card, ScrollArea } from "@radix-ui/themes";
+import { ChatMessage } from "../../services/chatApi";
+import "./MiddleChatPane.css";
+
+interface MiddleChatPaneProps {
+  dealId: string | null;
+  messages: ChatMessage[];
+  onSendMessage: (message: string) => void;
+  onFileUpload?: (file: File) => void;
+  onPreviewUpdate?: (type: string, data: any) => void;
+}
+
+interface ExpandableActionProps {
+  status: "pending" | "running" | "completed" | "failed";
+  label: string;
+  icon?: string;
+  children?: React.ReactNode;
+}
+
+function ExpandableAction({ status, label, icon, children }: ExpandableActionProps) {
+  const [isExpanded, setIsExpanded] = useState(status === "completed");
+
+  const getStatusIcon = () => {
+    if (icon) return icon;
+    switch (status) {
+      case "completed":
+        return "✓";
+      case "running":
+        return "⟳";
+      case "failed":
+        return "✗";
+      default:
+        return "○";
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case "completed":
+        return "#4CAF50";
+      case "running":
+        return "#FF9800";
+      case "failed":
+        return "#f44336";
+      default:
+        return "#999";
+    }
+  };
+
+  return (
+    <Flex direction="column" gap="8px">
+      <Flex
+        align="center"
+        gap="8px"
+        p="8px 12px"
+        style={{
+          backgroundColor: "#f8f9fa",
+          borderRadius: "6px",
+          cursor: children ? "pointer" : "default",
+        }}
+        onClick={() => children && setIsExpanded(!isExpanded)}
+      >
+        <Text
+          size="3"
+          weight="bold"
+          style={{ color: getStatusColor() }}
+        >
+          {getStatusIcon()}
+        </Text>
+        <Text size="3" weight="medium" style={{ flex: 1 }}>
+          {label}
+        </Text>
+        {children && (
+          <Text size="2" style={{ color: "#999" }}>
+            {isExpanded ? "▲" : "▼"}
+          </Text>
+        )}
+      </Flex>
+      {isExpanded && children && (
+        <Card style={{ marginLeft: "24px", padding: "12px" }}>
+          {children}
+        </Card>
+      )}
+    </Flex>
+  );
+}
+
+export default function MiddleChatPane({
+  dealId,
+  messages,
+  onSendMessage,
+  onFileUpload,
+}: MiddleChatPaneProps) {
+  const [inputValue, setInputValue] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    const message = inputValue.trim();
+    if (!message) return;
+
+    onSendMessage(message);
+    setInputValue("");
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0 && onFileUpload) {
+      onFileUpload(files[0]);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0 && onFileUpload) {
+      onFileUpload(files[0]);
+    }
+  };
+
+  const getPlaceholder = () => {
+    if (!dealId) {
+      return "Create a new deal or select an existing one to start chatting...";
+    }
+    return "Message Orin...";
+  };
+
+  const renderMessage = (message: ChatMessage) => {
+    const isUser = message.role === "user";
+
+    return (
+      <Flex
+        key={message.id}
+        direction="column"
+        style={{
+          alignSelf: isUser ? "flex-end" : "flex-start",
+          maxWidth: "80%",
+        }}
+      >
+        <Card
+          style={{
+            padding: "12px 16px",
+            backgroundColor: isUser ? "#545454" : "#f0f0f0",
+            color: isUser ? "#fff" : "#111",
+            borderRadius: "12px",
+          }}
+        >
+          <Text size="3" style={{ lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
+            {message.content}
+          </Text>
+        </Card>
+
+        {/* Expandable Actions */}
+        {message.actions && message.actions.length > 0 && (
+          <Flex direction="column" gap="8px" mt="12px">
+            {message.actions.map((action) => (
+              <ExpandableAction
+                key={action.id}
+                status={action.status}
+                label={action.label}
+              >
+                {action.data && (
+                  <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                    {JSON.stringify(action.data, null, 2)}
+                  </Text>
+                )}
+              </ExpandableAction>
+            ))}
+          </Flex>
+        )}
+      </Flex>
+    );
+  };
+
+  return (
+    <Flex
+      direction="column"
+      style={{
+        flex: 1,
+        minWidth: "400px",
+        height: "100vh",
+        borderRight: "1px solid #e0e0e0",
+        backgroundColor: "#fff",
+      }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Header */}
+      <Flex
+        align="center"
+        justify="between"
+        p="16px 24px"
+        style={{
+          borderBottom: "1px solid #e0e0e0",
+        }}
+      >
+        <Text size="4" weight="medium">
+          {dealId ? "Chat" : "New Deal"}
+        </Text>
+      </Flex>
+
+      {/* Messages */}
+      <ScrollArea
+        style={{ flex: 1, padding: "24px" }}
+        scrollbars="vertical"
+      >
+        <Flex direction="column" gap="16px">
+          {messages.length === 0 && dealId === null ? (
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              style={{ height: "100%", padding: "40px", textAlign: "center" }}
+            >
+              <Text size="5" weight="medium" style={{ marginBottom: "12px" }}>
+                Start a New Deal
+              </Text>
+              <Text size="3" style={{ color: "#666", maxWidth: "400px" }}>
+                Create a new deal to analyze properties, extract facts, calculate underwriting metrics, and generate investor packages.
+              </Text>
+            </Flex>
+          ) : (
+            messages.map((message) => renderMessage(message))
+          )}
+          <div ref={messagesEndRef} />
+        </Flex>
+      </ScrollArea>
+
+      {/* Input Area */}
+      <Flex
+        p="16px 24px"
+        style={{
+          borderTop: "1px solid #e0e0e0",
+        }}
+      >
+        {isDragging ? (
+          <Flex
+            align="center"
+            justify="center"
+            style={{
+              width: "100%",
+              padding: "40px",
+              border: "2px dashed #1976D2",
+              borderRadius: "8px",
+              backgroundColor: "#E3F2FD",
+            }}
+          >
+            <Text size="3" style={{ color: "#1976D2" }}>
+              📎 Drop your document here
+            </Text>
+          </Flex>
+        ) : (
+          <Flex gap="8px" align="center" style={{ width: "100%" }}>
+            <TextField.Root
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={getPlaceholder()}
+              disabled={!dealId}
+              style={{
+                flex: 1,
+                fontSize: "14px",
+              }}
+              size="3"
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="soft"
+              disabled={!dealId}
+              style={{
+                cursor: dealId ? "pointer" : "not-allowed",
+              }}
+            >
+              📎
+            </Button>
+            <Button
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim() || !dealId}
+              style={{
+                backgroundColor:
+                  inputValue.trim() && dealId ? "#545454" : "#ccc",
+                color: "#fff",
+                cursor:
+                  inputValue.trim() && dealId ? "pointer" : "not-allowed",
+              }}
+            >
+              Send
+            </Button>
+          </Flex>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          style={{ display: "none" }}
+          onChange={handleFileSelect}
+          accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png"
+        />
+      </Flex>
+    </Flex>
+  );
+}
+

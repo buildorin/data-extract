@@ -1,0 +1,19 @@
+.right-preview-pane {
+  width: 400px;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.preview-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
