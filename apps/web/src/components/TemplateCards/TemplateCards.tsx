@@ -16,27 +16,40 @@ export default function TemplateCards({ onSelect }: TemplateCardsProps) {
   const templates: TemplateCard[] = [
     {
       id: "analyze-property",
-      title: "Analyze Property",
-      description: "Upload rent rolls, P&Ls, and mortgage statements to extract key facts and calculate underwriting metrics.",
-      prompt: "I want to analyze a property. What documents do I need to upload?",
+      title: "Analyze a Deal in 2 Minutes",
+      description: "Drop a rent roll, P&L or cashflow statement to extract key facts NOI, DSCR, and cap rate instantly.",
+      prompt: "What can you tell me from a rent roll?",
     },
     {
       id: "calculate-dscr",
       title: "Calculate DSCR & Cap Spread",
-      description: "Get accurate debt service coverage ratios and capitalization rates from your property financials.",
-      prompt: "I need to calculate DSCR and cap spread for my property. What information do you need?",
+      description: "Get accurate financial numbers and rates to see if a deal pencils before you go deeper",
+      prompt: "How do you calculate DSCR and cap spread? Show me an example",
     },
     {
       id: "generate-memo",
-      title: "Generate Investor Memo",
-      description: "Create LP-ready deal packages with executive summaries, financial analysis, and risk assessments.",
-      prompt: "I need to create an investor-ready memo. Can you guide me through the process?",
+      title: "Create an LP Package",
+      description: "Turn your deal into an investor-ready memo with financials, risks, and terms.",
+      prompt: "What goes into an investor memo? Show me a sample structure.",
     },
     {
       id: "estimate-capital",
       title: "Estimate Capital Access",
-      description: "Determine how much capital your rental properties can support based on equity and cash flow.",
-      prompt: "How much capital can I access based on my rental properties?",
+      description: "See how much capital your rental equity can support — without refinancing.",
+      prompt: "How do you estimate equity capital access from rental properties?",
+    },
+    {
+      id: "model-renovation",
+      title: "Model a Renovation",
+      description: "See how unit upgrades affect rent, cash flow, and property value.",
+      prompt: "How do I know if a renovation is worth it? What should I consider?",
+    
+    },
+    {
+      id: "review-portfolio",
+      title: "Review My Portfolio",
+      description: "Upload multiple properties and get a consolidated view of NOI, equity, and risk.",
+      prompt: "Can you analyze a multi-property portfolio? What would that look like?",
     },
   ];
 

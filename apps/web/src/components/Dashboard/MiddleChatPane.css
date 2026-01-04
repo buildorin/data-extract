@@ -51,10 +51,71 @@
 /* Ensure user message text is always white and visible */
 .chat-message-bubble[style*="background-color: rgb(17, 17, 17)"],
 .chat-message-bubble[style*="background-color: #111"] {
-  background-color: #121 !important;
+  background-color: #111 !important;
 }
 
 .chat-message-bubble[style*="background-color: rgb(17, 17, 17)"] *,
 .chat-message-bubble[style*="background-color: #111"] * {
   color: #fff !important;
+}
+
+/* Remove all borders from input field - only outer container has border */
+.chat-input-no-border {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chat-input-no-border:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove all borders from TextField */
+.middle-chat-pane :global(.rt-TextFieldRoot) {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.middle-chat-pane :global(.rt-TextFieldInput) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Ensure input text is always visible (black) */
+.middle-chat-pane input[type="text"] {
+  color: #111 !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.middle-chat-pane input[type="text"]::placeholder {
+  color: #999 !important;
+}
+
+.middle-chat-pane input[type="text"]:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.middle-chat-pane input[type="text"]:disabled {
+  color: #999 !important;
+  cursor: not-allowed;
+}
+
+.add-button:hover {
+  background-color: #f5f5f5;
+}
+
+.send-button:hover {
+  opacity: 0.9;
+}
+
+.send-button:disabled:hover {
+  background-color: transparent;
+  cursor: not-allowed;
 }

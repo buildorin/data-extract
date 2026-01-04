@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Flex, Text, TextField, Button, ScrollArea } from "@radix-ui/themes";
+import { Flex, Text, Button } from "@radix-ui/themes";
 import { ChatMessage } from "../../services/chatApi";
 import "./MiddleChatPane.css";
 
@@ -96,6 +96,7 @@ export default function MiddleChatPane({
   const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom of messages container (not the whole page)
@@ -110,10 +111,14 @@ export default function MiddleChatPane({
 
   const handleSendMessage = () => {
     const message = inputValue.trim();
-    if (!message) return;
+    if (!message || !dealId) return;
 
     onSendMessage(message);
     setInputValue("");
+    // Keep focus on input after sending
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -177,7 +182,7 @@ export default function MiddleChatPane({
             backgroundColor: isUser ? "#111" : "#f5f5f5",
             color: isUser ? "#fff" : "#111",
             borderRadius: "12px",
-            border: isUser ? "1px solid #111" : "none",
+            border: isUser ? "1px solid #111" : "1px solid #e0e0e0",
             boxShadow: "none",
             overflow: "visible",
             position: "relative",
@@ -228,9 +233,6 @@ export default function MiddleChatPane({
         borderRight: "1px solid #e0e0e0",
         backgroundColor: "#fff",
       }}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
     >
       {/* Header */}
       <Flex
@@ -280,75 +282,141 @@ export default function MiddleChatPane({
         </Flex>
       </div>
 
-      {/* Input Area */}
+      {/* Input Area - Outer container with border, buttons below text field */}
       <Flex
         p="16px 24px"
         style={{
           borderTop: "1px solid #e0e0e0",
         }}
       >
-        {isDragging ? (
-          <Flex
-            align="center"
-            justify="center"
-            style={{
-              width: "100%",
-              padding: "40px",
-              border: "2px dashed #1976D2",
-              borderRadius: "8px",
-              backgroundColor: "#E3F2FD",
-            }}
-          >
-            <Text size="3" style={{ color: "#1976D2" }}>
-              📎 Drop your document here
-            </Text>
-          </Flex>
-        ) : (
-          <Flex gap="8px" align="center" style={{ width: "100%" }}>
-            <TextField.Root
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={getPlaceholder()}
-              disabled={!dealId}
-              style={{
-                flex: 1,
-                fontSize: "14px",
-              }}
+        <Flex
+          direction="column"
+          style={{
+            border: isDragging ? "2px dashed #111" : "1px solid #e0e0e0",
+            borderRadius: "12px",
+            backgroundColor: isDragging ? "#f5f5f5" : "#fff",
+            padding: "16px",
+            transition: "all 0.2s",
+            width: "100%",
+          }}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          {isDragging ? (
+            <Text
               size="3"
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              variant="soft"
-              disabled={!dealId}
               style={{
-                cursor: dealId ? "pointer" : "not-allowed",
+                color: "#111",
+                textAlign: "center",
+                width: "100%",
+                padding: "10px",
               }}
             >
-              📎
-            </Button>
-            <Button
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || !dealId}
-              style={{
-                backgroundColor:
-                  inputValue.trim() && dealId ? "#545454" : "#ccc",
-                color: "#fff",
-                cursor:
-                  inputValue.trim() && dealId ? "pointer" : "not-allowed",
-              }}
-            >
-              Send
-            </Button>
-          </Flex>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          style={{ display: "none" }}
-          onChange={handleFileSelect}
-          accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png"
-        />
+              Drop your document here
+            </Text>
+          ) : (
+            <>
+              {/* Text Input - No borders, full width */}
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={getPlaceholder()}
+                disabled={!dealId}
+                style={{
+                  width: "100%",
+                  fontSize: "16px",
+                  border: "none",
+                  backgroundColor: "transparent",
+                  boxShadow: "none",
+                  padding: "0",
+                  marginBottom: "12px",
+                  outline: "none",
+                  color: "#111",
+                  cursor: dealId ? "text" : "not-allowed",
+                }}
+                className="chat-input-no-border"
+              />
+
+              {/* Buttons Row - Below text field, inside container */}
+              <Flex
+                justify="between"
+                align="center"
+                style={{
+                  width: "100%",
+                }}
+              >
+                {/* + Button at leftmost */}
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  size="2"
+                  disabled={!dealId}
+                  style={{
+                    cursor: dealId ? "pointer" : "not-allowed",
+                    padding: "0",
+                    minWidth: "32px",
+                    width: "32px",
+                    height: "32px",
+                    backgroundColor: "transparent",
+                    color: "#111",
+                    border: "1px solid #111",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    opacity: dealId ? 1 : 0.5,
+                  }}
+                  className="add-button"
+                >
+                  <Text size="4" weight="bold" style={{ lineHeight: "1" }}>
+                    +
+                  </Text>
+                </Button>
+
+                {/* Arrow Button at rightmost */}
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || !dealId}
+                  variant="outline"
+                  size="2"
+                  style={{
+                    cursor: inputValue.trim() && dealId ? "pointer" : "not-allowed",
+                    padding: "0",
+                    minWidth: "32px",
+                    width: "32px",
+                    height: "32px",
+                    backgroundColor: inputValue.trim() && dealId ? "#111" : "transparent",
+                    color: inputValue.trim() && dealId ? "#fff" : "#ccc",
+                    border: "1px solid #111",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                  className="send-button"
+                >
+                  <Text size="3" weight="bold" style={{ lineHeight: "1" }}>
+                    ↑
+                  </Text>
+                </Button>
+              </Flex>
+            </>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            style={{ display: "none" }}
+            onChange={handleFileSelect}
+            accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png"
+          />
+        </Flex>
       </Flex>
     </Flex>
   );

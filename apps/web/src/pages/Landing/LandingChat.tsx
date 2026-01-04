@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Flex, Text, Button } from "@radix-ui/themes";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
@@ -14,6 +14,7 @@ export default function LandingChat() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
   const [pendingLoginAction, setPendingLoginAction] = useState(false);
+  const chatInterfaceRef = useRef<HTMLDivElement>(null);
 
   const handleGoToDashboard = () => {
     if (auth.isAuthenticated) {
@@ -83,8 +84,140 @@ export default function LandingChat() {
     // Simulate assistant response
     setTimeout(() => {
       let assistantResponse = "";
+      let hasTemplateResponse = false;
       
-      if (lowerContent.includes("analyze") || lowerContent.includes("property")) {
+      // Check for template card prompts first
+      if (lowerContent.includes("rent roll") || lowerContent.includes("analyze")) {
+        assistantResponse = `From a rent roll spreadsheet, I can extract and calculate:
+
+┌─────────────────────────────────────┐
+│  Example: 12-Unit Multifamily       │
+│  Austin, TX                         │
+├─────────────────────────────────────┤
+│  Gross Rent       $14,400/mo        │
+│  Vacancy          8% (1 unit)       │
+│  Effective Rent   $13,248/mo        │
+│  Est. NOI         $108,000/yr       │
+│  DSCR             1.38x             │
+│  Supportable Capital  $180K–$240K   │
+└─────────────────────────────────────┘
+
+`;
+        hasTemplateResponse = true;
+      } 
+      else if (lowerContent.includes("calculate dscr") || lowerContent.includes("cap spread")) {
+        assistantResponse = `Here's how I break it down:
+
+**DSCR (Debt Service Coverage Ratio)**
+NOI ÷ Annual Debt Payments
+
+Example: $108K NOI ÷ $72K debt service = 1.5x DSCR
+→ Lenders typically want 1.25x minimum
+
+**Cap Spread**
+Property Cap Rate − Cost of Debt
+
+Example: 7.2% cap − 6.5% debt rate = +70 bps spread
+→ Positive spread = deal generates excess return
+
+Want me to run these for your property?`;
+        hasTemplateResponse = true;
+      } 
+      else if (lowerContent.includes("investor memo") || (lowerContent.includes("LP package") || lowerContent.includes("structure"))) {
+        assistantResponse = `A solid LP package typically includes:
+
+1. **Executive Summary** — Deal thesis in 2 paragraphs
+2. **Property Overview** — Location, units, condition, photos
+3. **Financial Analysis** — NOI, DSCR, cap rate, projections
+4. **Capital Structure** — Equity/debt split, terms, waterfall
+5. **Risk Factors** — Market, tenant, rate sensitivity
+6. **Exit Strategy** — Hold period, target returns
+
+Here's a sample structure:
+
+┌─────────────────────────────────────┐
+│  [Sample Memo Preview]              │
+│  Riverside Townhomes — 8 Units      │
+│  $420K Raise | 8.5% Pref | 3-Yr Hold│
+└─────────────────────────────────────┘
+
+I can generate this from your property docs.`;
+        hasTemplateResponse = true;
+      } 
+      else if (lowerContent.includes("equity capital") || (lowerContent.includes("home equity") || lowerContent.includes("property equity"))) {
+        assistantResponse = `I look at three things:
+
+1. **Equity Position**
+   Property Value − Existing Debt = Available Equity
+   
+2. **Cash Flow Coverage**
+   Can the property service additional debt/pref?
+   
+3. **Lender/Investor Constraints**
+   Max LTV, min DSCR, rate expectations
+
+**Example:**
+┌─────────────────────────────────────┐
+│  Property Value      $1.8M         │
+│  Existing Mortgage   $720K (3.5%)  │
+│  Gross Equity        $1.08M        │
+│  NOI                 $98K/yr       │
+│  ─────────────────────────────     │
+│  Accessible Capital  $180K–$280K  │
+│  (without refinancing the first)   │
+└─────────────────────────────────────┘
+
+Want to see what your properties can support?`;
+        hasTemplateResponse = true;
+      } 
+      else if (lowerContent.includes("renovation") || lowerContent.includes("upgrade")) {
+        assistantResponse = `Good question — here's how I evaluate a renovation:
+
+**The Core Math:**
+┌─────────────────────────────────────┐
+│  Renovation: 4-Unit Interior Rehab  │
+├─────────────────────────────────────┤
+│  Cost                    $80,000    │
+│  Rent Increase           $200/unit  │
+│  Annual Added Income     $9,600     │
+│  ─────────────────────────────────  │
+│  Simple Payback          8.3 years  │
+│  Cash-on-Cash ROI        12%        │
+└─────────────────────────────────────┘
+
+**But that's not the full picture.**
+
+I also factor in:
+• Vacancy during construction (1-2 months lost rent)
+• Financing cost if you're borrowing for the rehab
+• Depreciation benefits (cost seg can accelerate write-offs)
+• Value-add to property (forced appreciation for refi/sale)
+
+Want me to model a specific project?`;
+        hasTemplateResponse = true;
+      } 
+      else if (lowerContent.includes("multi-property") || (lowerContent.includes("portfolio analysis") && lowerContent.includes("compare properties"))) {
+        assistantResponse = `Yes — here's what a portfolio view looks like:
+
+┌─────────────────────────────────────────────────┐
+│  Portfolio: 6 Properties | Texas               │
+├──────────────────┬──────────┬─────────┬────────┤
+│  Property        │  NOI     │  DSCR   │ Status │
+├──────────────────┼──────────┼─────────┼────────┤
+│  Austin 12-Unit  │  $108K   │  1.42x  │ ✓      │
+│  Dallas Retail   │  $84K    │  1.18x  │ ⚠️     │
+│  Houston 8-Unit  │  $72K    │  1.55x  │ ✓      │
+│  SA Industrial   │  $156K   │  1.61x  │ ✓      │
+│  FW Mixed-Use    │  $48K    │  0.98x  │ 🔴     │
+│  Plano 4-Plex    │  $36K    │  1.33x  │ ✓      │
+├──────────────────┴──────────┴─────────┴────────┤
+│  Total NOI: $504K | Avg DSCR: 1.35x            │
+│  ⚠️ 2 assets underperforming                   │
+└─────────────────────────────────────────────────┘
+
+Upload your rent rolls and I'll build this for you.`;
+        hasTemplateResponse = true;
+      } else if (lowerContent.includes("analyze") || lowerContent.includes("property")) {
         assistantResponse =
           "I can help you analyze a property. To get started, I'll need:\n\n• Rent roll (PDF or spreadsheet)\n• Trailing 12-month P&L\n• Mortgage statement (optional)\n\nYou can upload documents by dragging them into the chat or clicking the + button. Want to proceed?";
         setPendingLoginAction(false);
@@ -119,8 +252,23 @@ export default function LandingChat() {
 
       setMessages((prev) => [...prev, assistantMessage]);
 
+      // If template response, add follow-up prompt
+      if (hasTemplateResponse) {
+        setTimeout(() => {
+          const followUpMessage: ChatMessage = {
+            id: (Date.now() + 2).toString(),
+            role: "assistant",
+            content: "Want to see how this works with your actual property? Upload a document or create a free account to get started.",
+            timestamp: new Date(),
+          };
+          
+          setMessages((prev) => [...prev, followUpMessage]);
+          setPendingLoginAction(true);
+        }, 1500);
+      }
+
       // Trigger login modal after 2nd user message (if not already authenticated)
-      if (messageCount >= 1 && !auth.isAuthenticated && !pendingLoginAction) {
+      if (messageCount >= 1 && !auth.isAuthenticated && !pendingLoginAction && !hasTemplateResponse) {
         setTimeout(() => {
           setShowLoginModal(true);
         }, 1000);
@@ -165,7 +313,19 @@ export default function LandingChat() {
   };
 
   const handleTemplateSelect = (prompt: string) => {
-    handleMessage(prompt);
+    // Scroll to chat interface smoothly
+    if (chatInterfaceRef.current) {
+      chatInterfaceRef.current.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "center",
+        inline: "nearest"
+      });
+    }
+    
+    // Small delay to ensure scroll starts, then send message
+    setTimeout(() => {
+      handleMessage(prompt);
+    }, 200);
   };
 
   return (
@@ -258,12 +418,14 @@ export default function LandingChat() {
       >
         {/* Hero Section */}
         <Flex
+          ref={chatInterfaceRef}
           direction="column"
           align="center"
           style={{
             width: "100%",
             maxWidth: "800px",
             marginBottom: "80px",
+            scrollMarginTop: "100px", // Add offset for scroll positioning
           }}
         >
           <Text

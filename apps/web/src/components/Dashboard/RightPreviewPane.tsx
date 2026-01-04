@@ -1,4 +1,4 @@
-import { Flex, Text, Tabs, ScrollArea } from "@radix-ui/themes";
+import { Flex, Text, Tabs, ScrollArea, Button } from "@radix-ui/themes";
 import { useQuery } from "react-query";
 import { getDeal, getDealFacts, getDealDocuments } from "../../services/dealApi";
 import { calculateUnderwriting, UnderwritingResult } from "../../services/underwritingApi";
@@ -35,10 +35,24 @@ export default function RightPreviewPane({
     { enabled: !!dealId }
   );
 
-  const { data: underwriting } = useQuery<UnderwritingResult | null>(
+  // Check if deal is ready for underwriting
+  const isReadyForUnderwriting = deal?.status === "ready_for_underwriting" || deal?.status === "underwriting_complete";
+
+  const { 
+    data: underwriting, 
+    isLoading: isLoadingUnderwriting,
+    isError: isUnderwritingError,
+    refetch: refetchUnderwriting 
+  } = useQuery<UnderwritingResult | null>(
     ["underwriting", dealId],
     () => (dealId ? calculateUnderwriting(dealId) : null),
-    { enabled: !!dealId && previewType === "underwriting" }
+    { 
+      enabled: !!dealId && (previewType === "underwriting" || isReadyForUnderwriting),
+      // Retry on error to handle cases where underwriting hasn't been calculated yet
+      retry: 1,
+      // Refetch when tab changes to underwriting
+      refetchOnWindowFocus: previewType === "underwriting",
+    }
   );
 
   // Empty state
@@ -165,13 +179,35 @@ export default function RightPreviewPane({
 
           {/* Underwriting Tab */}
           <Tabs.Content value="underwriting" style={{ padding: "16px" }}>
-            {dealId && underwriting && (
+            {dealId && isLoadingUnderwriting && (
+              <Flex direction="column" align="center" justify="center" p="24px" gap="12px">
+                <Text size="3" style={{ color: "#666" }}>
+                  Calculating underwriting metrics...
+                </Text>
+              </Flex>
+            )}
+            {dealId && isUnderwritingError && (
+              <Flex direction="column" align="center" justify="center" p="24px" gap="12px">
+                <Text size="3" style={{ color: "#e74c3c" }}>
+                  Failed to calculate underwriting. Please try again.
+                </Text>
+                <Button size="2" onClick={() => refetchUnderwriting()}>
+                  Retry
+                </Button>
+              </Flex>
+            )}
+            {dealId && underwriting && !isLoadingUnderwriting && (
               <UnderwritingDashboard dealId={dealId} />
             )}
-            {dealId && !underwriting && (
-              <Text size="2" style={{ color: "#999" }}>
-                Run underwriting analysis to see metrics
-              </Text>
+            {dealId && !underwriting && !isLoadingUnderwriting && !isUnderwritingError && (
+              <Flex direction="column" align="center" justify="center" p="24px" gap="12px">
+                <Text size="3" style={{ color: "#999", textAlign: "center" }}>
+                  Run underwriting analysis to see metrics
+                </Text>
+                <Text size="2" style={{ color: "#999", textAlign: "center" }}>
+                  Go to the Facts tab and click "Run Underwriting →"
+                </Text>
+              </Flex>
             )}
           </Tabs.Content>
 
