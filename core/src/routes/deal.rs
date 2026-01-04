@@ -1,4 +1,4 @@
-use actix_multipart::form::{MultipartForm, tempfile::TempFile, text::Text};
+use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 use actix_web::{web, HttpResponse, Result};
 use chrono::Utc;
 use diesel::prelude::*;
@@ -11,7 +11,9 @@ use crate::models::document::{Document, DocumentResponse, NewDocument, UpdateDoc
 use crate::models::fact::{
     ApproveFactsRequest, Fact, FactResponse, FactType, NewFact, UpdateFact, UpdateFactValueRequest,
 };
-use crate::services::underwriting::{calculate_underwriting, UnderwritingInput, UnderwritingResult};
+use crate::services::underwriting::{
+    calculate_underwriting, UnderwritingInput, UnderwritingResult,
+};
 use crate::utils::clients::get_pg_client;
 
 // POST /api/v1/deals - Create new deal
@@ -37,7 +39,7 @@ pub async fn create_deal_route(
 
     let result = web::block(move || {
         use crate::data::schema::deals::dsl::*;
-        
+
         diesel::insert_into(deals)
             .values(&new_deal)
             .get_result::<Deal>(&mut client)
@@ -59,7 +61,7 @@ pub async fn create_deal_route(
 // GET /api/v1/deals - List user's deals
 pub async fn get_deals_route(user_info: web::ReqData<UserInfo>) -> Result<HttpResponse> {
     let user_id = user_info.user_id.clone();
-    
+
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
@@ -69,12 +71,12 @@ pub async fn get_deals_route(user_info: web::ReqData<UserInfo>) -> Result<HttpRe
         use crate::data::schema::deals::dsl::*;
         use crate::data::schema::documents;
         use crate::data::schema::facts;
-        
+
         let deal_list: Vec<Deal> = deals
             .filter(user_id.eq(&user_id))
             .order(created_at.desc())
             .load::<Deal>(&mut client)?;
-        
+
         // Get counts for each deal
         let mut responses = Vec::new();
         for deal in deal_list {
@@ -82,18 +84,18 @@ pub async fn get_deals_route(user_info: web::ReqData<UserInfo>) -> Result<HttpRe
                 .filter(documents::deal_id.eq(&deal.deal_id))
                 .count()
                 .get_result(&mut client)?;
-            
+
             let fact_count: i64 = facts::table
                 .filter(facts::deal_id.eq(&deal.deal_id))
                 .count()
                 .get_result(&mut client)?;
-            
+
             let mut response: DealResponse = deal.into();
             response.document_count = Some(doc_count);
             response.fact_count = Some(fact_count);
             responses.push(response);
         }
-        
+
         Ok::<Vec<DealResponse>, diesel::result::Error>(responses)
     })
     .await
@@ -116,7 +118,7 @@ pub async fn get_deal_route(
 ) -> Result<HttpResponse> {
     let deal_id = path.into_inner();
     let user_id = user_info.user_id.clone();
-    
+
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
@@ -126,26 +128,26 @@ pub async fn get_deal_route(
         use crate::data::schema::deals::dsl::*;
         use crate::data::schema::documents;
         use crate::data::schema::facts;
-        
+
         let deal = deals
             .filter(deal_id.eq(&deal_id))
             .filter(user_id.eq(&user_id))
             .first::<Deal>(&mut client)?;
-        
+
         let doc_count: i64 = documents::table
             .filter(documents::deal_id.eq(&deal.deal_id))
             .count()
             .get_result(&mut client)?;
-        
+
         let fact_count: i64 = facts::table
             .filter(facts::deal_id.eq(&deal.deal_id))
             .count()
             .get_result(&mut client)?;
-        
+
         let mut response: DealResponse = deal.into();
         response.document_count = Some(doc_count);
         response.fact_count = Some(fact_count);
-        
+
         Ok::<DealResponse, diesel::result::Error>(response)
     })
     .await
@@ -177,7 +179,7 @@ pub async fn upload_deal_documents(
     let deal_id = path.into_inner();
     let user_id = user_info.user_id.clone();
     let doc_type = form.document_type.0;
-    
+
     // Verify deal ownership
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
@@ -210,14 +212,14 @@ pub async fn upload_deal_documents(
 
     // Create document records for each file
     let mut document_responses = Vec::new();
-    
+
     for file in form.files {
         let document_id = Uuid::new_v4().to_string();
         let file_name = file.file_name.unwrap_or_else(|| "unknown".to_string());
-        
+
         // TODO: Upload file to S3 and trigger OCR processing
         // For now, just create the database record
-        
+
         let new_doc = NewDocument {
             document_id: document_id.clone(),
             deal_id: deal_id.clone(),
@@ -261,7 +263,7 @@ pub async fn get_deal_documents(
 ) -> Result<HttpResponse> {
     let deal_id = path.into_inner();
     let user_id = user_info.user_id.clone();
-    
+
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
@@ -271,19 +273,19 @@ pub async fn get_deal_documents(
         use crate::data::schema::deals::dsl::*;
         use crate::data::schema::documents;
         use crate::data::schema::facts;
-        
+
         // Verify deal ownership
         deals
             .filter(deal_id.eq(&deal_id))
             .filter(user_id.eq(&user_id))
             .first::<Deal>(&mut client)?;
-        
+
         // Get documents
         let docs: Vec<Document> = documents::table
             .filter(documents::deal_id.eq(&deal_id))
             .order(documents::created_at.desc())
             .load::<Document>(&mut client)?;
-        
+
         // Get fact counts for each document
         let mut responses = Vec::new();
         for doc in docs {
@@ -291,12 +293,12 @@ pub async fn get_deal_documents(
                 .filter(facts::document_id.eq(&doc.document_id))
                 .count()
                 .get_result(&mut client)?;
-            
+
             let mut response: DocumentResponse = doc.into();
             response.fact_count = Some(fact_count);
             responses.push(response);
         }
-        
+
         Ok::<Vec<DocumentResponse>, diesel::result::Error>(responses)
     })
     .await
@@ -319,7 +321,7 @@ pub async fn get_deal_facts(
 ) -> Result<HttpResponse> {
     let deal_id = path.into_inner();
     let user_id = user_info.user_id.clone();
-    
+
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
@@ -328,28 +330,29 @@ pub async fn get_deal_facts(
     let results = web::block(move || {
         use crate::data::schema::deals::dsl::*;
         use crate::data::schema::facts;
-        
+
         // Verify deal ownership
         deals
             .filter(deal_id.eq(&deal_id))
             .filter(user_id.eq(&user_id))
             .first::<Deal>(&mut client)?;
-        
+
         // Get facts
         let fact_list: Vec<Fact> = facts::table
             .filter(facts::deal_id.eq(&deal_id))
             .order(facts::created_at.asc())
             .load::<Fact>(&mut client)?;
-        
+
         // Convert to responses
-        let responses: Result<Vec<FactResponse>, serde_json::Error> = fact_list
-            .into_iter()
-            .map(|f| f.to_response())
-            .collect();
-        
-        responses.map_err(|_| diesel::result::Error::DeserializationError(Box::new(
-            std::io::Error::new(std::io::ErrorKind::Other, "Failed to deserialize facts")
-        )))
+        let responses: Result<Vec<FactResponse>, serde_json::Error> =
+            fact_list.into_iter().map(|f| f.to_response()).collect();
+
+        responses.map_err(|_| {
+            diesel::result::Error::DeserializationError(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Failed to deserialize facts",
+            )))
+        })
     })
     .await
     .map_err(|e| {
@@ -372,7 +375,7 @@ pub async fn update_fact_route(
 ) -> Result<HttpResponse> {
     let (deal_id, fact_id) = path.into_inner();
     let user_id = user_info.user_id.clone();
-    
+
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
@@ -381,26 +384,26 @@ pub async fn update_fact_route(
     let result = web::block(move || {
         use crate::data::schema::deals::dsl::*;
         use crate::data::schema::facts;
-        
+
         // Verify deal ownership
         deals
             .filter(deal_id.eq(&deal_id))
             .filter(user_id.eq(&user_id))
             .first::<Deal>(&mut client)?;
-        
+
         // Check if fact is locked
         let fact: Fact = facts::table
             .filter(facts::fact_id.eq(&fact_id))
             .filter(facts::deal_id.eq(&deal_id))
             .first::<Fact>(&mut client)?;
-        
+
         if fact.locked {
             return Err(diesel::result::Error::DatabaseError(
                 diesel::result::DatabaseErrorKind::Unknown,
-                Box::new("Cannot update locked fact".to_string())
+                Box::new("Cannot update locked fact".to_string()),
             ));
         }
-        
+
         // Update fact
         let update = UpdateFact {
             value: Some(req.value.clone()),
@@ -410,7 +413,7 @@ pub async fn update_fact_route(
             approved_by: None,
             locked: None,
         };
-        
+
         diesel::update(facts::table.filter(facts::fact_id.eq(&fact_id)))
             .set(&update)
             .get_result::<Fact>(&mut client)
@@ -442,7 +445,7 @@ pub async fn approve_facts_route(
     let deal_id = path.into_inner();
     let user_id = user_info.user_id.clone();
     let fact_ids = req.fact_ids.clone();
-    
+
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
@@ -451,13 +454,13 @@ pub async fn approve_facts_route(
     let results = web::block(move || {
         use crate::data::schema::deals::dsl::*;
         use crate::data::schema::facts;
-        
+
         // Verify deal ownership
         deals
             .filter(deal_id.eq(&deal_id))
             .filter(user_id.eq(&user_id))
             .first::<Deal>(&mut client)?;
-        
+
         // Approve and lock facts
         let update = UpdateFact {
             value: None,
@@ -467,11 +470,11 @@ pub async fn approve_facts_route(
             approved_by: Some(user_id.clone()),
             locked: Some(true),
         };
-        
+
         diesel::update(
             facts::table
                 .filter(facts::fact_id.eq_any(&fact_ids))
-                .filter(facts::deal_id.eq(&deal_id))
+                .filter(facts::deal_id.eq(&deal_id)),
         )
         .set(&update)
         .execute(&mut client)
@@ -499,7 +502,7 @@ pub async fn reset_facts_route(
 ) -> Result<HttpResponse> {
     let deal_id = path.into_inner();
     let user_id = user_info.user_id.clone();
-    
+
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
@@ -508,13 +511,13 @@ pub async fn reset_facts_route(
     let results = web::block(move || {
         use crate::data::schema::deals::dsl::*;
         use crate::data::schema::facts;
-        
+
         // Verify deal ownership
         deals
             .filter(deal_id.eq(&deal_id))
             .filter(user_id.eq(&user_id))
             .first::<Deal>(&mut client)?;
-        
+
         // Unlock and reset facts
         let update = UpdateFact {
             value: None,
@@ -524,7 +527,7 @@ pub async fn reset_facts_route(
             approved_by: None,
             locked: Some(false),
         };
-        
+
         diesel::update(facts::table.filter(facts::deal_id.eq(&deal_id)))
             .set(&update)
             .execute(&mut client)
@@ -552,7 +555,7 @@ pub async fn calculate_underwriting_route(
 ) -> Result<HttpResponse> {
     let deal_id = path.into_inner();
     let user_id = user_info.user_id.clone();
-    
+
     let mut client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
@@ -561,20 +564,20 @@ pub async fn calculate_underwriting_route(
     let result = web::block(move || {
         use crate::data::schema::deals::dsl::*;
         use crate::data::schema::facts;
-        
+
         // Verify deal ownership
         deals
             .filter(deal_id.eq(&deal_id))
             .filter(user_id.eq(&user_id))
             .first::<Deal>(&mut client)?;
-        
+
         // Get approved facts for this deal
         let fact_list: Vec<Fact> = facts::table
             .filter(facts::deal_id.eq(&deal_id))
             .filter(facts::status.eq("approved"))
             .filter(facts::locked.eq(true))
             .load::<Fact>(&mut client)?;
-        
+
         // Extract values from facts by type
         let mut unit_count: Option<i32> = None;
         let mut occupancy_rate: Option<f64> = None;
@@ -585,50 +588,52 @@ pub async fn calculate_underwriting_route(
         let mut property_value: Option<f64> = None;
         let mut mortgage_balance: Option<f64> = None;
         let mut interest_rate: Option<f64> = None;
-        
+
         for fact in fact_list {
             let parsed_value = fact.value.parse::<f64>().ok();
-            
+
             match fact.fact_type.as_str() {
                 "unit_count" => {
                     unit_count = fact.value.parse::<i32>().ok();
-                },
+                }
                 "occupancy_rate" => {
                     occupancy_rate = parsed_value;
-                },
+                }
                 "gross_scheduled_rent" => {
                     gross_scheduled_rent = parsed_value;
-                },
+                }
                 "collected_rent" => {
                     collected_rent = parsed_value;
-                },
+                }
                 "operating_expenses" => {
                     operating_expenses = parsed_value;
-                },
+                }
                 "debt_service" => {
                     debt_service = parsed_value;
-                },
+                }
                 "property_value" => {
                     property_value = parsed_value;
-                },
+                }
                 "mortgage_balance" => {
                     mortgage_balance = parsed_value;
-                },
+                }
                 "interest_rate" => {
                     interest_rate = parsed_value;
-                },
+                }
                 _ => {}
             }
         }
-        
+
         // Validate required fields
         if collected_rent.is_none() || operating_expenses.is_none() {
             return Err(diesel::result::Error::DatabaseError(
                 diesel::result::DatabaseErrorKind::Unknown,
-                Box::new("Missing required facts: collected_rent and operating_expenses".to_string())
+                Box::new(
+                    "Missing required facts: collected_rent and operating_expenses".to_string(),
+                ),
             ));
         }
-        
+
         let input = UnderwritingInput {
             unit_count,
             occupancy_rate,
@@ -640,7 +645,7 @@ pub async fn calculate_underwriting_route(
             mortgage_balance,
             interest_rate,
         };
-        
+
         Ok::<UnderwritingResult, diesel::result::Error>(calculate_underwriting(input))
     })
     .await
@@ -655,4 +660,3 @@ pub async fn calculate_underwriting_route(
 
     Ok(HttpResponse::Ok().json(result))
 }
-

@@ -110,7 +110,7 @@ impl FactType {
             FactType::Other => "other",
         }
     }
-    
+
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "unit_count" => Some(FactType::UnitCount),
@@ -144,7 +144,7 @@ impl FactStatus {
             FactStatus::Rejected => "rejected",
         }
     }
-    
+
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "pending_approval" => Some(FactStatus::PendingApproval),
@@ -205,4 +205,3 @@ pub struct UpdateFactValueRequest {
 pub struct ApproveFactsRequest {
     pub fact_ids: Vec<String>,
 }
-

@@ -75,7 +75,7 @@ impl DocumentType {
             DocumentType::Other => "other",
         }
     }
-    
+
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "rent_roll" => Some(DocumentType::RentRoll),
@@ -108,7 +108,7 @@ impl DocumentStatus {
             DocumentStatus::Failed => "failed",
         }
     }
-    
+
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "pending" => Some(DocumentStatus::Pending),
@@ -148,4 +148,3 @@ impl From<Document> for DocumentResponse {
         }
     }
 }
-
