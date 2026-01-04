@@ -30,9 +30,12 @@
   cursor: not-allowed;
 }
 
-/* Messages container - ensure no clipping */
+/* Messages container - scroll within container, not page */
 .messages-container {
   overflow-x: visible !important;
+  scroll-behavior: smooth;
+  /* Prevent page scroll when scrolling messages */
+  overscroll-behavior: contain;
 }
 
 /* Chat message bubble styling - ensure borders are fully visible */
@@ -53,6 +56,20 @@
   color: #fff !important;
 }
 
+/* Remove all borders from input field - only outer container has border */
+.chat-input-no-border {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chat-input-no-border:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* Remove all borders from TextField */
 .chat-interface :global(.rt-TextFieldRoot) {
   border: none !important;
@@ -68,8 +85,16 @@
 /* Ensure input text is always visible (black) */
 .chat-interface input[type="text"] {
   color: #111 !important;
+  border: none !important;
+  outline: none !important;
 }
 
 .chat-interface input[type="text"]::placeholder {
   color: #999 !important;
+}
+
+.chat-interface input[type="text"]:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }

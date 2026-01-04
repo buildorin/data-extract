@@ -89,7 +89,7 @@ export default function RightPreviewPane({
     <Flex
       direction="column"
       style={{
-        width: "400px",
+        width: "600px",
         height: "100vh",
         backgroundColor: "#f8f9fa",
         flexShrink: 0,
@@ -97,7 +97,7 @@ export default function RightPreviewPane({
     >
       <Tabs.Root defaultValue="analysis" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <Tabs.List style={{ padding: "16px 16px 0", backgroundColor: "#fff", borderBottom: "1px solid #e0e0e0" }}>
-          <Tabs.Trigger value="analysis">Analysis</Tabs.Trigger>
+          <Tabs.Trigger value="analysis">Overview</Tabs.Trigger>
           <Tabs.Trigger value="documents">Documents</Tabs.Trigger>
           <Tabs.Trigger value="facts">Facts</Tabs.Trigger>
           <Tabs.Trigger value="underwriting">Underwriting</Tabs.Trigger>

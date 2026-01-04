@@ -25,11 +25,18 @@ export default function ChatInterface({
   const [inputValue, setInputValue] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Scroll to bottom of messages container (not the whole page)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current && messagesEndRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages]);
 
   const handleSendMessage = () => {
@@ -38,6 +45,10 @@ export default function ChatInterface({
 
     onSend(message);
     setInputValue("");
+    // Keep focus on input after sending
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -85,59 +96,67 @@ export default function ChatInterface({
     >
       {/* Messages */}
       {messages.length > 0 && (
-        <Flex
-          direction="column"
-          gap="16px"
+        <div
+          ref={messagesContainerRef}
+          className="messages-container"
           style={{
             marginBottom: "24px",
-            maxHeight: "300px",
+            maxHeight: "400px",
             overflowY: "auto",
             overflowX: "visible",
             padding: "0 24px",
             width: "100%",
+            scrollBehavior: "smooth",
           }}
-          className="messages-container"
         >
-          {messages.map((message) => (
-            <Flex
-              key={message.id}
-              direction="column"
-              style={{
-                alignSelf: message.role === "user" ? "flex-end" : "flex-start",
-                maxWidth: "80%",
-                width: "fit-content",
-                position: "relative",
-              }}
-            >
-              <div
+          <Flex
+            direction="column"
+            gap="16px"
+            style={{
+              paddingBottom: "8px",
+            }}
+          >
+            {messages.map((message) => (
+              <Flex
+                key={message.id}
+                direction="column"
                 style={{
-                  padding: "12px 16px",
-                  backgroundColor:
-                    message.role === "user" ? "#111" : "#f5f5f5",
-                  color: message.role === "user" ? "#fff" : "#111",
-                  borderRadius: "12px",
-                  border: message.role === "user" ? "1px solid #111" : "none",
-                  boxShadow: "none",
-                  overflow: "visible",
+                  alignSelf: message.role === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "80%",
+                  width: "fit-content",
                   position: "relative",
                 }}
-                className="chat-message-bubble"
               >
-                <Text 
-                  size="3" 
-                  style={{ 
-                    lineHeight: "1.5", 
-                    whiteSpace: "pre-wrap",
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    backgroundColor:
+                      message.role === "user" ? "#111" : "#f5f5f5",
                     color: message.role === "user" ? "#fff" : "#111",
+                    borderRadius: "12px",
+                    border: message.role === "user" ? "1px solid #111" : "none",
+                    boxShadow: "none",
+                    overflow: "visible",
+                    position: "relative",
                   }}
+                  className="chat-message-bubble"
                 >
-                  {message.content}
-                </Text>
-              </div>
-            </Flex>
-          ))}
-          <div ref={messagesEndRef} />
-        </Flex>
+                  <Text 
+                    size="3" 
+                    style={{ 
+                      lineHeight: "1.5", 
+                      whiteSpace: "pre-wrap",
+                      color: message.role === "user" ? "#fff" : "#111",
+                    }}
+                  >
+                    {message.content}
+                  </Text>
+                </div>
+              </Flex>
+            ))}
+            <div ref={messagesEndRef} />
+          </Flex>
+        </div>
       )}
 
       {/* Input Area - Outer container with border, buttons below text field */}
@@ -162,7 +181,7 @@ export default function ChatInterface({
               color: "#111",
               textAlign: "center",
               width: "100%",
-              padding: "20px",
+              padding: "10px",
             }}
           >
             Drop your document here
@@ -188,6 +207,7 @@ export default function ChatInterface({
                 outline: "none",
                 color: "#111",
               }}
+              className="chat-input-no-border"
             />
 
             {/* Buttons Row - Below text field, inside container */}

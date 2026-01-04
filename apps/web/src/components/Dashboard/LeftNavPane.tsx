@@ -133,7 +133,7 @@ export default function LeftNavPane({
     <Flex
       direction="column"
       style={{
-        width: "240px",
+        width: "260px",
         height: "100vh",
         borderRight: "1px solid #e0e0e0",
         backgroundColor: "#fff",
@@ -176,25 +176,25 @@ export default function LeftNavPane({
       >
         <Flex direction="column" p="8px 0">
           <Text
-            size="1"
+            size="2"
             weight="bold"
             style={{
               color: "#666",
               textTransform: "uppercase",
-              padding: "8px 12px",
+              padding: "12px 16px",
               letterSpacing: "0.5px",
             }}
           >
             My Deals
           </Text>
 
-          {renderGroup("Active", "🟢", "active", groupedDeals.active)}
+          {renderGroup("Active", "🔵", "active", groupedDeals.active)}
           {renderGroup("In Review", "🟡", "in_review", groupedDeals.in_review)}
-          {renderGroup("Completed", "🔵", "completed", groupedDeals.completed)}
+          {renderGroup("Completed", "🟢", "completed", groupedDeals.completed)}
           {renderGroup("Shared", "🟣", "shared", groupedDeals.shared)}
 
           <Text
-            size="1"
+            size="2"
             weight="bold"
             style={{
               color: "#666",

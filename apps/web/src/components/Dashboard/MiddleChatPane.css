@@ -33,3 +33,28 @@
   }
 }
 
+/* Messages container - scroll within container, not page */
+.messages-container {
+  overflow-x: visible !important;
+  scroll-behavior: smooth;
+  /* Prevent page scroll when scrolling messages */
+  overscroll-behavior: contain;
+}
+
+/* Chat message bubble styling - ensure borders are fully visible */
+.chat-message-bubble {
+  overflow: visible !important;
+  position: relative;
+  display: block;
+}
+
+/* Ensure user message text is always white and visible */
+.chat-message-bubble[style*="background-color: rgb(17, 17, 17)"],
+.chat-message-bubble[style*="background-color: #111"] {
+  background-color: #121 !important;
+}
+
+.chat-message-bubble[style*="background-color: rgb(17, 17, 17)"] *,
+.chat-message-bubble[style*="background-color: #111"] * {
+  color: #fff !important;
+}

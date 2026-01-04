@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Flex, Text, TextField, Button, Card, ScrollArea } from "@radix-ui/themes";
+import { Flex, Text, TextField, Button, ScrollArea } from "@radix-ui/themes";
 import { ChatMessage } from "../../services/chatApi";
 import "./MiddleChatPane.css";
 
@@ -78,9 +78,9 @@ function ExpandableAction({ status, label, icon, children }: ExpandableActionPro
         )}
       </Flex>
       {isExpanded && children && (
-        <Card style={{ marginLeft: "24px", padding: "12px" }}>
+        <div style={{ marginLeft: "24px", padding: "12px", backgroundColor: "#fff", borderRadius: "8px", border: "1px solid #e0e0e0" }}>
           {children}
-        </Card>
+        </div>
       )}
     </Flex>
   );
@@ -95,10 +95,17 @@ export default function MiddleChatPane({
   const [inputValue, setInputValue] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Scroll to bottom of messages container (not the whole page)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current && messagesEndRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages]);
 
   const handleSendMessage = () => {
@@ -160,20 +167,34 @@ export default function MiddleChatPane({
         style={{
           alignSelf: isUser ? "flex-end" : "flex-start",
           maxWidth: "80%",
+          width: "fit-content",
+          position: "relative",
         }}
       >
-        <Card
+        <div
           style={{
             padding: "12px 16px",
-            backgroundColor: isUser ? "#545454" : "#f0f0f0",
+            backgroundColor: isUser ? "#111" : "#f5f5f5",
             color: isUser ? "#fff" : "#111",
             borderRadius: "12px",
+            border: isUser ? "1px solid #111" : "none",
+            boxShadow: "none",
+            overflow: "visible",
+            position: "relative",
           }}
+          className="chat-message-bubble"
         >
-          <Text size="3" style={{ lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
+          <Text 
+            size="3" 
+            style={{ 
+              lineHeight: "1.5", 
+              whiteSpace: "pre-wrap",
+              color: isUser ? "#fff" : "#111",
+            }}
+          >
             {message.content}
           </Text>
-        </Card>
+        </div>
 
         {/* Expandable Actions */}
         {message.actions && message.actions.length > 0 && (
@@ -226,11 +247,18 @@ export default function MiddleChatPane({
       </Flex>
 
       {/* Messages */}
-      <ScrollArea
-        style={{ flex: 1, padding: "24px" }}
-        scrollbars="vertical"
+      <div
+        ref={messagesContainerRef}
+        className="messages-container"
+        style={{
+          flex: 1,
+          padding: "24px",
+          overflowY: "auto",
+          overflowX: "visible",
+          scrollBehavior: "smooth",
+        }}
       >
-        <Flex direction="column" gap="16px">
+        <Flex direction="column" gap="16px" style={{ paddingBottom: "8px" }}>
           {messages.length === 0 && dealId === null ? (
             <Flex
               direction="column"
@@ -250,7 +278,7 @@ export default function MiddleChatPane({
           )}
           <div ref={messagesEndRef} />
         </Flex>
-      </ScrollArea>
+      </div>
 
       {/* Input Area */}
       <Flex
@@ -325,4 +353,3 @@ export default function MiddleChatPane({
     </Flex>
   );
 }
-

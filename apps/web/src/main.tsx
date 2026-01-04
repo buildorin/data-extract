@@ -61,7 +61,7 @@ const router = createBrowserRouter([
         path: "dashboard",
         element: (
           <AuthGuard>
-            <DashboardThreePane /> // New three-pane dashboard
+            <DashboardThreePane /> 
           </AuthGuard>
         ),
       },
