@@ -13,6 +13,7 @@ import {
   FactResponse,
   DocumentResponse,
 } from "../../services/dealApi";
+import { isMockDeal } from "../../services/mockDealData";
 import toast from "react-hot-toast";
 import "./FactReviewDeal.css";
 
@@ -455,7 +456,82 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
           </Dialog.Description>
           
           <Flex direction="column" gap="3" style={{ maxHeight: "70vh", overflow: "auto" }}>
-            {viewingDocument?.url || viewingDocument?.storage_location ? (
+            {isMockDeal(dealId) ? (
+              // Mock data - show sample PDF with disclaimer
+              <Flex direction="column" gap="3">
+                <Card style={{ background: "#fff3cd", borderColor: "#ffc107", padding: "16px" }}>
+                  <Flex direction="column" gap="2">
+                    <Text size="3" weight="bold" style={{ color: "#856404" }}>
+                      ⚠️ Mock Data Preview
+                    </Text>
+                    <Text size="2" style={{ color: "#856404" }}>
+                      This is a sample document preview for demonstration purposes. 
+                      In production, this would display the actual uploaded document.
+                    </Text>
+                  </Flex>
+                </Card>
+                
+                <Card style={{ padding: "24px", background: "#f8f9fa", border: "1px solid #e0e0e0" }}>
+                  <Flex direction="column" gap="3">
+                    <Flex direction="column" gap="1">
+                      <Text size="4" weight="bold">
+                        {viewingDocument?.file_name || "Sample Document"}
+                      </Text>
+                      <Text size="2" color="gray">
+                        Document Type: {viewingDocument?.document_type || "N/A"}
+                      </Text>
+                      {viewingDocument?.page_count && (
+                        <Text size="2" color="gray">
+                          Pages: {viewingDocument.page_count}
+                        </Text>
+                      )}
+                    </Flex>
+                    
+                    <Flex direction="column" gap="2" mt="3">
+                      <Text size="3" weight="medium">
+                        Extracted Information:
+                      </Text>
+                      {facts?.filter(f => f.source_citation.document === viewingDocument?.file_name).map((fact, idx) => (
+                        <Card key={fact.fact_id} style={{ padding: "12px", background: "#fff" }}>
+                          <Flex direction="column" gap="1">
+                            <Flex justify="between" align="center">
+                              <Text size="2" weight="medium">{fact.label}</Text>
+                              <Badge color={fact.status === "approved" ? "green" : fact.status === "missing" ? "red" : "yellow"}>
+                                {fact.status === "approved" ? "Verified" : fact.status === "missing" ? "Missing" : "Needs Review"}
+                              </Badge>
+                            </Flex>
+                            {fact.value && (
+                              <Text size="3" weight="bold">
+                                {fact.value} {fact.unit || ""}
+                              </Text>
+                            )}
+                            <Text size="1" color="gray">
+                              Page {fact.source_citation.page}, Line: {fact.source_citation.line || "N/A"}
+                            </Text>
+                          </Flex>
+                        </Card>
+                      ))}
+                    </Flex>
+                    
+                    <Flex direction="column" gap="1" mt="3" p="3" style={{ background: "#e9ecef", borderRadius: "4px" }}>
+                      <Text size="2" weight="medium">Document Metadata:</Text>
+                      <Text size="1" color="gray">
+                        Created: {viewingDocument?.created_at ? new Date(viewingDocument.created_at).toLocaleDateString() : "N/A"}
+                      </Text>
+                      <Text size="1" color="gray">
+                        Status: {viewingDocument?.status || "N/A"}
+                      </Text>
+                      {viewingDocument?.extracted_at && (
+                        <Text size="1" color="gray">
+                          Extracted: {new Date(viewingDocument.extracted_at).toLocaleDateString()}
+                        </Text>
+                      )}
+                    </Flex>
+                  </Flex>
+                </Card>
+              </Flex>
+            ) : viewingDocument?.url || viewingDocument?.storage_location ? (
+              // Real data - show actual document
               <iframe
                 src={viewingDocument.url || viewingDocument.storage_location}
                 style={{
