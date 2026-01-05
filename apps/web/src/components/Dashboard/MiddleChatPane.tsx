@@ -244,7 +244,7 @@ export default function MiddleChatPane({
         }}
       >
         <Text size="4" weight="medium">
-          {dealId ? "Chat" : "New Deal"}
+          {dealId ? "Deal Chat" : "New Deal"}
         </Text>
       </Flex>
 

@@ -71,7 +71,7 @@ export default function TemplateCards({ onSelect }: TemplateCardsProps) {
           textAlign: "center",
         }}
       >
-        What are you building?
+        Where do you want to start?
       </Text>
 
       <Flex

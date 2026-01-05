@@ -103,7 +103,7 @@ export default function RightPreviewPane({
     <Flex
       direction="column"
       style={{
-        width: "600px",
+        width: "650px",
         height: "100vh",
         backgroundColor: "#f8f9fa",
         flexShrink: 0,

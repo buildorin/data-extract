@@ -16,7 +16,7 @@ export default function QuickActionButtons({ onAction }: QuickActionButtonsProps
     {
       id: "calculate",
       icon: "📈",
-      label: "Calculate DSCR",
+      label: "Calculate Cashflow",
       prompt: "I need to calculate DSCR and cap spread for my property. Show me an example.",
     },
     {
@@ -28,14 +28,14 @@ export default function QuickActionButtons({ onAction }: QuickActionButtonsProps
     {
       id: "estimate",
       icon: "💰",
-      label: "Estimate Capital",
-      prompt: "How much property equity can I access without refinancing? Need an example",
+      label: "Estimate Equity",
+      prompt: "How much property equity can I access without refinancing or selling?",
     },
   ];
 
   return (
     <Flex
-      gap="16px"
+      gap="12px"
       wrap="wrap"
       justify="center"
       style={{
