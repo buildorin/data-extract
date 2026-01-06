@@ -1,0 +1,13 @@
+.quick-action-button {
+  transition: all 0.2s;
+}
+
+.quick-action-button:hover {
+  background-color: #f5f5f5;
+  border-color: #111;
+  transform: translateY(-1px);
+}
+
+.quick-action-button:active {
+  transform: translateY(0);
+}

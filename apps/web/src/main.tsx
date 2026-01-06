@@ -15,8 +15,10 @@ import "./index.css";
 import Auth from "./auth/Auth.tsx";
 import AuthGuard from "./auth/AuthGuard.tsx";
 import store from "./store/store";
-import Dashboard from "./pages/Dashboard/Dashboard.tsx";
-import Landing from "./pages/Landing/Landing.tsx";
+import Dashboard from "./pages/Dashboard/Dashboard.tsx"; // Old dashboard (keep for reference)
+import DashboardThreePane from "./pages/Dashboard/DashboardThreePane.tsx";
+import Landing from "./pages/Landing/Landing.tsx"; // Old landing (keep for reference)
+import LandingChat from "./pages/Landing/LandingChat.tsx";
 import Checkout from "./pages/Checkout/Checkout";
 import { env } from "./config/env";
 
@@ -53,15 +55,27 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Landing />,
+        element: <LandingChat />, // New chat-first landing
       },
       {
         path: "dashboard",
         element: (
           <AuthGuard>
-            <Dashboard />
+            <DashboardThreePane /> 
           </AuthGuard>
         ),
+      },
+      {
+        path: "dashboard-old",
+        element: (
+          <AuthGuard>
+            <Dashboard /> // Old dashboard kept for reference
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "landing-old",
+        element: <Landing />, // Old landing kept for reference
       },
       {
         path: "checkout/return",
