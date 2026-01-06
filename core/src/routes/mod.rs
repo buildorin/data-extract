@@ -1,3 +1,4 @@
+pub mod conversation;
 pub mod deal;
 pub mod github;
 pub mod health;

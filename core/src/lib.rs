@@ -21,6 +21,7 @@ use utoipa_swagger_ui::SwaggerUi;
 pub mod configs;
 pub mod jobs;
 pub mod middleware;
+pub mod agents;
 pub mod models;
 pub mod pipeline;
 pub mod routes;
@@ -195,6 +196,8 @@ pub fn main() -> std::io::Result<()> {
                 .route("/health", web::get().to(health_check))
                 .route("/github", web::get().to(get_github_repo_info))
                 .route("/llm/models", web::get().to(get_models_ids))
+                // Public conversation route (no auth)
+                .route("/api/v1/conversations/public/message", web::post().to(routes::conversation::send_public_message))
                 .service(
                     SwaggerUi::new("/swagger-ui/{_:.*}")
                         .url("/docs/openapi.json", ApiDoc::openapi()),
@@ -215,6 +218,14 @@ pub fn main() -> std::io::Result<()> {
                         .route("/{deal_id}/facts/approve", web::post().to(approve_facts_route))
                         .route("/{deal_id}/facts/reset", web::post().to(reset_facts_route))
                         .route("/{deal_id}/underwrite", web::post().to(calculate_underwriting_route)),
+                )
+                .service(
+                    web::scope("/conversations")
+                        .route("", web::post().to(routes::conversation::create_conversation))
+                        .route("", web::get().to(routes::conversation::list_conversations))
+                        .route("/{conversation_id}", web::get().to(routes::conversation::get_conversation))
+                        .route("/{conversation_id}/messages", web::post().to(routes::conversation::send_message))
+                        .route("/{conversation_id}", web::delete().to(routes::conversation::delete_conversation)),
                 )
                 .service(
                     web::scope("/task")
