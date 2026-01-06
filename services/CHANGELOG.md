@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.4](https://github.com/buildorin/data-extract/compare/chunkr-services-v0.1.3...chunkr-services-v0.1.4) (2026-01-06)
+
+
+### Features
+
+* Added doctr small dockers ([#407](https://github.com/buildorin/data-extract/issues/407)) ([9b8a56e](https://github.com/buildorin/data-extract/commit/9b8a56e273f39aa15d3001c6f7ccb707900dd584))
+* **core:** Improved image uploads to pdf conversion and added checkbox support ([a2b65ed](https://github.com/buildorin/data-extract/commit/a2b65ed182dcc07af1bccc5b4e98dec3a3335ed8))
+
+
+### Bug Fixes
+
+* **core:** Auto-fix clippy warnings ([#518](https://github.com/buildorin/data-extract/issues/518)) ([238f47f](https://github.com/buildorin/data-extract/commit/238f47fdaf5d2e62d12448424d1018eb1803b8f8))
+* Updated problematic ML dependencies ([#468](https://github.com/buildorin/data-extract/issues/468)) ([5e60961](https://github.com/buildorin/data-extract/commit/5e6096122d333b832c8fff1437cb47f70979683e))
+
 ## [0.1.3](https://github.com/lumina-ai-inc/chunkr/compare/chunkr-services-v0.1.2...chunkr-services-v0.1.3) (2025-05-22)
 
 
