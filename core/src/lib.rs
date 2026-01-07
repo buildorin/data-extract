@@ -19,9 +19,10 @@ use utoipa_redoc::{Redoc, Servable};
 use utoipa_swagger_ui::SwaggerUi;
 
 pub mod configs;
+pub mod data;
 pub mod jobs;
 pub mod middleware;
-pub mod agents;
+// pub mod agents; // Temporarily disabled - needs conversion from diesel to tokio-postgres
 pub mod models;
 pub mod pipeline;
 pub mod routes;
@@ -30,11 +31,12 @@ pub mod utils;
 
 use jobs::init::init_jobs;
 use middleware::auth::AuthMiddlewareFactory;
-use routes::deal::{
-    approve_facts_route, calculate_underwriting_route, create_deal_route, get_deal_documents,
-    get_deal_facts, get_deal_route, get_deals_route, reset_facts_route, update_fact_route,
-    upload_deal_documents,
-};
+// Deal routes temporarily disabled - need conversion from diesel to tokio-postgres
+// use routes::deal::{
+//     approve_facts_route, calculate_underwriting_route, create_deal_route, get_deal_documents,
+//     get_deal_facts, get_deal_route, get_deals_route, reset_facts_route, update_fact_route,
+//     upload_deal_documents,
+// };
 use routes::github::get_github_repo_info;
 use routes::health::health_check;
 use routes::llm::get_models_ids;
@@ -58,22 +60,60 @@ const ONE_GB: usize = 1024 * 1024 * 1024; // 1 GB in bytes
 
 fn run_migrations(url: &str) {
     use diesel::prelude::*;
-    let mut conn = diesel::pg::PgConnection::establish(url).expect("Failed to connect to database");
-    conn.run_pending_migrations(MIGRATIONS)
-        .expect("Failed to run migrations");
-
-    println!("Migrations ran successfully");
+    
+    // Retry logic for production environments
+    let max_retries = 5;
+    let mut attempt = 0;
+    
+    loop {
+        attempt += 1;
+        println!("Migration attempt {}/{}", attempt, max_retries);
+        
+        match diesel::pg::PgConnection::establish(url) {
+            Ok(mut conn) => {
+                match conn.run_pending_migrations(MIGRATIONS) {
+                    Ok(_) => {
+                        println!("✅ Migrations ran successfully");
+                        
+                        // Log migration audit trail
+                        if let Ok(env) = std::env::var("ENV") {
+                            if env == "production" {
+                                println!("📝 Migration audit: Environment={}, Timestamp={}", 
+                                    env, chrono::Utc::now().to_rfc3339());
+                            }
+                        }
+                        return;
+                    }
+                    Err(e) => {
+                        eprintln!("❌ Migration error: {}", e);
+                        if attempt >= max_retries {
+                            panic!("Failed to run migrations after {} attempts", max_retries);
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("❌ Database connection error: {}", e);
+                if attempt >= max_retries {
+                    panic!("Failed to connect to database after {} attempts", max_retries);
+                }
+            }
+        }
+        
+        // Wait before retrying
+        std::thread::sleep(std::time::Duration::from_secs(5));
+    }
 }
 
 #[derive(OpenApi)]
 #[openapi(
     info(
-        title = "Chunkr API",
-        description = "API service for document layout analysis and chunking to convert document into RAG/LLM-ready data.",
-        contact(name = "Chunkr", url = "https://chunkr.ai", email = "ishaan@lumina.sh"),
+        title = "Orin API",
+        description = "AI-powered real estate deal analysis platform for fund managers.",
+        contact(name = "Orin", url = "https://orin.ai", email = "support@orin.ai"),
         version = "1.0.0"
     ),
-    servers((url = "https://api.chunkr.ai", description = "Production server")),
+    servers((url = "https://api.orin.ai", description = "Production server")),
     paths(
         routes::health::health_check,
         routes::task::create_task_route,
@@ -181,6 +221,7 @@ pub fn main() -> std::io::Result<()> {
                         .allow_any_origin()
                         .allow_any_method()
                         .allow_any_header()
+                        .supports_credentials()
                 )
                 .wrap(Logger::default())
                 .wrap(Logger::new("%a %{User-Agent}i"))
@@ -206,19 +247,20 @@ pub fn main() -> std::io::Result<()> {
             let api_scope = web::scope("/api/v1")
                 .wrap(AuthMiddlewareFactory)
                 .route("/user", web::get().to(get_or_create_user))
-                .service(
-                    web::scope("/deals")
-                        .route("", web::post().to(create_deal_route))
-                        .route("", web::get().to(get_deals_route))
-                        .route("/{deal_id}", web::get().to(get_deal_route))
-                        .route("/{deal_id}/documents", web::post().to(upload_deal_documents))
-                        .route("/{deal_id}/documents", web::get().to(get_deal_documents))
-                        .route("/{deal_id}/facts", web::get().to(get_deal_facts))
-                        .route("/{deal_id}/facts/{fact_id}", web::patch().to(update_fact_route))
-                        .route("/{deal_id}/facts/approve", web::post().to(approve_facts_route))
-                        .route("/{deal_id}/facts/reset", web::post().to(reset_facts_route))
-                        .route("/{deal_id}/underwrite", web::post().to(calculate_underwriting_route)),
-                )
+                // Deal routes temporarily disabled - need conversion from diesel to tokio-postgres
+                // .service(
+                //     web::scope("/deals")
+                //         .route("", web::post().to(create_deal_route))
+                //         .route("", web::get().to(get_deals_route))
+                //         .route("/{deal_id}", web::get().to(get_deal_route))
+                //         .route("/{deal_id}/documents", web::post().to(upload_deal_documents))
+                //         .route("/{deal_id}/documents", web::get().to(get_deal_documents))
+                //         .route("/{deal_id}/facts", web::get().to(get_deal_facts))
+                //         .route("/{deal_id}/facts/{fact_id}", web::patch().to(update_fact_route))
+                //         .route("/{deal_id}/facts/approve", web::post().to(approve_facts_route))
+                //         .route("/{deal_id}/facts/reset", web::post().to(reset_facts_route))
+                //         .route("/{deal_id}/underwrite", web::post().to(calculate_underwriting_route)),
+                // )
                 .service(
                     web::scope("/conversations")
                         .route("", web::post().to(routes::conversation::create_conversation))
@@ -240,7 +282,10 @@ pub fn main() -> std::io::Result<()> {
                 .route("/tasks", web::get().to(get_tasks_route))
                 .route("/usage/monthly", web::get().to(get_monthly_usage));
 
-            if std::env::var("STRIPE__API_KEY").is_ok() {
+            // Stripe integration - only enabled if API key is configured
+            if std::env::var("STRIPE__API_KEY").is_ok() && 
+               std::env::var("FEATURES__STRIPE_ENABLED").unwrap_or_else(|_| "false".to_string()) == "true" {
+                println!("💳 Stripe integration enabled");
                 app = app.route("/stripe/webhook", web::post().to(stripe_webhook));
 
                 let stripe_scope = web::scope("/stripe")
@@ -257,6 +302,8 @@ pub fn main() -> std::io::Result<()> {
                     .route("/billing-portal", web::get().to(get_billing_portal_session));
 
                 app = app.service(stripe_scope);
+            } else {
+                println!("ℹ️  Stripe integration disabled");
             }
 
             app.service(api_scope)

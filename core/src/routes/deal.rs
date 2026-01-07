@@ -30,29 +30,31 @@ pub async fn create_deal_route(
         metadata: None,
     };
 
-    let mut client = get_pg_client().await.map_err(|e| {
+    let client = get_pg_client().await.map_err(|e| {
         eprintln!("Database connection error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Database connection failed")
     })?;
 
-    let result = web::block(move || {
-        use crate::data::schema::deals::dsl::*;
-        
-        diesel::insert_into(deals)
-            .values(&new_deal)
-            .get_result::<Deal>(&mut client)
-    })
-    .await
-    .map_err(|e| {
-        eprintln!("Error creating deal: {:?}", e);
-        actix_web::error::ErrorInternalServerError("Failed to create deal")
-    })?
-    .map_err(|e| {
+    let row = client.query_one(
+        "INSERT INTO deals (deal_id, user_id, deal_name, status, metadata, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING deal_id, user_id, deal_name, status, metadata, created_at, updated_at",
+        &[&new_deal.deal_id, &new_deal.user_id, &new_deal.deal_name, &new_deal.status, &new_deal.metadata]
+    ).await.map_err(|e| {
         eprintln!("Database error: {:?}", e);
-        actix_web::error::ErrorInternalServerError("Database error")
+        actix_web::error::ErrorInternalServerError("Failed to create deal")
     })?;
 
-    let response: DealResponse = result.into();
+    let response = DealResponse {
+        deal_id: row.get("deal_id"),
+        user_id: row.get("user_id"),
+        deal_name: row.get("deal_name"),
+        status: row.get("status"),
+        created_at: row.get("created_at"),
+        updated_at: row.get("updated_at"),
+        metadata: row.get("metadata"),
+        document_count: Some(0),
+        fact_count: Some(0),
+    };
+    
     Ok(HttpResponse::Ok().json(response))
 }
 

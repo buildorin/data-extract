@@ -1,5 +1,6 @@
 import axiosInstance from "./axios.config";
-import { Deal, DealDocument, ExtractedFact } from "../models/deal.model";
+// Type imports reserved for future use
+// import type { Deal, DealDocument, ExtractedFact } from "../models/deal.model";
 import { createMockDeal, MOCK_FACTS, MOCK_DOCUMENTS, MOCK_DEALS, isMockDeal } from "./mockDealData";
 
 // TODO: Set to false once backend is fully operational

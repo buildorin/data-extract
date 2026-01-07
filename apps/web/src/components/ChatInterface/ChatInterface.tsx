@@ -22,7 +22,7 @@ export default function ChatInterface({
   onSend,
   onFileUpload,
   placeholder = "Give Orin a task to work on...",
-  isLoading = false,
+  isLoading: _isLoading = false,
 }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState("");
   const [isDragging, setIsDragging] = useState(false);

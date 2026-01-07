@@ -16,7 +16,7 @@ export default function LandingChat() {
   const [messageCount, setMessageCount] = useState(0);
   const [pendingLoginAction, setPendingLoginAction] = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const chatInterfaceRef = useRef<HTMLDivElement>(null);
 
   const handleGoToDashboard = () => {

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Flex, Text, Button } from "@radix-ui/themes";
+import { Flex, Text, Button, Card } from "@radix-ui/themes";
 import { uploadFile } from "../../services/uploadFileApi";
 import { UploadForm } from "../../models/upload.model";
 import { OcrStrategy, SegmentationStrategy, Pipeline, ErrorHandling } from "../../models/taskConfig.model";
@@ -74,7 +74,7 @@ export default function DealUpload({ onUploadSuccess, onUploadStart }: DealUploa
           ocr_strategy: OcrStrategy.All,
           segmentation_strategy: SegmentationStrategy.LayoutAnalysis,
           high_resolution: true,
-          pipeline: Pipeline.Orin,
+          pipeline: Pipeline.Orin as any,
           error_handling: ErrorHandling.Fail,
         };
         

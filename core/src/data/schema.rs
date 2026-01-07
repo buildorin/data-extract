@@ -180,7 +180,8 @@ diesel::table! {
     usage (id) {
         id -> Int4,
         user_id -> Nullable<Text>,
-        usage -> Nullable<Int4>,
+        #[sql_name = "usage"]
+        usage_col -> Nullable<Int4>,
         usage_limit -> Nullable<Int4>,
         usage_type -> Nullable<Text>,
         unit -> Nullable<Text>,

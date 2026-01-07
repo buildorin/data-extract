@@ -61,7 +61,7 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
       factId: string;
       value: string;
       unit?: string;
-    }) => updateFact(dealId, data.factId, data.value, data.unit),
+    }) => updateFact(dealId, data.factId, { value: data.value }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-facts", dealId] });
       toast.success("Fact updated");
@@ -493,7 +493,7 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
                       <Text size="3" weight="medium">
                         Extracted Information:
                       </Text>
-                      {facts?.filter(f => f.source_citation.document === viewingDocument?.file_name).map((fact, idx) => (
+                      {facts?.filter(f => f.source_citation.document === viewingDocument?.file_name).map((fact, _idx) => (
                         <Card key={fact.fact_id} style={{ padding: "12px", background: "#fff" }}>
                           <Flex direction="column" gap="1">
                             <Flex justify="between" align="center">
@@ -532,10 +532,10 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
                   </Flex>
                 </Card>
               </Flex>
-            ) : viewingDocument?.url || viewingDocument?.storage_location ? (
+            ) : viewingDocument?.storage_location ? (
               // Real data - show actual document
               <iframe
-                src={viewingDocument.url || viewingDocument.storage_location}
+                src={viewingDocument.storage_location}
                 style={{
                   width: "100%",
                   height: "600px",

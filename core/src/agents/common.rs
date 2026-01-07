@@ -87,61 +87,39 @@ pub async fn log_execution(
     tokens_used: Option<i32>,
     execution_time_ms: Option<i32>,
 ) -> Result<String, Box<dyn Error + Send + Sync>> {
-    use crate::data::schema::agent_executions;
     use crate::utils::clients::get_pg_client;
-    use diesel::prelude::*;
 
     let execution_id = Uuid::new_v4().to_string();
     let now = Utc::now().naive_utc();
-
-    let new_execution = NewAgentExecution {
-        execution_id: execution_id.clone(),
-        agent_type: agent_type.to_string(),
-        entity_id,
-        entity_type,
-        input,
-        output,
-        status: status.to_string(),
-        error,
-        llm_provider,
-        model,
-        tokens_used,
-        execution_time_ms,
-        created_at: now,
-        completed_at: if status == "completed" || status == "failed" {
-            Some(now)
-        } else {
-            None
-        },
+    let completed_at = if status == "completed" || status == "failed" {
+        Some(now)
+    } else {
+        None
     };
 
-    let mut client = get_pg_client().await?;
+    let client = get_pg_client().await?;
 
-    diesel::insert_into(agent_executions::table)
-        .values(&new_execution)
-        .execute(&mut client)
-        .await?;
+    client.execute(
+        "INSERT INTO agent_executions (execution_id, agent_type, entity_id, entity_type, input, output, status, error, llm_provider, model, tokens_used, execution_time_ms, created_at, completed_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
+        &[
+            &execution_id,
+            &agent_type,
+            &entity_id,
+            &entity_type,
+            &input,
+            &output,
+            &status,
+            &error,
+            &llm_provider,
+            &model,
+            &tokens_used,
+            &execution_time_ms,
+            &now,
+            &completed_at,
+        ]
+    ).await?;
 
     Ok(execution_id)
-}
-
-#[derive(Debug, Clone, Insertable)]
-#[diesel(table_name = crate::data::schema::agent_executions)]
-struct NewAgentExecution {
-    execution_id: String,
-    agent_type: String,
-    entity_id: Option<String>,
-    entity_type: Option<String>,
-    input: JsonValue,
-    output: Option<JsonValue>,
-    status: String,
-    error: Option<String>,
-    llm_provider: Option<String>,
-    model: Option<String>,
-    tokens_used: Option<i32>,
-    execution_time_ms: Option<i32>,
-    created_at: chrono::NaiveDateTime,
-    completed_at: Option<chrono::NaiveDateTime>,
 }
 
 /// Convert agent error to user-friendly message

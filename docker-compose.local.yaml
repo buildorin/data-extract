@@ -1,0 +1,30 @@
+# Local development override for Mac (ARM64/Intel)
+# This file adds platform specifications and removes GPU requirements
+# Usage: docker compose -f docker-compose.production.yaml -f docker-compose.local.yaml up -d
+
+services:
+  server:
+    platform: linux/amd64
+    # Set to 1 replica for local dev - can't have multiple containers binding to same port
+    deploy:
+      replicas: 1
+  task:
+    platform: linux/amd64
+  web:
+    platform: linux/amd64
+    # Mount local build for development (not read-only to allow entrypoint scripts)
+    volumes:
+      - ./apps/web/dist:/usr/share/nginx/html
+  segmentation-backend:
+    platform: linux/amd64
+    # Disable GPU services on Mac - they won't work without NVIDIA GPU anyway
+    # Setting replicas to 0 prevents container creation
+    deploy:
+      replicas: 0
+  ocr-backend:
+    platform: linux/amd64
+    # Disable GPU services on Mac - they won't work without NVIDIA GPU anyway
+    # Setting replicas to 0 prevents container creation
+    deploy:
+      replicas: 0
+

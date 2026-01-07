@@ -4,7 +4,7 @@ use async_openai::{
         ChatCompletionRequestMessage, ChatCompletionRequestSystemMessageArgs,
         ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequest,
         CreateChatCompletionRequestArgs, CreateEmbeddingRequest, CreateEmbeddingRequestArgs,
-        EmbeddingInput,
+        EmbeddingInput, ResponseFormat,
     },
     Client,
 };
@@ -73,9 +73,7 @@ impl OpenAIClient {
         let request = CreateChatCompletionRequestArgs::default()
             .model(&self.model)
             .messages(messages)
-            .response_format(serde_json::json!({
-                "type": "json_object"
-            }))
+            .response_format(ResponseFormat::JsonObject)
             .temperature(0.1)
             .build()?;
 

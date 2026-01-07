@@ -1,84 +1,62 @@
-version: '3.8'
-
 services:
-  # Main API Server - Orin Build
   server:
-    image: ghcr.io/buildorin/orin-server:latest
+    image: luminainc/server:1.20.1
+    platform: linux/amd64
     ports:
       - "8000:8000"
     depends_on:
       - postgres
       - redis
       - minio
+      - qdrant
     env_file:
       - .env
+    deploy:
+      replicas: 2
     restart: always
     volumes:
       - ./models.yaml:/app/models.yaml:ro
-    environment:
-      - AUTH__KEYCLOAK_URL=https://auth.app.useorin.com
-      - AUTH__KEYCLOAK_REALM=orin
-      - AWS__ENDPOINT=http://minio:9000
-      - AWS__PRESIGNED_URL_ENDPOINT=https://s3.app.useorin.com
-      - AWS__REGION=us-east-1
-      - LLM__MODELS_PATH=/app/models.yaml
-      - PG__URL=postgresql://postgres:postgres@postgres:5432/chunkr
-      - REDIS__URL=redis://redis:6379
-      - WORKER__GENERAL_OCR_URL=http://ocr-backend:8000
-      - WORKER__SEGMENTATION_URL=http://segmentation-backend:8000
-      - WORKER__SERVER_URL=http://server:8000
 
-  # Task Workers - Orin Build
   task:
-    image: ghcr.io/buildorin/orin-task:latest
+    image: luminainc/task:1.20.1
+    platform: linux/amd64
     depends_on:
       - postgres
       - redis
       - minio
+      - qdrant
     env_file:
       - .env
+    deploy:
+      replicas: 5
     restart: always
     volumes:
       - ./models.yaml:/app/models.yaml:ro
-    environment:
-      - RUST_BACKTRACE=1
-      - AWS__ACCESS_KEY=minioadmin
-      - AWS__SECRET_KEY=minioadmin
-      - AWS__ENDPOINT=http://minio:9000
-      - AWS__REGION=us-east-1
-      - WORKER__S3_BUCKET=chunkr
-      - WORKER__SERVER_URL=http://server:8000
-      - WORKER__SEGMENTATION_URL=http://segmentation-backend:8000
-      - WORKER__GENERAL_OCR_URL=http://ocr-backend:8000
-      - PG__URL=postgresql://postgres:postgres@postgres:5432/chunkr
-      - REDIS__URL=redis://redis:6379
-    deploy:
-      replicas: 3
 
-  # Web Frontend - Orin Build
   web:
-    build:
-      context: .
-      dockerfile: docker/web/Dockerfile
-      args:
-        VITE_KEYCLOAK_URL: https://auth.app.useorin.com
-        VITE_KEYCLOAK_REALM: orin
-        VITE_KEYCLOAK_CLIENT_ID: orin
-        VITE_KEYCLOAK_REDIRECT_URI: https://app.useorin.com
-        VITE_KEYCLOAK_POST_LOGOUT_REDIRECT_URI: https://app.useorin.com
-        VITE_API_URL: https://api.app.useorin.com
+    image: luminainc/web:1.20.1
     platform: linux/amd64
     ports:
-      - "80:80"
+      - "5173:8000"
     env_file:
-      - apps/web/.env
+      - .env
+    deploy:
+      replicas: 1
     restart: always
 
-  # Segmentation Service - Orin Build
   segmentation-backend:
-    image: ghcr.io/buildorin/orin-segmentation:latest
-    expose:
-      - "8000"
+    image: luminainc/segmentation:1.4.2
+    platform: linux/amd64
+    ports:
+      - "8001:8000"
+    deploy:
+      replicas: 2
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
     volumes:
       - /dev/shm:/dev/shm
     environment:
@@ -92,14 +70,20 @@ services:
       - OPENBLAS_NUM_THREADS=8
       - VECLIB_MAXIMUM_THREADS=8
     restart: always
-    deploy:
-      replicas: 1
 
-  # OCR Service - Orin Build
   ocr-backend:
-    image: ghcr.io/buildorin/orin-ocr:latest
-    expose:
-      - "8000"
+    image: luminainc/doctr:1.20.1
+    platform: linux/amd64
+    ports:
+      - "8002:8000"
+    deploy:
+      replicas: 2
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
     volumes:
       - /dev/shm:/dev/shm
     environment:
@@ -111,16 +95,17 @@ services:
       - OPENBLAS_NUM_THREADS=8
       - VECLIB_MAXIMUM_THREADS=8
     restart: always
-    deploy:
-      replicas: 1
 
-  # Database
   postgres:
-    image: postgres:14
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: chunkr
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -128,32 +113,36 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      replicas: 1
     restart: always
 
-  # Redis Cache
   redis:
     image: redis:latest
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      replicas: 1
     restart: always
 
-  # S3 Storage
   minio:
     image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
       - minio_data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     command: server /data --console-address ":9001"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
@@ -162,7 +151,6 @@ services:
       retries: 1
     restart: always
 
-  # MinIO Initialization
   minio-init:
     image: minio/mc
     depends_on:
@@ -174,9 +162,18 @@ services:
         /usr/bin/mc mb myminio/chunkr --ignore-existing &&
         /usr/bin/mc anonymous set public myminio/chunkr
       "
-    restart: "no"
 
-  # Authentication
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: always
+
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.2
     ports:
@@ -189,9 +186,6 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HTTP_ENABLED=true
-      - KC_HTTPS_ENABLED=false
-      - KC_HOSTNAME=auth.app.useorin.com
-      - KC_HOSTNAME_PORT=443
       - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=postgres
@@ -204,15 +198,16 @@ services:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 10
+      start_period: 600s
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - default
+    restart: always
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  qdrant_data:
+

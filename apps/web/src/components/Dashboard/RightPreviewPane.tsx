@@ -23,7 +23,7 @@ export default function RightPreviewPane({
     { enabled: !!dealId }
   );
 
-  const { data: facts } = useQuery(
+  const { data: _facts } = useQuery(
     ["facts", dealId],
     () => (dealId ? getDealFacts(dealId) : null),
     { enabled: !!dealId }

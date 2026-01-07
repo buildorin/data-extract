@@ -1,11 +1,10 @@
 use actix_web::{web, HttpResponse, Result};
 use chrono::Utc;
-use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::agents::chat_orchestrator::ChatOrchestratorAgent;
+// use crate::agents::chat_orchestrator::ChatOrchestratorAgent; // Temporarily disabled
 use crate::models::auth::UserInfo;
 use crate::utils::clients::get_pg_client;
 
@@ -39,16 +38,13 @@ pub async fn create_conversation(
         actix_web::error::ErrorInternalServerError("Database connection failed")
     })?;
 
-    use crate::data::schema::conversations;
-
-    diesel::insert_into(conversations::table)
-        .values(&new_conversation)
-        .execute(&mut client)
-        .await
-        .map_err(|e| {
-            eprintln!("Database error: {:?}", e);
-            actix_web::error::ErrorInternalServerError("Failed to create conversation")
-        })?;
+    client.execute(
+        "INSERT INTO conversations (conversation_id, user_id, deal_id, title, context, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        &[&new_conversation.conversation_id, &new_conversation.user_id, &new_conversation.deal_id, &new_conversation.title, &new_conversation.context, &new_conversation.created_at, &new_conversation.updated_at]
+    ).await.map_err(|e| {
+        eprintln!("Database error: {:?}", e);
+        actix_web::error::ErrorInternalServerError("Failed to create conversation")
+    })?;
 
     Ok(HttpResponse::Ok().json(json!({
         "conversation_id": conversation_id,
@@ -66,17 +62,23 @@ pub async fn list_conversations(user_info: web::ReqData<UserInfo>) -> Result<Htt
         actix_web::error::ErrorInternalServerError("Database connection failed")
     })?;
 
-    use crate::data::schema::conversations;
+    let rows = client.query(
+        "SELECT conversation_id, user_id, deal_id, title, context, created_at, updated_at FROM conversations WHERE user_id = $1 ORDER BY updated_at DESC",
+        &[&user_id]
+    ).await.map_err(|e| {
+        eprintln!("Database error: {:?}", e);
+        actix_web::error::ErrorInternalServerError("Failed to fetch conversations")
+    })?;
 
-    let results: Vec<Conversation> = conversations::table
-        .filter(conversations::user_id.eq(&user_id))
-        .order(conversations::updated_at.desc())
-        .load::<Conversation>(&mut client)
-        .await
-        .map_err(|e| {
-            eprintln!("Database error: {:?}", e);
-            actix_web::error::ErrorInternalServerError("Failed to fetch conversations")
-        })?;
+    let results: Vec<Conversation> = rows.iter().map(|row| Conversation {
+        conversation_id: row.get("conversation_id"),
+        user_id: row.get("user_id"),
+        deal_id: row.get("deal_id"),
+        title: row.get("title"),
+        context: row.get("context"),
+        created_at: row.get("created_at"),
+        updated_at: row.get("updated_at"),
+    }).collect();
 
     Ok(HttpResponse::Ok().json(results))
 }
@@ -94,26 +96,43 @@ pub async fn get_conversation(
         actix_web::error::ErrorInternalServerError("Database connection failed")
     })?;
 
-    use crate::data::schema::{conversations, messages};
-
     // Get conversation
-    let conversation: Conversation = conversations::table
-        .filter(conversations::conversation_id.eq(&conversation_id))
-        .filter(conversations::user_id.eq(&user_id))
-        .first::<Conversation>(&mut client)
-        .await
-        .map_err(|_| actix_web::error::ErrorNotFound("Conversation not found"))?;
+    let conv_row = client.query_opt(
+        "SELECT conversation_id, user_id, deal_id, title, context, created_at, updated_at FROM conversations WHERE conversation_id = $1 AND user_id = $2",
+        &[&conversation_id, &user_id]
+    ).await.map_err(|e| {
+        eprintln!("Database error: {:?}", e);
+        actix_web::error::ErrorInternalServerError("Database error")
+    })?.ok_or_else(|| actix_web::error::ErrorNotFound("Conversation not found"))?;
+
+    let conversation = Conversation {
+        conversation_id: conv_row.get("conversation_id"),
+        user_id: conv_row.get("user_id"),
+        deal_id: conv_row.get("deal_id"),
+        title: conv_row.get("title"),
+        context: conv_row.get("context"),
+        created_at: conv_row.get("created_at"),
+        updated_at: conv_row.get("updated_at"),
+    };
 
     // Get messages
-    let msgs: Vec<Message> = messages::table
-        .filter(messages::conversation_id.eq(&conversation_id))
-        .order(messages::created_at.asc())
-        .load::<Message>(&mut client)
-        .await
-        .map_err(|e| {
-            eprintln!("Database error: {:?}", e);
-            actix_web::error::ErrorInternalServerError("Failed to fetch messages")
-        })?;
+    let msg_rows = client.query(
+        "SELECT message_id, conversation_id, role, content, metadata, embedding_id, created_at FROM messages WHERE conversation_id = $1 ORDER BY created_at ASC",
+        &[&conversation_id]
+    ).await.map_err(|e| {
+        eprintln!("Database error: {:?}", e);
+        actix_web::error::ErrorInternalServerError("Failed to fetch messages")
+    })?;
+
+    let msgs: Vec<Message> = msg_rows.iter().map(|row| Message {
+        message_id: row.get("message_id"),
+        conversation_id: row.get("conversation_id"),
+        role: row.get("role"),
+        content: row.get("content"),
+        metadata: row.get("metadata"),
+        embedding_id: row.get("embedding_id"),
+        created_at: row.get("created_at"),
+    }).collect();
 
     Ok(HttpResponse::Ok().json(json!({
         "conversation": conversation,
@@ -141,53 +160,43 @@ pub async fn send_message(
         actix_web::error::ErrorInternalServerError("Database connection failed")
     })?;
 
-    use crate::data::schema::conversations;
+    let conv_row = client.query_opt(
+        "SELECT conversation_id, user_id, deal_id, title, context, created_at, updated_at FROM conversations WHERE conversation_id = $1 AND user_id = $2",
+        &[&conversation_id, &user_id]
+    ).await.map_err(|e| {
+        eprintln!("Database error: {:?}", e);
+        actix_web::error::ErrorInternalServerError("Database error")
+    })?.ok_or_else(|| actix_web::error::ErrorNotFound("Conversation not found"))?;
 
-    let conversation: Conversation = conversations::table
-        .filter(conversations::conversation_id.eq(&conversation_id))
-        .filter(conversations::user_id.eq(&user_id))
-        .first::<Conversation>(&mut client)
-        .await
-        .map_err(|_| actix_web::error::ErrorNotFound("Conversation not found"))?;
+    let conversation = Conversation {
+        conversation_id: conv_row.get("conversation_id"),
+        user_id: conv_row.get("user_id"),
+        deal_id: conv_row.get("deal_id"),
+        title: conv_row.get("title"),
+        context: conv_row.get("context"),
+        created_at: conv_row.get("created_at"),
+        updated_at: conv_row.get("updated_at"),
+    };
 
-    // Process message with chat orchestrator
-    let orchestrator = ChatOrchestratorAgent::new()
-        .await
-        .map_err(|e| {
-            eprintln!("Failed to initialize chat orchestrator: {:?}", e);
-            actix_web::error::ErrorInternalServerError("Chat service unavailable")
-        })?;
-
-    let result = orchestrator
-        .process_message(
-            &conversation_id,
-            &req.content,
-            &user_id,
-            conversation.deal_id.clone(),
-            true, // User is authenticated
-        )
-        .await
-        .map_err(|e| {
-            eprintln!("Chat processing error: {:?}", e);
-            actix_web::error::ErrorInternalServerError("Failed to process message")
-        })?;
+    // TODO: Re-enable chat orchestrator after converting to tokio-postgres
+    // For now, return a placeholder response
+    let result = serde_json::json!({
+        "response": "Chat orchestrator temporarily disabled during migration. Will be re-enabled soon.",
+        "intent": "placeholder",
+        "action": null,
+        "context_used": 0
+    });
 
     // Update conversation updated_at
-    diesel::update(conversations::table.filter(conversations::conversation_id.eq(&conversation_id)))
-        .set(conversations::updated_at.eq(Utc::now().naive_utc()))
-        .execute(&mut client)
-        .await
-        .map_err(|e| {
-            eprintln!("Database error: {:?}", e);
-            actix_web::error::ErrorInternalServerError("Failed to update conversation")
-        })?;
+    client.execute(
+        "UPDATE conversations SET updated_at = $1 WHERE conversation_id = $2",
+        &[&Utc::now().naive_utc(), &conversation_id]
+    ).await.map_err(|e| {
+        eprintln!("Database error: {:?}", e);
+        actix_web::error::ErrorInternalServerError("Failed to update conversation")
+    })?;
 
-    Ok(HttpResponse::Ok().json(json!({
-        "response": result.response,
-        "intent": result.intent,
-        "action": result.action,
-        "context_used": result.context_used,
-    })))
+    Ok(HttpResponse::Ok().json(result))
 }
 
 // DELETE /api/v1/conversations/:conversation_id - Delete conversation
@@ -203,17 +212,11 @@ pub async fn delete_conversation(
         actix_web::error::ErrorInternalServerError("Database connection failed")
     })?;
 
-    use crate::data::schema::conversations;
-
     // Delete conversation (messages will cascade)
-    let deleted = diesel::delete(
-        conversations::table
-            .filter(conversations::conversation_id.eq(&conversation_id))
-            .filter(conversations::user_id.eq(&user_id)),
-    )
-    .execute(&mut client)
-    .await
-    .map_err(|e| {
+    let deleted = client.execute(
+        "DELETE FROM conversations WHERE conversation_id = $1 AND user_id = $2",
+        &[&conversation_id, &user_id]
+    ).await.map_err(|e| {
         eprintln!("Database error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Failed to delete conversation")
     })?;
@@ -239,41 +242,17 @@ pub async fn send_public_message(
 ) -> Result<HttpResponse> {
     let session_id = req.session_id.clone().unwrap_or_else(|| Uuid::new_v4().to_string());
 
-    // For public chat, we don't store messages but still use the orchestrator
-    let orchestrator = ChatOrchestratorAgent::new()
-        .await
-        .map_err(|e| {
-            eprintln!("Failed to initialize chat orchestrator: {:?}", e);
-            actix_web::error::ErrorInternalServerError("Chat service unavailable")
-        })?;
-
-    // Use a temporary conversation ID for public users
-    let temp_conversation_id = format!("public-{}", session_id);
-
-    let result = orchestrator
-        .process_message(
-            &temp_conversation_id,
-            &req.content,
-            "anonymous",
-            None,
-            false, // Not authenticated
-        )
-        .await
-        .map_err(|e| {
-            eprintln!("Chat processing error: {:?}", e);
-            actix_web::error::ErrorInternalServerError("Failed to process message")
-        })?;
-
+    // TODO: Re-enable chat orchestrator after converting to tokio-postgres
+    // For now, return a placeholder response
     Ok(HttpResponse::Ok().json(json!({
-        "response": result.response,
+        "response": "Public chat temporarily disabled during migration. Please check back soon!",
         "session_id": session_id,
-        "intent": result.intent,
+        "intent": "placeholder",
     })))
 }
 
-// Diesel models
-#[derive(Debug, Clone, Queryable, Selectable, Serialize)]
-#[diesel(table_name = crate::data::schema::conversations)]
+// Database models
+#[derive(Debug, Clone, Serialize)]
 struct Conversation {
     conversation_id: String,
     user_id: String,
@@ -284,8 +263,7 @@ struct Conversation {
     updated_at: chrono::NaiveDateTime,
 }
 
-#[derive(Debug, Clone, Insertable)]
-#[diesel(table_name = crate::data::schema::conversations)]
+#[derive(Debug, Clone)]
 struct NewConversation {
     conversation_id: String,
     user_id: String,
@@ -296,8 +274,7 @@ struct NewConversation {
     updated_at: chrono::NaiveDateTime,
 }
 
-#[derive(Debug, Clone, Queryable, Selectable, Serialize)]
-#[diesel(table_name = crate::data::schema::messages)]
+#[derive(Debug, Clone, Serialize)]
 struct Message {
     message_id: String,
     conversation_id: String,

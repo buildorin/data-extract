@@ -218,7 +218,7 @@ pub struct SearchResult {
 /// Convert serde_json::Value to qdrant Value
 fn json_to_qdrant_value(json: JsonValue) -> Value {
     match json {
-        JsonValue::Null => Value::from(()),
+        JsonValue::Null => Value::from("null"),
         JsonValue::Bool(b) => Value::from(b),
         JsonValue::Number(n) => {
             if let Some(i) = n.as_i64() {
@@ -226,7 +226,7 @@ fn json_to_qdrant_value(json: JsonValue) -> Value {
             } else if let Some(f) = n.as_f64() {
                 Value::from(f)
             } else {
-                Value::from(())
+                Value::from("0")
             }
         }
         JsonValue::String(s) => Value::from(s),
@@ -239,7 +239,12 @@ fn json_to_qdrant_value(json: JsonValue) -> Value {
                 .into_iter()
                 .map(|(k, v)| (k, json_to_qdrant_value(v)))
                 .collect();
-            Value::from(map)
+            // Create a struct value with the map
+            Value {
+                kind: Some(qdrant_client::qdrant::value::Kind::StructValue(
+                    qdrant_client::qdrant::Struct { fields: map }
+                ))
+            }
         }
     }
 }

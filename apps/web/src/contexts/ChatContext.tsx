@@ -65,9 +65,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   // Create deal mutation
   const createDealMutation = useMutation(
-    (dealName: string) => createDeal({ deal_name: dealName }),
+    (dealData: { deal_name: string }) => createDeal(dealData.deal_name),
     {
-      onSuccess: (data) => {
+      onSuccess: (__data) => {
         queryClient.invalidateQueries("deals");
         toast.success("New deal created!");
       },
@@ -81,7 +81,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Upload file mutation
   const uploadFileMutation = useMutation(
     ({ dealId, file }: { dealId: string; file: File }) =>
-      uploadDealDocuments(dealId, [file]),
+      uploadDealDocuments(dealId, [file], 'rental_document') as any,
     {
       onSuccess: (_, variables) => {
         queryClient.invalidateQueries(["documents", variables.dealId]);
@@ -121,8 +121,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         const context: ChatContextType = {
           dealId,
           dealData: deal,
-          facts,
-          documents,
+          facts: facts || undefined,
+          documents: documents || undefined,
           previousMessages: chatSessions.get(dealId) || [],
         };
 
@@ -190,7 +190,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const createNewDeal = useCallback(async () => {
     const dealName = `New Deal ${new Date().toLocaleDateString()}`;
-    const result = await createDealMutation.mutateAsync(dealName);
+    const result = await createDealMutation.mutateAsync({ deal_name: dealName });
     setCurrentDealId(result.deal_id);
     setChatSessions((prev) => {
       const updated = new Map(prev);

@@ -7,7 +7,7 @@ use crate::services::ai::prompts::{
 };
 use crate::utils::clients::get_pg_client;
 use chrono::Utc;
-use diesel::prelude::*;
+// Removed diesel - using tokio-postgres instead
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 use std::error::Error;
@@ -330,22 +330,18 @@ impl ChatOrchestratorAgent {
         &self,
         conversation_id: &str,
     ) -> Result<Vec<ConversationMessage>, Box<dyn Error + Send + Sync>> {
-        use crate::data::schema::messages;
+        let client = get_pg_client().await?;
 
-        let mut client = get_pg_client().await?;
+        let rows = client.query(
+            "SELECT role, content FROM messages WHERE conversation_id = $1 ORDER BY created_at ASC LIMIT 20",
+            &[&conversation_id]
+        ).await?;
 
-        let msgs: Vec<Message> = messages::table
-            .filter(messages::conversation_id.eq(conversation_id))
-            .order(messages::created_at.asc())
-            .limit(20) // Last 20 messages
-            .load::<Message>(&mut client)
-            .await?;
-
-        Ok(msgs
+        Ok(rows
             .into_iter()
-            .map(|m| ConversationMessage {
-                role: m.role,
-                content: m.content,
+            .map(|row| ConversationMessage {
+                role: row.get("role"),
+                content: row.get("content"),
             })
             .collect())
     }
@@ -357,26 +353,14 @@ impl ChatOrchestratorAgent {
         role: &str,
         content: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        use crate::data::schema::messages;
-
-        let mut client = get_pg_client().await?;
+        let client = get_pg_client().await?;
         let message_id = Uuid::new_v4().to_string();
         let now = Utc::now().naive_utc();
 
-        let new_message = NewMessage {
-            message_id,
-            conversation_id: conversation_id.to_string(),
-            role: role.to_string(),
-            content: content.to_string(),
-            metadata: None,
-            embedding_id: None,
-            created_at: now,
-        };
-
-        diesel::insert_into(messages::table)
-            .values(&new_message)
-            .execute(&mut client)
-            .await?;
+        client.execute(
+            "INSERT INTO messages (message_id, conversation_id, role, content, metadata, embedding_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            &[&message_id, &conversation_id, &role, &content, &None::<serde_json::Value>, &None::<String>, &now]
+        ).await?;
 
         Ok(())
     }
@@ -417,29 +401,7 @@ struct ConversationMessage {
     content: String,
 }
 
-#[derive(Debug, Clone, Queryable, Selectable)]
-#[diesel(table_name = crate::data::schema::messages)]
-struct Message {
-    message_id: String,
-    conversation_id: String,
-    role: String,
-    content: String,
-    metadata: Option<JsonValue>,
-    embedding_id: Option<String>,
-    created_at: chrono::NaiveDateTime,
-}
-
-#[derive(Debug, Clone, Insertable)]
-#[diesel(table_name = crate::data::schema::messages)]
-struct NewMessage {
-    message_id: String,
-    conversation_id: String,
-    role: String,
-    content: String,
-    metadata: Option<JsonValue>,
-    embedding_id: Option<String>,
-    created_at: chrono::NaiveDateTime,
-}
+// Removed diesel models - using raw SQL queries instead
 
 #[cfg(test)]
 mod tests {
