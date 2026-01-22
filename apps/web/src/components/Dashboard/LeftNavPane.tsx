@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Flex, Text, Button, TextField, Badge, ScrollArea } from "@radix-ui/themes";
 import { useQuery } from "react-query";
 import { getDeals, DealResponse } from "../../services/dealApi";
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LeftNavPane.tsx:5',message:'Attempting to import getLiveShares',data:{importName:'getLiveShares'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+// #endregion
 import { getLiveShares, type LiveShare } from "../../services/liveShareApi";
 import "./LeftNavPane.css";
 

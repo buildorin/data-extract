@@ -22,7 +22,12 @@ export function CreateLiveShareModal({
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: () => createLiveShare(dealId, expiresInDays),
+    mutationFn: () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'CreateLiveShareModal.tsx:25',message:'Calling createLiveShare',data:{dealId,expiresInDays,requestObject:{deal_id:dealId,expires_in_days:expiresInDays}},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
+      return createLiveShare({ deal_id: dealId, expires_in_days: expiresInDays });
+    },
     onSuccess: (data) => {
       setShareUrl(data.share_url);
       queryClient.invalidateQueries('liveShares');

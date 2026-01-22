@@ -420,52 +420,84 @@ const InvestorPackage = () => {
               <Flex direction="column" gap="4">
                 {/* Header */}
                 <Flex direction="column" gap="2" style={{ position: "relative" }}>
-                  <Flex justify="end" style={{ position: "absolute", top: 0, right: 0, zIndex: 10 }}>
-                    <DealTypeBadge dealType={currentDeal?.deal_type} />
-                  </Flex>
-                  <Flex direction="column" gap="2" style={{ flex: 1 }}>
-                    {editingField === "dealName" ? (
+                  <Flex justify="between" align="start" style={{ width: "100%" }}>
+                    <Flex direction="column" gap="2" style={{ flex: "0 0 70%" }}>
+                      {editingField === "dealName" ? (
                   <Flex direction="column" gap="2">
-                        <TextField.Root
-                          value={editingValue}
-                          onChange={(e) => setEditingValue(e.target.value)}
-                          placeholder="Deal Name"
-                          autoFocus
-                          style={{ width: "100%" }}
-                        />
-                        <Flex gap="2">
-                          <Button size="2" onClick={() => handleSaveEdit("dealName")} disabled={!editingValue.trim()}>
-                            Save
-                          </Button>
-                          <Button size="2" variant="soft" onClick={handleCancelEdit}>
-                            Cancel
-                          </Button>
+                          <TextField.Root
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            placeholder="Deal Name"
+                            autoFocus
+                            style={{ width: "100%" }}
+                          />
+                          <Flex gap="2">
+                            <Button size="2" onClick={() => handleSaveEdit("dealName")} disabled={!editingValue.trim()}>
+                              Save
+                            </Button>
+                            <Button size="2" variant="soft" onClick={handleCancelEdit}>
+                              Cancel
+                            </Button>
+                          </Flex>
                         </Flex>
-                      </Flex>
-                    ) : (
-                      <Text
-                        size="7"
-                        weight="bold"
-                        onClick={() => !editingField && handleStartEdit("dealName", memo.dealName)}
-                        style={{
-                          cursor: "pointer",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          transition: "background-color 0.2s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = "#f0f0f0";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }}
-                      >
+                      ) : (
+                        <Text
+                          size="7"
+                          weight="bold"
+                          onClick={() => !editingField && handleStartEdit("dealName", memo.dealName)}
+                          style={{
+                            cursor: "pointer",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            transition: "background-color 0.2s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "#f0f0f0";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "transparent";
+                          }}
+                        >
                       {memo.dealName}
                     </Text>
-                    )}
+                      )}
                     <Text size="3" color="gray">
                       Investment Memorandum
                     </Text>
+                    </Flex>
+                    <Flex direction="column" gap="3px" align="end" style={{ flex: "0 0 auto" }}>
+                      <DealTypeBadge dealType={currentDeal?.deal_type || 'rental_income'} />
+                      <br />
+                      <Flex align="center" gap="4px">
+                        <Text size="1" style={{ color: "#666", textTransform: "uppercase" }}>
+                          Deal Score:
+                        </Text>
+                        <Text size="3" weight="medium">
+                          {currentDeal?.orin_score !== null && currentDeal?.orin_score !== undefined 
+                            ? currentDeal.orin_score 
+                            : "80"}
+                        </Text>
+                        {currentDeal?.orin_score_tier && (
+                          <Text
+                            size="1"
+                            style={{
+                              padding: "2px 8px",
+                              borderRadius: "12px",
+                              backgroundColor: 
+                                currentDeal.orin_score_tier === "strong" ? "#d4edda" :
+                                currentDeal.orin_score_tier === "good" ? "#fff3cd" :
+                                currentDeal.orin_score_tier === "risky" ? "#f8d7da" : "#e2e3e5",
+                              color:
+                                currentDeal.orin_score_tier === "strong" ? "#155724" :
+                                currentDeal.orin_score_tier === "good" ? "#856404" :
+                                currentDeal.orin_score_tier === "risky" ? "#721c24" : "#383d41",
+                            }}
+                          >
+                            {currentDeal.orin_score_tier}
+                          </Text>
+                        )}
+                      </Flex>
+                    </Flex>
                   </Flex>
                 </Flex>
 
@@ -936,16 +968,32 @@ const InvestorPackage = () => {
                   </Card>
                 ))}
 
-                {/* Add Custom Block Button */}
+                {/* Add Custom Block */}
                 <Flex justify="center">
-                  <Button
-                    size="2"
-                    variant="soft"
+                  <Flex
+                    align="center"
+                    gap="6px"
                     onClick={handleAddCustomBlock}
-                    style={{ cursor: "pointer" }}
+                    style={{
+                      cursor: "pointer",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f0f0f0";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
                   >
-                    + Add Block
-                  </Button>
+                    <Text size="3" style={{ color: "#666" }}>
+                      +
+                    </Text>
+                    <Text size="2" style={{ color: "#666" }}>
+                      Add Block
+                    </Text>
+                  </Flex>
                 </Flex>
 
                 {/* Actions */}

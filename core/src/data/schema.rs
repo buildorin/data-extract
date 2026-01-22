@@ -1,5 +1,37 @@
 // @generated automatically by Diesel CLI.
 
+pub mod sql_types {
+    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "deal_type_enum"))]
+    pub struct DealTypeEnum;
+}
+
+diesel::table! {
+    agent_executions (execution_id) {
+        #[max_length = 255]
+        execution_id -> Varchar,
+        #[max_length = 100]
+        agent_type -> Varchar,
+        #[max_length = 255]
+        entity_id -> Nullable<Varchar>,
+        #[max_length = 100]
+        entity_type -> Nullable<Varchar>,
+        input -> Jsonb,
+        output -> Nullable<Jsonb>,
+        #[max_length = 50]
+        status -> Varchar,
+        error -> Nullable<Text>,
+        #[max_length = 50]
+        llm_provider -> Nullable<Varchar>,
+        #[max_length = 100]
+        model -> Nullable<Varchar>,
+        tokens_used -> Nullable<Int4>,
+        execution_time_ms -> Nullable<Int4>,
+        created_at -> Timestamp,
+        completed_at -> Nullable<Timestamp>,
+    }
+}
+
 diesel::table! {
     api_keys (key) {
         key -> Text,
@@ -18,14 +50,38 @@ diesel::table! {
 }
 
 diesel::table! {
+    conversations (conversation_id) {
+        #[max_length = 255]
+        conversation_id -> Varchar,
+        #[max_length = 255]
+        user_id -> Varchar,
+        #[max_length = 255]
+        deal_id -> Nullable<Varchar>,
+        #[max_length = 500]
+        title -> Nullable<Varchar>,
+        context -> Nullable<Jsonb>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::DealTypeEnum;
+
     deals (deal_id) {
         deal_id -> Text,
         user_id -> Text,
         deal_name -> Text,
         status -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        metadata -> Jsonb,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
+        metadata -> Nullable<Jsonb>,
+        deal_type -> DealTypeEnum,
+        orin_score -> Nullable<Int4>,
+        orin_score_breakdown -> Nullable<Jsonb>,
+        orin_score_calculated_at -> Nullable<Timestamptz>,
+        orin_score_tier -> Nullable<Text>,
     }
 }
 
@@ -39,11 +95,13 @@ diesel::table! {
         storage_location -> Nullable<Text>,
         page_count -> Nullable<Int4>,
         ocr_output -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        ocr_completed_at -> Nullable<Timestamptz>,
-        fact_extraction_status -> Nullable<Text>,
-        fact_extraction_completed_at -> Nullable<Timestamptz>,
-        embedding_id -> Nullable<Text>,
+        created_at -> Nullable<Timestamptz>,
+        ocr_completed_at -> Nullable<Timestamp>,
+        #[max_length = 50]
+        fact_extraction_status -> Nullable<Varchar>,
+        fact_extraction_completed_at -> Nullable<Timestamp>,
+        #[max_length = 255]
+        embedding_id -> Nullable<Varchar>,
     }
 }
 
@@ -61,19 +119,44 @@ diesel::table! {
         confidence_score -> Nullable<Float8>,
         approved_at -> Nullable<Timestamptz>,
         approved_by -> Nullable<Text>,
-        locked -> Bool,
-        created_at -> Timestamptz,
-        extraction_method -> Nullable<Text>,
+        locked -> Nullable<Bool>,
+        created_at -> Nullable<Timestamptz>,
+        #[max_length = 50]
+        extraction_method -> Nullable<Varchar>,
         reviewed_by_user -> Nullable<Bool>,
-        embedding_id -> Nullable<Text>,
+        #[max_length = 255]
+        embedding_id -> Nullable<Varchar>,
     }
 }
 
 diesel::table! {
-    discounts (user_id, usage_type) {
-        user_id -> Text,
-        usage_type -> Text,
-        amount -> Nullable<Float8>,
+    investor_interest (id) {
+        id -> Text,
+        live_share_id -> Text,
+        name -> Text,
+        amount -> Nullable<Numeric>,
+        status -> Text,
+        notes -> Nullable<Text>,
+        created_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    investor_memos (memo_id) {
+        #[max_length = 255]
+        memo_id -> Varchar,
+        #[max_length = 255]
+        deal_id -> Varchar,
+        #[max_length = 500]
+        title -> Nullable<Varchar>,
+        content -> Text,
+        sections -> Nullable<Jsonb>,
+        version -> Nullable<Int4>,
+        #[max_length = 50]
+        status -> Nullable<Varchar>,
+        created_by_agent -> Nullable<Bool>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -88,6 +171,35 @@ diesel::table! {
         amount_due -> Float8,
         total_pages -> Int4,
         stripe_invoice_id -> Nullable<Text>,
+        bill_date -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    live_shares (id) {
+        id -> Text,
+        deal_id -> Text,
+        user_id -> Text,
+        short_id -> Text,
+        expires_at -> Timestamptz,
+        view_count -> Int4,
+        created_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    messages (message_id) {
+        #[max_length = 255]
+        message_id -> Varchar,
+        #[max_length = 255]
+        conversation_id -> Varchar,
+        #[max_length = 50]
+        role -> Varchar,
+        content -> Text,
+        metadata -> Nullable<Jsonb>,
+        #[max_length = 255]
+        embedding_id -> Nullable<Varchar>,
+        created_at -> Timestamp,
     }
 }
 
@@ -101,6 +213,11 @@ diesel::table! {
         month -> Int4,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
+        overage_usage -> Nullable<Int4>,
+        tier -> Nullable<Text>,
+        usage_limit -> Nullable<Int4>,
+        billing_cycle_start -> Nullable<Timestamptz>,
+        billing_cycle_end -> Nullable<Timestamptz>,
     }
 }
 
@@ -113,6 +230,23 @@ diesel::table! {
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
         id -> Int4,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::DealTypeEnum;
+
+    scoring_formulas (formula_id) {
+        formula_id -> Text,
+        user_id -> Text,
+        deal_id -> Nullable<Text>,
+        formula_name -> Text,
+        formula_config -> Jsonb,
+        deal_type -> DealTypeEnum,
+        is_active -> Nullable<Bool>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -138,6 +272,28 @@ diesel::table! {
 }
 
 diesel::table! {
+    share_views (id) {
+        id -> Text,
+        live_share_id -> Text,
+        viewed_at -> Nullable<Timestamptz>,
+        ip_address -> Nullable<Text>,
+        user_agent -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    subscriptions (user_id) {
+        user_id -> Text,
+        stripe_subscription_id -> Nullable<Text>,
+        tier -> Text,
+        last_paid_date -> Nullable<Timestamptz>,
+        last_paid_status -> Nullable<Text>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
     task_invoices (task_id) {
         task_id -> Text,
         invoice_id -> Text,
@@ -145,6 +301,7 @@ diesel::table! {
         pages -> Int4,
         cost -> Float8,
         created_at -> Timestamp,
+        bill_date -> Nullable<Timestamptz>,
     }
 }
 
@@ -166,13 +323,24 @@ diesel::table! {
         output_location -> Nullable<Text>,
         configuration -> Nullable<Text>,
         message -> Nullable<Text>,
+        image_folder_location -> Nullable<Text>,
         pdf_location -> Nullable<Text>,
-        input_file_type -> Nullable<Text>,
         #[max_length = 255]
         mime_type -> Nullable<Varchar>,
         started_at -> Nullable<Timestamptz>,
         #[max_length = 255]
-        image_folder_location -> Nullable<Varchar>,
+        version -> Nullable<Varchar>,
+    }
+}
+
+diesel::table! {
+    tiers (tier) {
+        tier -> Text,
+        price_per_month -> Float8,
+        usage_limit -> Int4,
+        overage_rate -> Float8,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -181,21 +349,11 @@ diesel::table! {
         id -> Int4,
         user_id -> Nullable<Text>,
         #[sql_name = "usage"]
-        usage_col -> Nullable<Int4>,
-        usage_limit -> Nullable<Int4>,
+        usage_value -> Nullable<Int4>,
         usage_type -> Nullable<Text>,
         unit -> Nullable<Text>,
         created_at -> Nullable<Timestamptz>,
         updated_at -> Nullable<Timestamptz>,
-    }
-}
-
-diesel::table! {
-    usage_limits (id) {
-        id -> Int4,
-        usage_type -> Text,
-        tier -> Text,
-        usage_limit -> Int4,
     }
 }
 
@@ -225,91 +383,46 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    conversations (conversation_id) {
-        conversation_id -> Text,
-        user_id -> Text,
-        deal_id -> Nullable<Text>,
-        title -> Nullable<Text>,
-        context -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    messages (message_id) {
-        message_id -> Text,
-        conversation_id -> Text,
-        role -> Text,
-        content -> Text,
-        metadata -> Nullable<Jsonb>,
-        embedding_id -> Nullable<Text>,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    agent_executions (execution_id) {
-        execution_id -> Text,
-        agent_type -> Text,
-        entity_id -> Nullable<Text>,
-        entity_type -> Nullable<Text>,
-        input -> Jsonb,
-        output -> Nullable<Jsonb>,
-        status -> Text,
-        error -> Nullable<Text>,
-        llm_provider -> Nullable<Text>,
-        model -> Nullable<Text>,
-        tokens_used -> Nullable<Int4>,
-        execution_time_ms -> Nullable<Int4>,
-        created_at -> Timestamptz,
-        completed_at -> Nullable<Timestamptz>,
-    }
-}
-
-diesel::table! {
-    investor_memos (memo_id) {
-        memo_id -> Text,
-        deal_id -> Text,
-        title -> Nullable<Text>,
-        content -> Text,
-        sections -> Nullable<Jsonb>,
-        version -> Nullable<Int4>,
-        status -> Nullable<Text>,
-        created_by_agent -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
-
 diesel::joinable!(conversations -> deals (deal_id));
 diesel::joinable!(conversations -> users (user_id));
 diesel::joinable!(deals -> users (user_id));
 diesel::joinable!(documents -> deals (deal_id));
 diesel::joinable!(facts -> deals (deal_id));
 diesel::joinable!(facts -> documents (document_id));
+diesel::joinable!(investor_interest -> live_shares (live_share_id));
 diesel::joinable!(investor_memos -> deals (deal_id));
+diesel::joinable!(live_shares -> deals (deal_id));
+diesel::joinable!(live_shares -> users (user_id));
 diesel::joinable!(messages -> conversations (conversation_id));
+diesel::joinable!(monthly_usage -> tiers (tier));
+diesel::joinable!(scoring_formulas -> deals (deal_id));
+diesel::joinable!(scoring_formulas -> users (user_id));
+diesel::joinable!(share_views -> live_shares (live_share_id));
+diesel::joinable!(subscriptions -> tiers (tier));
+diesel::joinable!(subscriptions -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     agent_executions,
     api_keys,
     conversations,
     deals,
-    discounts,
     documents,
     facts,
+    investor_interest,
     investor_memos,
     invoices,
+    live_shares,
     messages,
     monthly_usage,
     pre_applied_free_pages,
+    scoring_formulas,
     segment_process,
+    share_views,
+    subscriptions,
     task_invoices,
     tasks,
+    tiers,
     usage,
-    usage_limits,
     usage_type,
     users,
 );

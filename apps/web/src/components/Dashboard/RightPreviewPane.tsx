@@ -543,7 +543,7 @@ export default function RightPreviewPane({
                 })
               ) : (
                 <Text size="2" style={{ color: "#999" }}>
-                  No documents uploaded yet
+                  Drop files (PDF, Xls, Docs) in the chat bar
                 </Text>
               )}
             </Flex>

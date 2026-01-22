@@ -6,6 +6,8 @@ import { DealResponse, DocumentResponse, FactResponse } from "./dealApi";
 // LocalStorage keys
 const MOCK_DEALS_KEY = 'orin_mock_deals';
 const MOCK_DOCUMENTS_KEY = 'orin_mock_documents';
+const MOCK_LIVE_SHARES_KEY = 'live_shares';
+const MOCK_INVESTOR_INTEREST_KEY = 'investor_interest';
 
 // Default mock deals
 const DEFAULT_MOCK_DEALS: DealResponse[] = [
@@ -431,9 +433,62 @@ const loadFromLocalStorage = <T>(key: string, defaultValue: T): T => {
   return defaultValue;
 };
 
+// Default mock live shares
+const DEFAULT_MOCK_LIVE_SHARES = [
+  {
+    id: "live-share-001-mockdata",
+    deal_id: "deal-003-mockdata", // Riverside Townhomes
+    short_id: "rvrsd2024",
+    share_url: `${window.location.origin}/share/rvrsd2024`,
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    view_count: 12,
+    is_expired: false,
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+// Default mock investor interest
+const DEFAULT_MOCK_INVESTOR_INTEREST = [
+  {
+    id: "interest-001-mockdata",
+    live_share_id: "live-share-001-mockdata",
+    name: "John Smith",
+    amount: 250000,
+    status: "Interested",
+    notes: "Looking for stable rental income properties",
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "interest-002-mockdata",
+    live_share_id: "live-share-001-mockdata",
+    name: "Sarah Johnson",
+    amount: 500000,
+    status: "Interested",
+    notes: "Interested in the location and projected returns",
+    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "interest-003-mockdata",
+    live_share_id: "live-share-001-mockdata",
+    name: "Michael Chen",
+    amount: null,
+    status: "Maybe",
+    notes: "Need more information about the renovation timeline",
+    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 // Initialize from localStorage
 export const MOCK_DEALS: DealResponse[] = loadFromLocalStorage(MOCK_DEALS_KEY, DEFAULT_MOCK_DEALS);
 export const MOCK_DOCUMENTS: DocumentResponse[] = loadFromLocalStorage(MOCK_DOCUMENTS_KEY, DEFAULT_MOCK_DOCUMENTS);
+
+// Initialize live shares and investor interest if not present
+if (!localStorage.getItem(MOCK_LIVE_SHARES_KEY)) {
+  localStorage.setItem(MOCK_LIVE_SHARES_KEY, JSON.stringify(DEFAULT_MOCK_LIVE_SHARES));
+}
+if (!localStorage.getItem(MOCK_INVESTOR_INTEREST_KEY)) {
+  localStorage.setItem(MOCK_INVESTOR_INTEREST_KEY, JSON.stringify(DEFAULT_MOCK_INVESTOR_INTEREST));
+}
 
 // Save to localStorage
 export const saveMockData = () => {

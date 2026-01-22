@@ -22,11 +22,17 @@ pub async fn create_deal_route(
     let user_id = user_info.user_id.clone();
     let deal_id = Uuid::new_v4().to_string();
 
+    let deal_type_str = match req.deal_type {
+        crate::models::deal::DealType::RentalIncome => "rental_income",
+        crate::models::deal::DealType::ValueAdd => "value_add",
+    };
+
     let new_deal = NewDeal {
         deal_id: deal_id.clone(),
         user_id,
         deal_name: req.deal_name.clone(),
         status: "draft".to_string(),
+        deal_type: req.deal_type,
         metadata: None,
     };
 
@@ -36,18 +42,28 @@ pub async fn create_deal_route(
     })?;
 
     let row = client.query_one(
-        "INSERT INTO deals (deal_id, user_id, deal_name, status, metadata, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING deal_id, user_id, deal_name, status, metadata, created_at, updated_at",
-        &[&new_deal.deal_id, &new_deal.user_id, &new_deal.deal_name, &new_deal.status, &new_deal.metadata]
+        "INSERT INTO deals (deal_id, user_id, deal_name, status, deal_type, metadata, created_at, updated_at) VALUES ($1, $2, $3, $4, $5::deal_type_enum, $6, NOW(), NOW()) RETURNING deal_id, user_id, deal_name, status, deal_type, orin_score, orin_score_breakdown, orin_score_calculated_at, orin_score_tier, metadata, created_at, updated_at",
+        &[&new_deal.deal_id, &new_deal.user_id, &new_deal.deal_name, &new_deal.status, &deal_type_str, &new_deal.metadata]
     ).await.map_err(|e| {
         eprintln!("Database error: {:?}", e);
         actix_web::error::ErrorInternalServerError("Failed to create deal")
     })?;
 
+    let deal_type_result: String = row.get("deal_type");
     let response = DealResponse {
         deal_id: row.get("deal_id"),
         user_id: row.get("user_id"),
         deal_name: row.get("deal_name"),
         status: row.get("status"),
+        deal_type: if deal_type_result == "rental_income" {
+            crate::models::deal::DealType::RentalIncome
+        } else {
+            crate::models::deal::DealType::ValueAdd
+        },
+        orin_score: row.get("orin_score"),
+        orin_score_breakdown: row.get("orin_score_breakdown"),
+        orin_score_calculated_at: row.get("orin_score_calculated_at"),
+        orin_score_tier: row.get("orin_score_tier"),
         created_at: row.get("created_at"),
         updated_at: row.get("updated_at"),
         metadata: row.get("metadata"),

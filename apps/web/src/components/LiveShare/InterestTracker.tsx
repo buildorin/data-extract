@@ -132,66 +132,69 @@ export function InterestTracker({ shareId }: InterestTrackerProps) {
           </Flex>
           <Flex direction="column">
             <Text size="1" style={{ color: '#666', marginBottom: '2px' }}>
-              Status
-            </Text>
-            <Badge
-              color={share.is_expired ? 'red' : 'green'}
-              variant="soft"
-            >
-              {share.is_expired ? 'Expired' : 'Active'}
-            </Badge>
-          </Flex>
-        </Flex>
-        <Flex
-          onClick={handleCopyLink}
-          align="center"
-          gap="6px"
-          style={{
-            cursor: 'pointer',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            backgroundColor: 'transparent',
-            transition: 'all 0.2s',
-            marginLeft: '16px',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#e0e0e0';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-          title="Copy share link"
-        >
-          <Text size="3" style={{ color: '#666' }}>
-            📋
-          </Text>
-          <Text size="2" style={{ color: '#666' }}>
-            Copy Link
-          </Text>
-        </Flex>
-      </Flex>
-
-      {/* Deal Type Row */}
-      <Flex
-        p="16px 24px"
-        align="center"
-        justify="between"
-        style={{
-          borderBottom: '1px solid #e0e0e0',
-          backgroundColor: '#f9fafb',
-        }}
-      >
-        <Flex align="center" gap="24px">
-          <DealTypeBadge dealType={deal?.deal_type} />
-          {/* Deal Score placeholder for Phase 2 */}
-          <Flex direction="column">
-            <Text size="1" style={{ color: '#666', marginBottom: '2px' }}>
               Deal Score
             </Text>
-            <Text size="2" style={{ color: '#999' }}>
-              Coming Soon
+            <Flex align="center" gap="4px">
+              <Text size="2" weight="medium" style={{ color: '#999' }}>
+                {deal?.orin_score !== null && deal?.orin_score !== undefined 
+                  ? deal.orin_score 
+                  : '—'}
+              </Text>
+              {deal?.orin_score_tier && (
+                <Text
+                  size="1"
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: "12px",
+                    backgroundColor: 
+                      deal.orin_score_tier === "strong" ? "#d4edda" :
+                      deal.orin_score_tier === "good" ? "#fff3cd" :
+                      deal.orin_score_tier === "risky" ? "#f8d7da" : "#e2e3e5",
+                    color:
+                      deal.orin_score_tier === "strong" ? "#155724" :
+                      deal.orin_score_tier === "good" ? "#856404" :
+                      deal.orin_score_tier === "risky" ? "#721c24" : "#383d41",
+                  }}
+                >
+                  {deal.orin_score_tier}
+                </Text>
+              )}
+            </Flex>
+          </Flex>
+        </Flex>
+        <Flex direction="column" align="end" gap="8px">
+          <Flex
+            onClick={handleCopyLink}
+            align="center"
+            gap="6px"
+            style={{
+              cursor: 'pointer',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              backgroundColor: 'transparent',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#e0e0e0';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            title="Copy share link"
+          >
+            <Text size="3" style={{ color: '#666' }}>
+              📋
+            </Text>
+            <Text size="2" style={{ color: '#666' }}>
+              Copy Link
             </Text>
           </Flex>
+          <Badge
+            color={share.is_expired ? 'red' : 'green'}
+            variant="soft"
+          >
+            {share.is_expired ? 'Expired' : 'Active'}
+          </Badge>
         </Flex>
       </Flex>
 

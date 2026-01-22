@@ -18,7 +18,7 @@ use utoipa::{
 use utoipa_redoc::{Redoc, Servable};
 use utoipa_swagger_ui::SwaggerUi;
 
-// pub mod agents; // Temporarily disabled - needs Diesel to tokio-postgres conversion
+// pub mod agents; // Temporarily disabled - has compilation errors
 pub mod configs;
 pub mod data;
 pub mod events;
@@ -240,6 +240,9 @@ pub fn main() -> std::io::Result<()> {
                 .route("/llm/models", web::get().to(get_models_ids))
                 // Public conversation route (no auth)
                 .route("/api/v1/conversations/public/message", web::post().to(routes::conversation::send_public_message))
+                // Public share routes (no auth)
+                .route("/api/v1/share/{short_id}/view", web::post().to(routes::live_share::track_view_route))
+                .route("/api/v1/share/{short_id}/interest", web::post().to(routes::live_share::submit_interest_route))
                 .service(
                     SwaggerUi::new("/swagger-ui/{_:.*}")
                         .url("/docs/openapi.json", ApiDoc::openapi()),
@@ -251,17 +254,30 @@ pub fn main() -> std::io::Result<()> {
                 // Deal routes temporarily disabled - need Diesel to tokio-postgres conversion
                 // .service(
                 //     web::scope("/deals")
-                //         .route("", web::post().to(create_deal_route))
-                //         .route("", web::get().to(get_deals_route))
-                //         .route("/{deal_id}", web::get().to(get_deal_route))
-                //         .route("/{deal_id}/documents", web::post().to(upload_deal_documents))
-                //         .route("/{deal_id}/documents", web::get().to(get_deal_documents))
-                //         .route("/{deal_id}/facts", web::get().to(get_deal_facts))
-                //         .route("/{deal_id}/facts/{fact_id}", web::patch().to(update_fact_route))
-                //         .route("/{deal_id}/facts/approve", web::post().to(approve_facts_route))
-                //         .route("/{deal_id}/facts/reset", web::post().to(reset_facts_route))
-                //         .route("/{deal_id}/underwrite", web::post().to(calculate_underwriting_route)),
+                //         .route("", web::post().to(routes::deal::create_deal_route))
+                //         .route("", web::get().to(routes::deal::get_deals_route))
+                //         .route("/{deal_id}", web::get().to(routes::deal::get_deal_route))
+                //         .route("/{deal_id}/documents", web::post().to(routes::deal::upload_deal_documents))
+                //         .route("/{deal_id}/documents", web::get().to(routes::deal::get_deal_documents))
+                //         .route("/{deal_id}/facts", web::get().to(routes::deal::get_deal_facts))
+                //         .route("/{deal_id}/facts/{fact_id}", web::patch().to(routes::deal::update_fact_route))
+                //         .route("/{deal_id}/facts/approve", web::post().to(routes::deal::approve_facts_route))
+                //         .route("/{deal_id}/facts/reset", web::post().to(routes::deal::reset_facts_route))
+                //         .route("/{deal_id}/underwrite", web::post().to(routes::deal::calculate_underwriting_route))
+                //         .route("/{deal_id}/calculate-score", web::post().to(routes::scoring::calculate_score_route))
+                //         .route("/{deal_id}/score", web::get().to(routes::scoring::get_score_route)),
                 // )
+                // Scoring routes (standalone for now, will be integrated with deals later)
+                .route("/deals/{deal_id}/calculate-score", web::post().to(routes::scoring::calculate_score_route))
+                .route("/deals/{deal_id}/score", web::get().to(routes::scoring::get_score_route))
+                .service(
+                    web::scope("/live-shares")
+                        .route("", web::post().to(routes::live_share::create_live_share_route))
+                        .route("", web::get().to(routes::live_share::list_live_shares_route))
+                        .route("/{id}", web::get().to(routes::live_share::get_live_share_route))
+                        .route("/{id}", web::delete().to(routes::live_share::delete_live_share_route))
+                        .route("/{id}/analytics", web::get().to(routes::live_share::get_analytics_route)),
+                )
                 .service(
                     web::scope("/conversations")
                         .route("", web::post().to(routes::conversation::create_conversation))

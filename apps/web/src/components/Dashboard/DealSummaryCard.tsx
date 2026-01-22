@@ -1,7 +1,8 @@
 import { Flex, Text, Card, Button, Separator, Grid, TextField } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
-import { DealResponse } from "../../services/dealApi";
+import { DealResponse, updateDealScore } from "../../services/dealApi";
 import { DealTypeBadge } from "./DealTypeBadge";
+import { getDealScore, calculateDealScore } from "../../services/scoringApi";
 import "./DealSummaryCard.css";
 
 interface DealSummaryCardProps {
@@ -70,10 +71,45 @@ export default function DealSummaryCard({
   const [dealNameValue, setDealNameValue] = useState(deal.deal_name);
   const [isEditingDealScore, setIsEditingDealScore] = useState(false);
   const [dealScoreValue, setDealScoreValue] = useState("—");
+  const [scoreData, setScoreData] = useState<{
+    score: number | null;
+    tier: string | null;
+  } | null>(null);
+  const [isCalculatingScore, setIsCalculatingScore] = useState(false);
 
   useEffect(() => {
     setDealNameValue(deal.deal_name);
   }, [deal.deal_name]);
+
+  // Fetch existing score on mount - check deal object first, then API
+  useEffect(() => {
+    // First check if deal already has score
+    if (deal.orin_score !== null && deal.orin_score !== undefined) {
+      setScoreData({
+        score: deal.orin_score,
+        tier: deal.orin_score_tier || null,
+      });
+      setDealScoreValue(deal.orin_score.toString());
+      return;
+    }
+    
+    // Otherwise try to fetch from API
+    const fetchScore = async () => {
+      try {
+        const response = await getDealScore(deal.deal_id);
+        if (response.score !== null) {
+          setScoreData({
+            score: response.score,
+            tier: response.tier,
+          });
+          setDealScoreValue(response.score.toString());
+        }
+      } catch (error) {
+        console.error('Error fetching deal score:', error);
+      }
+    };
+    fetchScore();
+  }, [deal.deal_id, deal.orin_score, deal.orin_score_tier]);
 
   const handleSaveDealName = () => {
     if (dealNameValue.trim() && onDealNameUpdate) {
@@ -86,6 +122,32 @@ export default function DealSummaryCard({
     setDealNameValue(deal.deal_name);
     setIsEditingDealName(false);
   };
+
+  const determineTierFromScore = (score: number): string => {
+    if (score >= 85 && score <= 100) return "strong";
+    if (score >= 70 && score <= 84) return "good";
+    if (score >= 50 && score <= 69) return "risky";
+    return "pass";
+  };
+
+  const handleCalculateScore = async () => {
+    setIsCalculatingScore(true);
+    try {
+      const response = await calculateDealScore(deal.deal_id);
+      if (response.score !== null) {
+        setScoreData({
+          score: response.score,
+          tier: response.tier,
+        });
+        setDealScoreValue(response.score.toString());
+      }
+    } catch (error) {
+      console.error('Error calculating deal score:', error);
+    } finally {
+      setIsCalculatingScore(false);
+    }
+  };
+
   // Calculate capital range based on metrics
   const getCapitalRange = () => {
     if (!metrics?.noi) return { min: 0, max: 0 };
@@ -120,9 +182,6 @@ export default function DealSummaryCard({
           <Flex justify="end" style={{ position: "absolute", top: 0, right: 0 }}>
             <DealTypeBadge dealType={deal.deal_type} />
           </Flex>
-          <Text size="2" weight="medium" style={{ color: "#666" }}>
-            📊 Deal Analysis
-          </Text>
           {isEditingDealName ? (
             <Flex gap="8px" align="center">
               <TextField.Root
@@ -169,8 +228,8 @@ export default function DealSummaryCard({
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              {deal.deal_name}
-            </Text>
+            {deal.deal_name}
+          </Text>
           )}
         </Flex>
 
@@ -182,51 +241,201 @@ export default function DealSummaryCard({
           <InfoRow label="Status" value={deal.status.replace(/_/g, " ")} />
           <InfoRow label="Documents" value={deal.document_count || 0} />
           <Flex direction="column" gap="4px">
-            <Text size="1" style={{ color: "#666", textTransform: "uppercase" }}>
-              Deal Score
-            </Text>
-            {isEditingDealScore ? (
-              <Flex gap="8px" align="center">
-                <TextField.Root
-                  value={dealScoreValue}
-                  onChange={(e) => setDealScoreValue(e.target.value)}
-                  placeholder="Enter score"
-                  style={{ flex: 1 }}
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      setIsEditingDealScore(false);
-                    }
-                    if (e.key === "Escape") {
-                      setDealScoreValue("—");
-                      setIsEditingDealScore(false);
-                    }
-                  }}
-                  onBlur={() => {
-                    setIsEditingDealScore(false);
-                  }}
-                />
-              </Flex>
-            ) : (
-              <Text
-                size="2"
-                weight="medium"
-                onClick={() => setIsEditingDealScore(true)}
-                style={{
-                  cursor: "pointer",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  transition: "background-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f0f0f0";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
-              >
-                {dealScoreValue}
+            <Flex justify="between" align="center">
+              <Text size="1" style={{ color: "#666", textTransform: "uppercase" }}>
+                Deal Score
               </Text>
+              {!scoreData && !isCalculatingScore && (
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={handleCalculateScore}
+                  style={{ cursor: "pointer" }}
+                >
+                  Calculate
+                </Button>
+              )}
+            </Flex>
+            {isCalculatingScore ? (
+              <Text size="2" weight="medium" style={{ color: "#999" }}>
+                Calculating...
+              </Text>
+            ) : scoreData && scoreData.score !== null ? (
+              isEditingDealScore ? (
+                <Flex gap="8px" align="center">
+                  <TextField.Root
+                    value={dealScoreValue}
+                    onChange={(e) => setDealScoreValue(e.target.value)}
+                    placeholder="Enter score"
+                    style={{ width: "80px" }}
+                    autoFocus
+                    type="number"
+                    min="0"
+                    max="100"
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter") {
+                        const score = parseInt(dealScoreValue);
+                        if (!isNaN(score) && score >= 0 && score <= 100) {
+                          const tier = determineTierFromScore(score);
+                          setScoreData({
+                            score,
+                            tier,
+                          });
+                          // Persist to deal
+                          try {
+                            await updateDealScore(deal.deal_id, score, tier);
+                          } catch (error) {
+                            console.error('Error updating deal score:', error);
+                          }
+                          setIsEditingDealScore(false);
+                        }
+                      }
+                      if (e.key === "Escape") {
+                        setDealScoreValue(scoreData.score?.toString() || "—");
+                        setIsEditingDealScore(false);
+                      }
+                    }}
+                    onBlur={async () => {
+                      const score = parseInt(dealScoreValue);
+                      if (!isNaN(score) && score >= 0 && score <= 100) {
+                        const tier = determineTierFromScore(score);
+                        setScoreData({
+                          score,
+                          tier,
+                        });
+                        // Persist to deal
+                        try {
+                          await updateDealScore(deal.deal_id, score, tier);
+                        } catch (error) {
+                          console.error('Error updating deal score:', error);
+                        }
+                      } else {
+                        setDealScoreValue(scoreData.score?.toString() || "—");
+                      }
+                      setIsEditingDealScore(false);
+                    }}
+                  />
+                </Flex>
+              ) : (
+                <Flex gap="8px" align="center">
+                  <Text
+                    size="2"
+                    weight="medium"
+                    onClick={() => setIsEditingDealScore(true)}
+                    style={{
+                      cursor: "pointer",
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f0f0f0";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    {scoreData.score}
+                  </Text>
+                  {scoreData.tier && (
+                    <Text
+                      size="1"
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                        backgroundColor: 
+                          scoreData.tier === "strong" ? "#d4edda" :
+                          scoreData.tier === "good" ? "#fff3cd" :
+                          scoreData.tier === "risky" ? "#f8d7da" : "#e2e3e5",
+                        color:
+                          scoreData.tier === "strong" ? "#155724" :
+                          scoreData.tier === "good" ? "#856404" :
+                          scoreData.tier === "risky" ? "#721c24" : "#383d41",
+                      }}
+                    >
+                      {scoreData.tier}
+                    </Text>
+                  )}
+                </Flex>
+              )
+            ) : (
+              isEditingDealScore ? (
+                <Flex gap="8px" align="center">
+                  <TextField.Root
+                    value={dealScoreValue}
+                    onChange={(e) => setDealScoreValue(e.target.value)}
+                    placeholder="Enter score"
+                    style={{ width: "80px" }}
+                    autoFocus
+                    type="number"
+                    min="0"
+                    max="100"
+                    onKeyDown={async (e) => {
+                      if (e.key === "Enter") {
+                        const score = parseInt(dealScoreValue);
+                        if (!isNaN(score) && score >= 0 && score <= 100) {
+                          const tier = determineTierFromScore(score);
+                          setScoreData({
+                            score,
+                            tier,
+                          });
+                          // Persist to deal
+                          try {
+                            await updateDealScore(deal.deal_id, score, tier);
+                          } catch (error) {
+                            console.error('Error updating deal score:', error);
+                          }
+                          setIsEditingDealScore(false);
+                        }
+                      }
+                      if (e.key === "Escape") {
+                        setDealScoreValue("—");
+                        setIsEditingDealScore(false);
+                      }
+                    }}
+                    onBlur={async () => {
+                      const score = parseInt(dealScoreValue);
+                      if (!isNaN(score) && score >= 0 && score <= 100) {
+                        const tier = determineTierFromScore(score);
+                        setScoreData({
+                          score,
+                          tier,
+                        });
+                        // Persist to deal
+                        try {
+                          await updateDealScore(deal.deal_id, score, tier);
+                        } catch (error) {
+                          console.error('Error updating deal score:', error);
+                        }
+                      } else {
+                        setDealScoreValue("—");
+                      }
+                      setIsEditingDealScore(false);
+                    }}
+                  />
+                </Flex>
+              ) : (
+                <Text
+                  size="2"
+                  weight="medium"
+                  onClick={() => setIsEditingDealScore(true)}
+                  style={{
+                    color: "#999",
+                    cursor: "pointer",
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f0f0f0";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  Not calculated
+                </Text>
+              )
             )}
           </Flex>
         </Grid>

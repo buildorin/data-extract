@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PublicSharePage.tsx:4',message:'Attempting to import getPublicShare and trackView',data:{importNames:['getPublicShare','trackView']},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'H1'})}).catch(()=>{});
+// #endregion
 import { getPublicShare, trackView } from '../../services/liveShareApi';
 import { Flex, Text, Button } from '@radix-ui/themes';
 

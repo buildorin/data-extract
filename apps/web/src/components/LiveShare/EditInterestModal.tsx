@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EditInterestModal.tsx:3',message:'Attempting to import addInvestorInterest and deleteInvestorInterest',data:{importNames:['addInvestorInterest','deleteInvestorInterest']},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'H1'})}).catch(()=>{});
+// #endregion
 import { addInvestorInterest, deleteInvestorInterest, type InvestorInterest } from '../../services/liveShareApi';
 import { toast } from 'react-hot-toast';
 import { Flex, Text, Button, TextField, TextArea, RadioGroup, Dialog } from '@radix-ui/themes';

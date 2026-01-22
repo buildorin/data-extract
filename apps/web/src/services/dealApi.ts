@@ -25,6 +25,8 @@ export interface DealResponse {
   metadata: any;
   document_count?: number;
   fact_count?: number;
+  orin_score?: number | null; // Deal Score (0-100)
+  orin_score_tier?: string | null; // Score tier: strong, good, risky, pass
 }
 
 export interface DocumentResponse {
@@ -547,6 +549,31 @@ export const updateDealName = async (
   }
 
   const response = await axiosInstance.patch(`/api/v1/deals/${dealId}`, { deal_name: dealName });
+  return response.data;
+};
+
+// Update deal score
+export const updateDealScore = async (
+  dealId: string,
+  score: number,
+  tier: string | null
+): Promise<DealResponse> => {
+  if (USE_MOCK_DATA && isMockDeal(dealId)) {
+    const deal = MOCK_DEALS.find((d) => d.deal_id === dealId);
+    if (deal) {
+      deal.orin_score = score;
+      deal.orin_score_tier = tier;
+      deal.updated_at = new Date().toISOString();
+      saveMockData();
+      return deal;
+    }
+    throw new Error('Deal not found');
+  }
+
+  const response = await axiosInstance.patch(`/api/v1/deals/${dealId}`, { 
+    orin_score: score,
+    orin_score_tier: tier 
+  });
   return response.data;
 };
 

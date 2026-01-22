@@ -1,0 +1,10 @@
+DROP INDEX IF EXISTS idx_investor_interest_live_share_id;
+DROP INDEX IF EXISTS idx_share_views_viewed_at;
+DROP INDEX IF EXISTS idx_share_views_live_share_id;
+DROP INDEX IF EXISTS idx_live_shares_expires_at;
+DROP INDEX IF EXISTS idx_live_shares_short_id;
+DROP INDEX IF EXISTS idx_live_shares_user_id;
+DROP INDEX IF EXISTS idx_live_shares_deal_id;
+DROP TABLE IF EXISTS investor_interest;
+DROP TABLE IF EXISTS share_views;
+DROP TABLE IF EXISTS live_shares;
