@@ -3,12 +3,18 @@
 
 import { DealResponse, DocumentResponse, FactResponse } from "./dealApi";
 
-export const MOCK_DEALS: DealResponse[] = [
+// LocalStorage keys
+const MOCK_DEALS_KEY = 'orin_mock_deals';
+const MOCK_DOCUMENTS_KEY = 'orin_mock_documents';
+
+// Default mock deals
+const DEFAULT_MOCK_DEALS: DealResponse[] = [
   {
     deal_id: "deal-002-mockdata",
     user_id: "mock-user-001",
     deal_name: "Downtown Commercial Property",
     status: "processing_documents",
+    deal_type: "rental_income",
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     metadata: {},
@@ -20,6 +26,7 @@ export const MOCK_DEALS: DealResponse[] = [
     user_id: "mock-user-001",
     deal_name: "Riverside Townhomes",
     status: "ready_for_underwriting",
+    deal_type: "rental_income",
     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     metadata: {},
@@ -28,7 +35,8 @@ export const MOCK_DEALS: DealResponse[] = [
   },
 ];
 
-export const MOCK_DOCUMENTS: DocumentResponse[] = [
+// Default mock documents
+const DEFAULT_MOCK_DOCUMENTS: DocumentResponse[] = [
   // Documents for Downtown Commercial Property (deal-002-mockdata)
   {
     document_id: "doc-downtown-001",
@@ -390,20 +398,60 @@ export const MOCK_FACTS: FactResponse[] = [
   },
 ];
 
+// These two pre-existing deals have pre-loaded documents for demo
+const PREEXISTING_MOCK_DEALS = ['deal-002-mockdata', 'deal-003-mockdata'];
+
 export const isMockDeal = (dealId?: string): boolean => {
+  // ANY deal with "mockdata" suffix uses mock mode for deal management
+  // (but file uploads still go through REAL OCR processing)
   return dealId ? dealId.includes("mockdata") : false;
 };
 
+export const isPreexistingMockDeal = (dealId?: string): boolean => {
+  // Check if it's one of the two pre-existing deals with pre-loaded documents
+  return dealId ? PREEXISTING_MOCK_DEALS.includes(dealId) : false;
+};
+
 export const generateMockDealId = (): string => {
+  // NEW deals get "mockdata" suffix so they use mock mode for deal management
+  // but file uploads still use REAL backend for OCR processing
   return `deal-${Date.now()}-mockdata`;
 };
 
-export const createMockDeal = (dealName: string): DealResponse => {
-  const newDeal = {
+// Load from localStorage with fallback to defaults
+const loadFromLocalStorage = <T>(key: string, defaultValue: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error(`Failed to load ${key} from localStorage:`, e);
+  }
+  return defaultValue;
+};
+
+// Initialize from localStorage
+export const MOCK_DEALS: DealResponse[] = loadFromLocalStorage(MOCK_DEALS_KEY, DEFAULT_MOCK_DEALS);
+export const MOCK_DOCUMENTS: DocumentResponse[] = loadFromLocalStorage(MOCK_DOCUMENTS_KEY, DEFAULT_MOCK_DOCUMENTS);
+
+// Save to localStorage
+export const saveMockData = () => {
+  try {
+    localStorage.setItem(MOCK_DEALS_KEY, JSON.stringify(MOCK_DEALS));
+    localStorage.setItem(MOCK_DOCUMENTS_KEY, JSON.stringify(MOCK_DOCUMENTS));
+  } catch (e) {
+    console.error('Failed to save mock data to localStorage:', e);
+  }
+};
+
+export const createMockDeal = (dealName: string, dealType: string = 'rental_income'): DealResponse => {
+  const newDeal: DealResponse = {
     deal_id: generateMockDealId(),
     user_id: "mock-user-001",
     deal_name: dealName,
     status: "draft",
+    deal_type: dealType as 'rental_income' | 'value_add',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     metadata: {},
@@ -411,5 +459,6 @@ export const createMockDeal = (dealName: string): DealResponse => {
     fact_count: 0,
   };
   MOCK_DEALS.push(newDeal);
+  saveMockData();  // Auto-save
   return newDeal;
 };

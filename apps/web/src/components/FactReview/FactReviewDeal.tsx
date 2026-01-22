@@ -1,19 +1,17 @@
 import { useState } from "react";
-import { Flex, Text, Card, Button, TextField, Badge, Dialog } from "@radix-ui/themes";
+import { Flex, Text, Card, Button, TextField, Badge } from "@radix-ui/themes";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import {
-  getDeal,
   getDealFacts,
-  getDealDocuments,
+  createFact,
   updateFact,
   approveFacts,
   resetFacts,
   updateDealStatus,
-  DealResponse,
   FactResponse,
-  DocumentResponse,
+  getDeal,
+  DealResponse,
 } from "../../services/dealApi";
-import { isMockDeal } from "../../services/mockDealData";
 import toast from "react-hot-toast";
 import "./FactReviewDeal.css";
 
@@ -29,15 +27,63 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
     Record<string, { value: string; unit?: string }>
   >({});
   const [selectedFacts, setSelectedFacts] = useState<Set<string>>(new Set());
-  const [viewingDocument, setViewingDocument] = useState<DocumentResponse | null>(null);
+  const [showAddFactForm, setShowAddFactForm] = useState(false);
+  const [newFactLabel, setNewFactLabel] = useState("");
+  const [newFactValue, setNewFactValue] = useState("");
+  const [newFactUnit, setNewFactUnit] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['primary']));
   const queryClient = useQueryClient();
 
-  const {
-    data: dealInfo,
-  } = useQuery<DealResponse>({
-    queryKey: ["deal", dealId],
-    queryFn: () => getDeal(dealId),
-  });
+  // Adaptive field groups based on deal type
+  const RENTAL_INCOME_FIELDS = {
+    operations: {
+      title: "OPERATIONS",
+      fields: [
+        { label: "Annual Rental Income", unit: "$", type: "currency", placeholder: "e.g., 480000" },
+        { label: "Occupancy Rate", unit: "%", type: "percentage", placeholder: "e.g., 95" },
+        { label: "T12 Operating Expenses", unit: "$", type: "currency", placeholder: "e.g., 160000" },
+        { label: "Management Fee", unit: "%", type: "percentage", placeholder: "e.g., 5" },
+      ],
+    },
+    terminalValue: {
+      title: "TERMINAL VALUE",
+      fields: [
+        { label: "Exit Cap Rate", unit: "%", type: "percentage", placeholder: "e.g., 6.5" },
+        { label: "Annual Appreciation", unit: "%", type: "percentage", placeholder: "e.g., 3" },
+      ],
+    },
+  };
+
+  const VALUE_ADD_FIELDS = {
+    capitalReno: {
+      title: "CAPITAL & RENOVATION",
+      fields: [
+        { label: "ARV (After Repair Value)", unit: "$", type: "currency", placeholder: "e.g., 2500000" },
+        { label: "Renovation Budget", unit: "$", type: "currency", placeholder: "e.g., 500000" },
+        { label: "Hard Costs", unit: "$", type: "currency", placeholder: "e.g., 400000" },
+        { label: "Soft Costs", unit: "$", type: "currency", placeholder: "e.g., 100000" },
+        { label: "Construction Timeline", unit: "days", type: "number", placeholder: "e.g., 180" },
+      ],
+    },
+    acquisition: {
+      title: "ACQUISITION",
+      fields: [
+        { label: "Purchase Price", unit: "$", type: "currency", placeholder: "e.g., 1800000" },
+        { label: "Closing Costs", unit: "$", type: "currency", placeholder: "e.g., 50000" },
+        { label: "Short-term Loan Terms", unit: "", type: "text", placeholder: "e.g., 12% interest, 12 months" },
+      ],
+    },
+  };
+
+  // Legacy seeded fields for backward compatibility (will be replaced by adaptive groups)
+  const SEEDED_FIELDS = [
+    { label: "Gross Rent", unit: "$", type: "currency" },
+    { label: "Operating Expenses", unit: "$", type: "currency" },
+    { label: "Loan Amount", unit: "$", type: "currency" },
+    { label: "Interest Rate", unit: "%", type: "percentage" },
+    { label: "Loan Term", unit: "years", type: "number" },
+  ];
+
 
   const {
     data: facts,
@@ -49,11 +95,58 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
     queryFn: () => getDealFacts(dealId),
   });
 
-  const {
-    data: documents,
-  } = useQuery<DocumentResponse[]>({
-    queryKey: ["deal-documents", dealId],
-    queryFn: () => getDealDocuments(dealId),
+  // Get deal data to determine type
+  const { data: deal } = useQuery<DealResponse>({
+    queryKey: ["deal", dealId],
+    queryFn: () => getDeal(dealId),
+  });
+
+  // Initialize factsList early to avoid temporal dead zone errors
+  const factsList = facts || [];
+  const hasLockedFacts = factsList.some((f) => f.locked);
+
+  // Determine deal type and field groups
+  const dealType = deal?.deal_type || 'rental_income';
+  const fieldGroups = dealType === 'value_add' ? VALUE_ADD_FIELDS : RENTAL_INCOME_FIELDS;
+
+  // Accordion toggle function
+  const toggleGroup = (groupKey: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) {
+        next.delete(groupKey);
+      } else {
+        next.add(groupKey);
+      }
+      return next;
+    });
+  };
+
+  // Quick add handler
+  const handleQuickAdd = (field: { label: string; unit?: string; type: string; placeholder: string }) => {
+    setNewFactLabel(field.label);
+    setNewFactUnit(field.unit || "");
+    setShowAddFactForm(true);
+  };
+
+  const createFactMutation = useMutation({
+    mutationFn: (data: {
+      label: string;
+      value: string;
+      unit?: string;
+    }) => createFact(dealId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deal-facts", dealId] });
+      queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+      setNewFactLabel("");
+      setNewFactValue("");
+      setNewFactUnit("");
+      setShowAddFactForm(false);
+      toast.success("Fact added");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create fact");
+    },
   });
 
   const updateMutation = useMutation({
@@ -61,7 +154,7 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
       factId: string;
       value: string;
       unit?: string;
-    }) => updateFact(dealId, data.factId, data.value, data.unit),
+    }) => updateFact(dealId, data.factId, { value: data.value }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-facts", dealId] });
       toast.success("Fact updated");
@@ -161,6 +254,49 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
     approveMutation.mutate(allIds);
   };
 
+  const handleAddFact = () => {
+    if (!newFactLabel.trim() || !newFactValue.trim()) {
+      toast.error("Please provide both field name and value");
+      return;
+    }
+
+    // Validate Loan Term (should be 20-30 years)
+    if (newFactLabel.trim().toLowerCase() === "loan term") {
+      const termValue = parseFloat(newFactValue.trim());
+      if (isNaN(termValue) || termValue < 20 || termValue > 30) {
+        toast.error("Loan Term must be between 20 and 30 years");
+        return;
+      }
+    }
+
+    // Validate Interest Rate (should be a floating point number)
+    if (newFactLabel.trim().toLowerCase() === "interest rate") {
+      const rateValue = parseFloat(newFactValue.trim());
+      if (isNaN(rateValue) || rateValue < 0 || rateValue > 100) {
+        toast.error("Interest Rate must be a valid number between 0 and 100");
+        return;
+      }
+    }
+
+    createFactMutation.mutate({
+      label: newFactLabel.trim(),
+      value: newFactValue.trim(),
+      unit: newFactUnit.trim() || undefined,
+    });
+  };
+
+  const handleAddSeededField = (field: { label: string; unit: string; type: string }) => {
+    setNewFactLabel(field.label);
+    setNewFactUnit(field.unit);
+    setNewFactValue("");
+    setShowAddFactForm(true);
+  };
+
+  // Check which seeded fields are missing
+  const missingSeededFields = SEEDED_FIELDS.filter(
+    (field) => !factsList.some((f) => f.label.toLowerCase() === field.label.toLowerCase())
+  );
+
   const handleRunUnderwriting = async () => {
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/8ba094c0-f913-4a1d-9d69-0a38a5483749',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'FactReviewDeal.tsx:handleRunUnderwriting',message:'handleRunUnderwriting called',data:{dealId,factsCount:facts?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
@@ -227,18 +363,6 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
     }
   };
 
-  const findDocumentByName = (fileName: string): DocumentResponse | undefined => {
-    return documents?.find((doc) => doc.file_name === fileName);
-  };
-
-  const handleViewSource = (fact: FactResponse) => {
-    const doc = findDocumentByName(fact.source_citation.document);
-    if (doc) {
-      setViewingDocument(doc);
-    } else {
-      toast.error("Document not found");
-    }
-  };
 
   if (isLoading) {
     return (
@@ -257,62 +381,108 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
     );
   }
 
-  if (!facts || facts.length === 0) {
-    return (
-      <Flex justify="center" align="center" p="8">
-        <Text color="gray">No facts extracted yet</Text>
-      </Flex>
-    );
-  }
-
-  const hasLockedFacts = facts.some((f) => f.locked);
-
   return (
     <Flex
       direction="column"
       gap="3"
       p="24px"
-      style={{ overflowY: "auto", height: "100%" }}
+      style={{ height: "100%", display: "flex", overflow: "hidden" }}
       className="fact-review-container"
     >
-      <Flex direction="column" gap="3" mb="3">
-        <Flex justify="between" align="center">
-          <Flex direction="column" gap="1">
-            <Text size="4" weight="medium">
-              {dealInfo?.deal_name || "Deal"}
-            </Text>
-            <Text size="2" color="gray">
-              Verify extracted data to lock and analyze
-            </Text>
-          </Flex>
-          <Flex gap="2" wrap="wrap">
+      <Flex direction="column" gap="2" mb="2" style={{ flexShrink: 0 }}>
+        <Flex direction="column" gap="1">
+          <Text size="6" weight="medium">
+            Inputs to run deal analysis
+          </Text>
+          <Text size="2" weight="regular">
+            Auto extracted from documents when available
+          </Text>
+        </Flex>
+        {factsList.length > 0 && (
+          <Flex justify="end" align="center" gap="12px">
             {hasLockedFacts && (
-              <Button
-                size="2"
-                variant="outline"
-                color="red"
-                onClick={() => resetMutation.mutate()}
-                disabled={resetMutation.isLoading}
+              <Flex
+                onClick={() => !resetMutation.isLoading && resetMutation.mutate()}
+                align="center"
+                gap="6px"
+                style={{
+                  cursor: resetMutation.isLoading ? "not-allowed" : "pointer",
+                  opacity: resetMutation.isLoading ? 0.5 : 1,
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!resetMutation.isLoading) {
+                    e.currentTarget.style.backgroundColor = "#f0f0f0";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
               >
-                Reset All
-              </Button>
+                <Text size="3">🔄</Text>
+                <Text size="2" style={{ color: "#666", fontWeight: "500" }}>
+                  Reset All
+                </Text>
+              </Flex>
             )}
-            {selectedFacts.size > 0 && (
-              <Button
-                size="2"
-                onClick={handleApproveSelected}
-                disabled={approveMutation.isLoading}
-              >
-                Verify Selected ({selectedFacts.size})
-              </Button>
+            {factsList.length > 0 && (
+              <>
+                {selectedFacts.size > 0 && (
+                  <Flex
+                    onClick={() => !approveMutation.isLoading && handleApproveSelected()}
+                    align="center"
+                    gap="6px"
+                    style={{
+                      cursor: approveMutation.isLoading ? "not-allowed" : "pointer",
+                      opacity: approveMutation.isLoading ? 0.5 : 1,
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!approveMutation.isLoading) {
+                        e.currentTarget.style.backgroundColor = "#f0f0f0";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    <Text size="3">✓</Text>
+                    <Text size="2" style={{ color: "#1976D2", fontWeight: "500" }}>
+                      Verify Selected ({selectedFacts.size})
+                    </Text>
+                  </Flex>
+                )}
+                <Flex
+                  onClick={() => !approveMutation.isLoading && handleVerifyAll()}
+                  align="center"
+                  gap="6px"
+                  style={{
+                    cursor: approveMutation.isLoading ? "not-allowed" : "pointer",
+                    opacity: approveMutation.isLoading ? 0.5 : 1,
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!approveMutation.isLoading) {
+                      e.currentTarget.style.backgroundColor = "#f0f0f0";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <Text size="3">✓</Text>
+                  <Text size="2" style={{ color: "#666", fontWeight: "500" }}>
+                    Verify All
+                  </Text>
+                </Flex>
+              </>
             )}
-            <Button
-              size="2"
-              onClick={handleVerifyAll}
-              disabled={approveMutation.isLoading}
-            >
-              Verify All
-            </Button>
             <Button
               size="2"
               onClick={handleRunUnderwriting}
@@ -321,18 +491,189 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
                 color: "#fff",
               }}
             >
-              Run Underwriting →
+              Run Analysis →
             </Button>
           </Flex>
-        </Flex>
+        )}
       </Flex>
 
-      <Flex direction="column" gap="2">
-        {facts.map((fact) => {
+      {/* Add Fact Form */}
+      <Card
+        style={{
+          padding: "16px",
+          marginBottom: "16px",
+          backgroundColor: "#f9fafb",
+          border: "1px solid #e0e0e0",
+        }}
+      >
+        <Flex direction="column" gap="12px">
+          <Flex justify="between" align="center">
+            <Text size="3" weight="bold">
+              Add New Fact
+            </Text>
+            {!showAddFactForm && (
+              <button
+                onClick={() => setShowAddFactForm(true)}
+                style={{
+                  backgroundColor: "transparent",
+                  border: "1px solid #1976D2",
+                  color: "#000",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                }}
+              >
+                + Fact
+              </button>
+            )}
+          </Flex>
+
+          {showAddFactForm && (
+            <Flex direction="column" gap="12px">
+              <Flex gap="8px" align="center" wrap="wrap">
+                <TextField.Root
+                  placeholder="Field name (e.g., Gross Rent)"
+                  value={newFactLabel}
+                  onChange={(e) => setNewFactLabel(e.target.value)}
+                  style={{ flex: "1 1 200px", minWidth: "200px" }}
+                />
+                <TextField.Root
+                  placeholder="Value"
+                  value={newFactValue}
+                  onChange={(e) => setNewFactValue(e.target.value)}
+                  style={{ flex: "1 1 150px", minWidth: "150px" }}
+                />
+                <TextField.Root
+                  placeholder="Unit (optional)"
+                  value={newFactUnit}
+                  onChange={(e) => setNewFactUnit(e.target.value)}
+                  style={{ width: "120px" }}
+                />
+                <Button
+                  size="2"
+                  onClick={handleAddFact}
+                  disabled={createFactMutation.isLoading || !newFactLabel.trim() || !newFactValue.trim()}
+                  style={{ cursor: "pointer" }}
+                >
+                  {createFactMutation.isLoading ? "Adding..." : "Add"}
+                </Button>
+                <Button
+                  size="2"
+                  variant="soft"
+                  onClick={() => {
+                    setShowAddFactForm(false);
+                    setNewFactLabel("");
+                    setNewFactValue("");
+                    setNewFactUnit("");
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  Cancel
+                </Button>
+              </Flex>
+            </Flex>
+          )}
+        </Flex>
+      </Card>
+
+      {/* Accordion Groups */}
+      <Flex direction="column" gap="16px" style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "16px" }}>
+        {Object.entries(fieldGroups).map(([groupKey, group], index) => {
+          const isExpanded = expandedGroups.has(index === 0 ? 'primary' : 'secondary');
+          const groupFacts = factsList.filter(f => 
+            group.fields.some(field => field.label === f.label)
+          );
+          const completedCount = groupFacts.filter(f => f.locked).length;
+          const totalCount = group.fields.length;
+          
+          return (
+            <Card key={groupKey} style={{ padding: "0", border: "1px solid #e0e0e0" }}>
+              {/* Accordion Header */}
+              <Flex
+                onClick={() => toggleGroup(index === 0 ? 'primary' : 'secondary')}
+                p="16px"
+                align="center"
+                justify="between"
+                style={{
+                  cursor: "pointer",
+                  backgroundColor: "#f9fafb",
+                  borderBottom: isExpanded ? "1px solid #e0e0e0" : "none",
+                }}
+              >
+                <Flex align="center" gap="12px">
+                  <Text size="2" weight="bold" style={{ color: "#333" }}>
+                    {group.title}
+                  </Text>
+                  <Badge variant="soft" color={completedCount === totalCount ? "green" : "gray"}>
+                    {completedCount}/{totalCount}
+                  </Badge>
+                </Flex>
+                <Text size="3">{isExpanded ? "▼" : "▶"}</Text>
+              </Flex>
+              
+              {/* Accordion Content */}
+              {isExpanded && (
+                <Flex direction="column" gap="12px" p="16px" style={{ transition: "all 0.3s ease" }}>
+                  {group.fields.map(field => {
+                    const existingFact = groupFacts.find(f => f.label === field.label);
+                    const status = existingFact ? getFactStatus(existingFact) : "missing";
+                    const statusDisplay = getStatusDisplay(status);
+                    const isEdited = existingFact ? !!editedFacts[existingFact.fact_id] : false;
+                    
+                    return (
+                      <Flex key={field.label} direction="column" gap="8px" p="12px" style={{ border: "1px solid #e0e0e0", borderRadius: "6px" }}>
+                        <Flex justify="between" align="center">
+                          <Text size="2" weight="medium">{field.label}</Text>
+                          <Flex align="center" gap="8px">
+                            {existingFact?.locked && <Badge color="green">✓ Verified</Badge>}
+                            {!existingFact && (
+                              <Button
+                                size="1"
+                                variant="soft"
+                                onClick={() => handleQuickAdd(field)}
+                              >
+                                + Quick add
+                              </Button>
+                            )}
+                          </Flex>
+                        </Flex>
+                        
+                        {existingFact && (
+                          <Flex gap="8px" align="center">
+                            <TextField.Root
+                              value={editedFacts[existingFact.fact_id]?.value ?? existingFact.value}
+                              onChange={(e) => handleValueChange(existingFact.fact_id, e.target.value)}
+                              disabled={existingFact.locked}
+                              style={{ flex: 1 }}
+                              placeholder={field.placeholder}
+                            />
+                            {existingFact.unit && <Text size="2">{existingFact.unit}</Text>}
+                            {!existingFact.locked && isEdited && (
+                              <Button size="1" onClick={() => saveFact(existingFact.fact_id)}>
+                                Save
+                              </Button>
+                            )}
+                          </Flex>
+                        )}
+                      </Flex>
+                    );
+                  })}
+                </Flex>
+              )}
+            </Card>
+          );
+        })}
+
+        {/* Legacy facts that don't match any field group */}
+        {factsList.filter(f => {
+          const allFieldLabels = Object.values(fieldGroups).flatMap(g => g.fields.map(field => field.label));
+          return !allFieldLabels.includes(f.label);
+        }).map((fact) => {
           const status = getFactStatus(fact);
           const statusDisplay = getStatusDisplay(status);
           const isEdited = !!editedFacts[fact.fact_id];
-          const sourceDoc = findDocumentByName(fact.source_citation.document);
 
           return (
             <Card
@@ -364,30 +705,25 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
                       {statusDisplay.icon} {statusDisplay.label}
                     </Badge>
                     {fact.locked && (
-                      <Badge color="green" style={{ flexShrink: 0 }}>
+                      <Badge color="gray" style={{ flexShrink: 0 }}>
                         Locked
                       </Badge>
                     )}
                   </Flex>
-                  {sourceDoc && (
-                    <Flex
-                      align="center"
-                      gap="1"
-                      onClick={() => handleViewSource(fact)}
-                      style={{
-                        cursor: "pointer",
-                        flexShrink: 0,
-                        color: "#111",
-                      }}
-                    >
-                      <Text size="2" style={{ color: "#111" }}>
-                        📄
+                  <Flex direction="column" align="end" gap="1" style={{ fontSize: "11px", flexShrink: 0 }}>
+                    <Text size="1" color="gray" style={{ textAlign: "right" }}>
+                      <strong>Source:</strong> {fact.source_citation.document}, Page{" "}
+                      {fact.source_citation.page}
+                      {fact.source_citation.line && ` - Line: ${fact.source_citation.line}`}
+                    </Text>
+                    {fact.approved_at && (
+                      <Text size="1" color="gray" style={{ textAlign: "right" }}>
+                        <strong>Verified:</strong>{" "}
+                        {new Date(fact.approved_at).toLocaleDateString()}
+                        {fact.approved_by && ` by ${fact.approved_by}`}
                       </Text>
-                      <Text size="2" weight="medium" style={{ color: "#111" }}>
-                        View Source
-                      </Text>
-                    </Flex>
-                  )}
+                    )}
+                  </Flex>
                 </Flex>
 
                 <Flex gap="2" align="center" wrap="wrap">
@@ -426,156 +762,11 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
                     </Button>
                   )}
                 </Flex>
-
-                <Flex direction="column" gap="1" style={{ fontSize: "11px" }}>
-                  <Text size="1" color="gray">
-                    <strong>Source:</strong> {fact.source_citation.document}, Page{" "}
-                    {fact.source_citation.page}
-                    {fact.source_citation.line && ` - Line: ${fact.source_citation.line}`}
-                  </Text>
-                  {fact.approved_at && (
-                    <Text size="1" color="gray">
-                      <strong>Verified:</strong>{" "}
-                      {new Date(fact.approved_at).toLocaleDateString()}
-                      {fact.approved_by && ` by ${fact.approved_by}`}
-                    </Text>
-                  )}
-                </Flex>
               </Flex>
             </Card>
           );
         })}
       </Flex>
-
-      {/* Document Viewer Dialog */}
-      <Dialog.Root open={!!viewingDocument} onOpenChange={(open) => !open && setViewingDocument(null)}>
-        <Dialog.Content style={{ maxWidth: "90vw", maxHeight: "90vh" }}>
-          <Dialog.Title>
-            {viewingDocument?.file_name || "Source Document"}
-          </Dialog.Title>
-          <Dialog.Description size="2" mb="4">
-            Page {viewingDocument && facts?.find(f => f.source_citation.document === viewingDocument.file_name)?.source_citation.page || 1}
-          </Dialog.Description>
-          
-          <Flex direction="column" gap="3" style={{ maxHeight: "70vh", overflow: "auto" }}>
-            {isMockDeal(dealId) ? (
-              // Mock data - show sample PDF with disclaimer
-              <Flex direction="column" gap="3">
-                <Card style={{ background: "#fff3cd", borderColor: "#ffc107", padding: "16px" }}>
-                  <Flex direction="column" gap="2">
-                    <Text size="3" weight="bold" style={{ color: "#856404" }}>
-                      ⚠️ Mock Data Preview
-                    </Text>
-                    <Text size="2" style={{ color: "#856404" }}>
-                      This is a sample document preview for demonstration purposes. 
-                      In production, this would display the actual uploaded document.
-                    </Text>
-                  </Flex>
-                </Card>
-                
-                <Card style={{ padding: "24px", background: "#f8f9fa", border: "1px solid #e0e0e0" }}>
-                  <Flex direction="column" gap="3">
-                    <Flex direction="column" gap="1">
-                      <Text size="4" weight="bold">
-                        {viewingDocument?.file_name || "Sample Document"}
-                      </Text>
-                      <Text size="2" color="gray">
-                        Document Type: {viewingDocument?.document_type || "N/A"}
-                      </Text>
-                      {viewingDocument?.page_count && (
-                        <Text size="2" color="gray">
-                          Pages: {viewingDocument.page_count}
-                        </Text>
-                      )}
-                    </Flex>
-                    
-                    <Flex direction="column" gap="2" mt="3">
-                      <Text size="3" weight="medium">
-                        Extracted Information:
-                      </Text>
-                      {facts?.filter(f => f.source_citation.document === viewingDocument?.file_name).map((fact, idx) => (
-                        <Card key={fact.fact_id} style={{ padding: "12px", background: "#fff" }}>
-                          <Flex direction="column" gap="1">
-                            <Flex justify="between" align="center">
-                              <Text size="2" weight="medium">{fact.label}</Text>
-                              <Badge color={fact.status === "approved" ? "green" : fact.status === "missing" ? "red" : "yellow"}>
-                                {fact.status === "approved" ? "Verified" : fact.status === "missing" ? "Missing" : "Needs Review"}
-                              </Badge>
-                            </Flex>
-                            {fact.value && (
-                              <Text size="3" weight="bold">
-                                {fact.value} {fact.unit || ""}
-                              </Text>
-                            )}
-                            <Text size="1" color="gray">
-                              Page {fact.source_citation.page}, Line: {fact.source_citation.line || "N/A"}
-                            </Text>
-                          </Flex>
-                        </Card>
-                      ))}
-                    </Flex>
-                    
-                    <Flex direction="column" gap="1" mt="3" p="3" style={{ background: "#e9ecef", borderRadius: "4px" }}>
-                      <Text size="2" weight="medium">Document Metadata:</Text>
-                      <Text size="1" color="gray">
-                        Created: {viewingDocument?.created_at ? new Date(viewingDocument.created_at).toLocaleDateString() : "N/A"}
-                      </Text>
-                      <Text size="1" color="gray">
-                        Status: {viewingDocument?.status || "N/A"}
-                      </Text>
-                      {viewingDocument?.extracted_at && (
-                        <Text size="1" color="gray">
-                          Extracted: {new Date(viewingDocument.extracted_at).toLocaleDateString()}
-                        </Text>
-                      )}
-                    </Flex>
-                  </Flex>
-                </Card>
-              </Flex>
-            ) : viewingDocument?.url || viewingDocument?.storage_location ? (
-              // Real data - show actual document
-              <iframe
-                src={viewingDocument.url || viewingDocument.storage_location}
-                style={{
-                  width: "100%",
-                  height: "600px",
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "4px",
-                }}
-                title={viewingDocument.file_name}
-              />
-            ) : (
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                p="8"
-                gap="2"
-                style={{ minHeight: "400px" }}
-              >
-                <Text size="4" color="gray">
-                  📄 {viewingDocument?.file_name}
-                </Text>
-                <Text size="2" color="gray">
-                  Document preview not available. The document will be available once uploaded and processed.
-                </Text>
-                <Text size="1" color="gray" style={{ marginTop: "8px" }}>
-                  Source: {facts?.find(f => f.source_citation.document === viewingDocument?.file_name)?.source_citation.document}
-                  {facts?.find(f => f.source_citation.document === viewingDocument?.file_name)?.source_citation.page && 
-                    `, Page ${facts.find(f => f.source_citation.document === viewingDocument?.file_name)?.source_citation.page}`
-                  }
-                </Text>
-              </Flex>
-            )}
-          </Flex>
-
-          <Flex gap="3" mt="4" justify="end">
-            <Dialog.Close>
-              <Button variant="soft">Close</Button>
-            </Dialog.Close>
-          </Flex>
-        </Dialog.Content>
-      </Dialog.Root>
     </Flex>
   );
 };

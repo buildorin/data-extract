@@ -2,18 +2,23 @@ import { useState } from "react";
 import { Flex, Text, Button, TextField, Badge, ScrollArea } from "@radix-ui/themes";
 import { useQuery } from "react-query";
 import { getDeals, DealResponse } from "../../services/dealApi";
+import { getLiveShares, type LiveShare } from "../../services/liveShareApi";
 import "./LeftNavPane.css";
 
 interface LeftNavPaneProps {
   selectedDealId: string | null;
   onSelectDeal: (dealId: string) => void;
   onNewDeal: () => void;
+  onSelectLiveShare?: (shareId: string) => void;
+  selectedLiveShareId?: string | null;
 }
 
 export default function LeftNavPane({
   selectedDealId,
   onSelectDeal,
   onNewDeal,
+  onSelectLiveShare,
+  selectedLiveShareId,
 }: LeftNavPaneProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
@@ -24,6 +29,13 @@ export default function LeftNavPane({
   });
 
   const { data: deals = [] } = useQuery<DealResponse[]>("deals", getDeals);
+  const { data: liveShares = [] } = useQuery<LiveShare[]>(
+    'liveShares',
+    getLiveShares,
+    {
+      refetchInterval: 30000, // Refresh every 30 seconds
+    }
+  );
 
   const toggleGroup = (group: string) => {
     setExpandedGroups((prev) => ({ ...prev, [group]: !prev[group] }));
@@ -116,8 +128,26 @@ export default function LeftNavPane({
         >
           <Flex align="center" gap="8px">
             <Text size="2">{isExpanded ? "▼" : "▶"}</Text>
+            <Text
+              size="2"
+              weight="medium"
+              style={{
+                color:
+                  groupKey === "active"
+                    ? "#1976D2"
+                    : groupKey === "in_review"
+                    ? "#FF9800"
+                    : groupKey === "completed"
+                    ? "#4CAF50"
+                    : "#9E9E9E",
+                fontSize: "14px",
+                lineHeight: "1",
+              }}
+            >
+              {icon}
+            </Text>
             <Text size="2" weight="medium">
-              {icon} {title}
+              {title}
             </Text>
             <Badge size="1" variant="soft">
               {deals.length}
@@ -188,11 +218,12 @@ export default function LeftNavPane({
             My Deals
           </Text>
 
-          {renderGroup("Active", "🔵", "active", groupedDeals.active)}
-          {renderGroup("In Review", "🟡", "in_review", groupedDeals.in_review)}
-          {renderGroup("Completed", "🟢", "completed", groupedDeals.completed)}
-          {renderGroup("Shared", "🟣", "shared", groupedDeals.shared)}
+          {renderGroup("New", "●", "active", groupedDeals.active)}
+          {renderGroup("Underwriting", "●", "in_review", groupedDeals.in_review)}
+          {renderGroup("Fundraising", "●", "completed", groupedDeals.completed)}
+          {renderGroup("Closed", "●", "shared", groupedDeals.shared)}
 
+          {/* LIVE LINKS Section */}
           <Text
             size="2"
             weight="bold"
@@ -203,18 +234,56 @@ export default function LeftNavPane({
               letterSpacing: "0.5px",
             }}
           >
-            Shared Packages
+            Live Links
           </Text>
-          <Text
-            size="2"
-            style={{
-              color: "#999",
-              padding: "8px 12px",
-              fontStyle: "italic",
-            }}
-          >
-            No shared packages yet
-          </Text>
+
+          {liveShares.length === 0 ? (
+            <Text
+              size="2"
+              style={{
+                color: "#999",
+                padding: "8px 12px",
+                fontStyle: "italic",
+              }}
+            >
+              No active share links yet
+            </Text>
+          ) : (
+            <Flex direction="column" style={{ marginBottom: "8px" }}>
+              {liveShares.map((share) => {
+                const deal = deals.find((d) => d.deal_id === share.deal_id);
+                const isExpired = share.is_expired;
+                const isSelected = selectedLiveShareId === share.id;
+
+                return (
+                  <Flex
+                    key={share.id}
+                    align="center"
+                    justify="between"
+                    p="8px 12px"
+                    style={{
+                      cursor: isExpired ? "not-allowed" : "pointer",
+                      backgroundColor: isSelected ? "#f0f0f0" : "transparent",
+                      opacity: isExpired ? 0.6 : 1,
+                    }}
+                    onClick={() => !isExpired && onSelectLiveShare?.(share.id)}
+                  >
+                    <Flex align="center" gap="8px" style={{ minWidth: 0, flex: 1 }}>
+                      {!isExpired && (
+                        <Text size="2" style={{ color: "#22c55e" }}>●</Text>
+                      )}
+                      <Text size="2" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {deal?.deal_name || 'Unknown Deal'}
+                      </Text>
+                    </Flex>
+                    <Text size="1" style={{ color: "#666", flexShrink: 0, marginLeft: "8px" }}>
+                      {share.view_count} {share.view_count === 1 ? 'view' : 'views'}
+                    </Text>
+                  </Flex>
+                );
+              })}
+            </Flex>
+          )}
         </Flex>
       </ScrollArea>
 
@@ -238,6 +307,7 @@ export default function LeftNavPane({
           + New Deal
         </Button>
       </Flex>
+
     </Flex>
   );
 }

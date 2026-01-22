@@ -18,25 +18,37 @@ use memtrack::track_mem;
 fn orchestrate_task(
     _pipeline: &mut Pipeline,
 ) -> Result<Vec<PipelineStep>, Box<dyn std::error::Error>> {
-    let mut steps = vec![PipelineStep::ConvertToImages];
+    // Old pipeline steps removed - using new simplified pipeline
+    let mut steps = vec![];
 
     #[cfg(feature = "azure")]
     {
         match _pipeline.get_task()?.configuration.pipeline.clone() {
             Some(core::models::task::PipelineType::Azure) => {
+                // #region agent log
+                let _ = std::fs::OpenOptions::new().create(true).append(true).open("/Users/harishmaiya/Documents/GitHub/data-extract/.cursor/debug.log").and_then(|mut f| std::io::Write::write_all(&mut f, format!("{{\"location\":\"task_worker.rs:27\",\"message\":\"Using Azure pipeline\",\"data\":{{}},\"timestamp\":{},\"sessionId\":\"debug-session\",\"runId\":\"run3\",\"hypothesisId\":\"H13\"}}\n", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()).as_bytes()));
+                // #endregion
                 steps.push(PipelineStep::AzureAnalysis)
             }
-            _ => steps.push(PipelineStep::ChunkrAnalysis),
+            _ => {
+                // #region agent log
+                let _ = std::fs::OpenOptions::new().create(true).append(true).open("/Users/harishmaiya/Documents/GitHub/data-extract/.cursor/debug.log").and_then(|mut f| std::io::Write::write_all(&mut f, format!("{{\"location\":\"task_worker.rs:34\",\"message\":\"Using Chunkr pipeline\",\"data\":{{\"pipelineValue\":\"{:?}\"}},\"timestamp\":{},\"sessionId\":\"debug-session\",\"runId\":\"run3\",\"hypothesisId\":\"H13\"}}\n", _pipeline.get_task()?.configuration.pipeline, std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()).as_bytes()));
+                // #endregion
+                steps.push(PipelineStep::ChunkrAnalysis)
+            },
         }
     }
     #[cfg(not(feature = "azure"))]
     {
-        steps.push(PipelineStep::ChunkrAnalysis);
+        // #region agent log
+        let _ = std::fs::OpenOptions::new().create(true).append(true).open("/Users/harishmaiya/Documents/GitHub/data-extract/.cursor/debug.log").and_then(|mut f| std::io::Write::write_all(&mut f, format!("{{\"location\":\"task_worker.rs:45\",\"message\":\"Using Chunkr pipeline (no azure feature)\",\"data\":{{}},\"timestamp\":{},\"sessionId\":\"debug-session\",\"runId\":\"run3\",\"hypothesisId\":\"H13\"}}\n", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()).as_bytes()));
+        // #endregion
+        // Old Chunkr pipeline removed
+        // Use deal_document_worker for new document processing
     }
 
-    steps.push(PipelineStep::Crop);
-    steps.push(PipelineStep::SegmentProcessing);
-    steps.push(PipelineStep::Chunking);
+    // Old pipeline steps removed - this worker is deprecated
+    // Use deal_document_worker and fact_extraction_worker instead
     Ok(steps)
 }
 
