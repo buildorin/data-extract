@@ -114,7 +114,7 @@ services:
     useStandardEnv: true
     image:
       repository: orin-server
-      tag: latest
+      tag: 1.21.0
     port: 8000
     targetPort: 8000
     ingress:
@@ -137,7 +137,7 @@ services:
     useStandardEnv: true
     image:
       repository: orin-task
-      tag: latest
+      tag: 1.21.0
     envFrom:
       - secretRef:
           name: orin-secret
@@ -157,12 +157,12 @@ services:
     enabled: true
     image:
       repository: orin-web
-      tag: prod
+      tag: 1.21.0
     port: 80
     targetPort: 80
     ingress:
       enabled: true
-      subdomain: ""
+      subdomain: ''
     env:
       - name: VITE_API_URL
         value: >-
@@ -190,7 +190,7 @@ services:
     enabled: true
     image:
       repository: orin-ocr
-      tag: latest
+      tag: 1.21.0
     port: 8000
     targetPort: 8000
     useGPU: true
@@ -204,7 +204,7 @@ services:
     enabled: true
     image:
       repository: orin-segmentation
-      tag: latest
+      tag: 1.21.0
     port: 8000
     targetPort: 8000
     useGPU: true
