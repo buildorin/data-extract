@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Flex, Text, Card, Slider } from "@radix-ui/themes";
+import { StressTestResult } from "../../services/underwritingApi";
 
 interface StressTestPanelProps {
   onScenarioChange: (scenario: {
@@ -7,9 +8,19 @@ interface StressTestPanelProps {
     expenseAdjustment: number;
     interestRateAdjustment: number;
   }) => void;
+  stressTestResult?: StressTestResult | null;
+  baseNoi?: number;
+  baseDscr?: number;
+  baseCashFlow?: number;
 }
 
-const StressTestPanel = ({ onScenarioChange }: StressTestPanelProps) => {
+const StressTestPanel = ({ 
+  onScenarioChange, 
+  stressTestResult,
+  baseNoi,
+  baseDscr,
+  baseCashFlow 
+}: StressTestPanelProps) => {
   const [rentAdjustment, setRentAdjustment] = useState(0);
   const [expenseAdjustment, setExpenseAdjustment] = useState(0);
   const [interestRateAdjustment, setInterestRateAdjustment] = useState(0);
@@ -41,16 +52,40 @@ const StressTestPanel = ({ onScenarioChange }: StressTestPanelProps) => {
     });
   };
 
-  const getRiskColor = () => {
-    const totalStress =
-      Math.abs(rentAdjustment) +
-      Math.abs(expenseAdjustment) +
-      Math.abs(interestRateAdjustment) / 100;
+  const getRiskColor = (): string => {
+    // If no adjustments, return gray
+    if (rentAdjustment === 0 && expenseAdjustment === 0 && interestRateAdjustment === 0) {
+      return "#gray";
+    }
 
-    if (totalStress === 0) return "#gray";
-    if (totalStress < 10) return "#16a34a"; // green
-    if (totalStress < 20) return "#eab308"; // yellow
-    return "#dc2626"; // red
+    // If no stress test result yet, return gray
+    if (!stressTestResult || baseNoi === undefined || baseDscr === undefined || baseCashFlow === undefined) {
+      return "#gray";
+    }
+
+    // Calculate percentage changes for each metric
+    const noiChangePct = ((stressTestResult.stressed_noi - baseNoi) / baseNoi) * 100;
+    const dscrChangePct = baseDscr > 0 
+      ? ((stressTestResult.stressed_dscr || 0) - baseDscr) / baseDscr * 100 
+      : 0;
+    const cashFlowChangePct = baseCashFlow !== undefined && baseCashFlow !== 0
+      ? ((stressTestResult.stressed_cash_flow || 0) - baseCashFlow) / Math.abs(baseCashFlow) * 100
+      : 0;
+
+    // Calculate average change across all three metrics
+    const avgChange = (noiChangePct + dscrChangePct + cashFlowChangePct) / 3;
+
+    // Determine color based on overall impact
+    if (avgChange > 0) {
+      // Overall improvement - green
+      return "#16a34a"; // green
+    } else if (avgChange >= -5) {
+      // Less than 5% decline - orange
+      return "#eab308"; // yellow/orange
+    } else {
+      // More than 5% decline - red
+      return "#dc2626"; // red
+    }
   };
 
   return (
@@ -65,7 +100,8 @@ const StressTestPanel = ({ onScenarioChange }: StressTestPanelProps) => {
               width: "20px",
               height: "20px",
               borderRadius: "50%",
-              background: getRiskColor(),
+              backgroundColor: getRiskColor(),
+              border: "1px solid #ccc",
             }}
           />
         </Flex>

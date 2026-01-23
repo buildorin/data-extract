@@ -179,9 +179,8 @@ export default function DealSummaryCard({
       <Flex direction="column" gap="24px">
         {/* Header */}
         <Flex direction="column" gap="8px" style={{ position: "relative" }}>
-          <Flex justify="end" style={{ position: "absolute", top: 0, right: 0 }}>
-            <DealTypeBadge dealType={deal.deal_type} />
-          </Flex>
+          <Flex justify="between" align="start" style={{ width: "100%" }}>
+            <Flex direction="column" gap="2" style={{ flex: 1 }}>
           {isEditingDealName ? (
             <Flex gap="8px" align="center">
               <TextField.Root
@@ -212,7 +211,7 @@ export default function DealSummaryCard({
             </Flex>
           ) : (
             <Text
-              size="5"
+              size="6"
               weight="bold"
               onClick={() => setIsEditingDealName(true)}
               style={{
@@ -231,6 +230,11 @@ export default function DealSummaryCard({
             {deal.deal_name}
           </Text>
           )}
+            </Flex>
+            <Flex direction="column" gap="2px" align="end" style={{ flex: "0 0 auto" }}>
+              <DealTypeBadge dealType={deal.deal_type || 'rental_income'} />
+            </Flex>
+          </Flex>
         </Flex>
 
         <Separator size="4" />

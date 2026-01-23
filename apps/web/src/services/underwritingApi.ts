@@ -382,7 +382,7 @@ export const applyStressTest = (
 
   for (const step of base.audit_trail) {
     for (const [name, value] of step.inputs) {
-      if (name === "Gross Scheduled Rent") gross_rent = value;
+      if (name === "Gross Scheduled Rent" || name === "Gross Rent") gross_rent = value;
       if (name === "Collected Rent") gross_rent = value;
       if (name === "Operating Expenses") operating_expenses = value;
       if (name === "Annual Debt Service") debt_service = value;
@@ -390,24 +390,121 @@ export const applyStressTest = (
     }
   }
 
+  // Extract loan details for proper interest rate recalculation
+  // Try multiple ways to find these values
+  let loan_amount = 0;
+  let original_interest_rate = 0;
+  let loan_term_years = 30; // default
+  
+  for (const step of base.audit_trail) {
+    for (const [name, value] of step.inputs) {
+      if (name === "Loan Amount" || name === "Loan" || name === "Mortgage Balance") {
+        if (loan_amount === 0) loan_amount = value;
+      }
+      if (name === "Interest Rate" || name === "Interest" || name === "Rate") {
+        if (original_interest_rate === 0) original_interest_rate = value;
+      }
+      if (name === "Loan Term" || name === "Term" || name === "Loan Term (years)") {
+        if (loan_term_years === 30) loan_term_years = value;
+      }
+    }
+  }
+  
+  // If we still don't have loan amount but have debt service, try to estimate
+  // This is a fallback - ideally we should have loan details in facts
+  if (loan_amount === 0 && debt_service > 0 && original_interest_rate > 0) {
+    // Rough estimate: debt_service ≈ loan_amount * (rate/100) for interest-only
+    // But for amortizing, it's more complex. Let's try a simple approximation
+    // For a 30-year loan at rate r, monthly payment ≈ loan * (r/12) / (1 - (1+r/12)^(-360))
+    // We can reverse engineer this, but it's complex. Better to ensure loan_amount is in facts.
+    console.warn(`[Stress Test] Loan Amount not found in audit trail, cannot recalculate debt service accurately`);
+  }
+  
+  console.log(`[Stress Test] Base Values: Rent=${gross_rent}, Expenses=${operating_expenses}, Debt Service=${debt_service}`);
+  console.log(`[Stress Test] Loan Details: Amount=${loan_amount}, Rate=${original_interest_rate}%, Term=${loan_term_years}y`);
+  console.log(`[Stress Test] Adjustments: Rent=${input.rent_adjustment}%, Expenses=${input.expense_adjustment}%, Rate=${input.interest_rate_adjustment} bps`);
+
   // Apply adjustments
-  if (input.rent_adjustment !== undefined) {
-    gross_rent *= 1 + input.rent_adjustment / 100;
+  // Standard Real Estate Formulas:
+  // NOI = Gross Rent - Operating Expenses
+  // DSCR = NOI / Annual Debt Service
+  // Cash Flow = NOI - Annual Debt Service
+  
+  // Rent adjustment: positive = more rent (increases NOI, DSCR, Cash Flow)
+  // Example: Base rent $100k, +10% → $110k → NOI increases by $10k
+  if (input.rent_adjustment !== undefined && input.rent_adjustment !== 0) {
+    const original_rent = gross_rent;
+    gross_rent *= (1 + input.rent_adjustment / 100);
+    console.log(`[Stress Test] Rent: $${original_rent.toFixed(0)} → $${gross_rent.toFixed(0)} (${input.rent_adjustment > 0 ? '+' : ''}${input.rent_adjustment}%)`);
   }
 
-  if (input.expense_adjustment !== undefined) {
-    operating_expenses *= 1 + input.expense_adjustment / 100;
+  // Expense adjustment: positive = more expenses (decreases NOI, DSCR, Cash Flow)
+  // Example: Base expenses $40k, +15% → $46k → NOI decreases by $6k
+  if (input.expense_adjustment !== undefined && input.expense_adjustment !== 0) {
+    const original_expenses = operating_expenses;
+    operating_expenses *= (1 + input.expense_adjustment / 100);
+    console.log(`[Stress Test] Expenses: $${original_expenses.toFixed(0)} → $${operating_expenses.toFixed(0)} (${input.expense_adjustment > 0 ? '+' : ''}${input.expense_adjustment}%)`);
   }
 
-  if (input.interest_rate_adjustment !== undefined) {
-    // Simplified: adjust debt service proportionally
-    debt_service *= 1 + input.interest_rate_adjustment / 10000;
+  // Recalculate debt service if interest rate changes
+  // Interest rate adjustment: positive = higher rate (increases debt service, decreases DSCR & Cash Flow)
+  // Example: 5.5% + 100 bps = 6.5% → higher monthly payment → higher debt service
+  if (input.interest_rate_adjustment !== undefined && input.interest_rate_adjustment !== 0) {
+    // Convert basis points to percentage points (100 bps = 1%)
+    // e.g., 5.5% + 100 bps = 5.5% + 1% = 6.5%
+    const new_interest_rate = original_interest_rate + (input.interest_rate_adjustment / 100);
+    
+    console.log(`[Stress Test] Interest Rate: ${original_interest_rate.toFixed(2)}% → ${new_interest_rate.toFixed(2)}% (${input.interest_rate_adjustment > 0 ? '+' : ''}${input.interest_rate_adjustment} bps)`);
+    
+    // Always recalculate debt service if we have loan details, even if base debt_service was 0
+    if (loan_amount > 0 && new_interest_rate >= 0 && loan_term_years > 0) {
+      const original_debt_service = debt_service;
+      
+      // Standard Mortgage Payment Formula: M = P * [r(1+r)^n] / [(1+r)^n - 1]
+      // Where: P = loan amount, r = monthly interest rate, n = number of payments
+      const monthly_rate = new_interest_rate / 100 / 12;
+      const num_payments = loan_term_years * 12;
+      
+      let monthly_payment = 0;
+      if (monthly_rate > 0 && num_payments > 0) {
+        const numerator = monthly_rate * Math.pow(1 + monthly_rate, num_payments);
+        const denominator = Math.pow(1 + monthly_rate, num_payments) - 1;
+        monthly_payment = loan_amount * (numerator / denominator);
+      } else if (num_payments > 0) {
+        // If rate is 0, just divide loan by number of payments
+        monthly_payment = loan_amount / num_payments;
+      }
+      
+      // New annual debt service
+      debt_service = monthly_payment * 12;
+      console.log(`[Stress Test] Debt Service: $${original_debt_service.toFixed(0)} → $${debt_service.toFixed(0)} (${debt_service > original_debt_service ? 'increased' : debt_service < original_debt_service ? 'decreased' : 'unchanged'})`);
+    } else if (debt_service > 0 && original_interest_rate > 0 && new_interest_rate >= 0) {
+      // Fallback: If we have base debt service and interest rates, estimate new debt service
+      // This is approximate: new_debt_service ≈ old_debt_service * (new_rate / old_rate)
+      // This assumes the loan amount stays the same and only rate changes
+      const original_debt_service = debt_service;
+      if (original_interest_rate > 0) {
+        // Approximate: debt service is roughly proportional to interest rate for amortizing loans
+        // More accurate: recalculate from scratch, but this is a reasonable approximation
+        const rate_ratio = new_interest_rate / original_interest_rate;
+        // For amortizing loans, the relationship isn't linear, but this gives a reasonable estimate
+        // Better approach: we should always have loan_amount in facts
+        debt_service = debt_service * rate_ratio;
+        console.log(`[Stress Test] Debt Service (estimated): $${original_debt_service.toFixed(0)} → $${debt_service.toFixed(0)} (rate ratio: ${rate_ratio.toFixed(3)})`);
+        console.warn(`[Stress Test] Using estimated debt service - loan details incomplete. Please ensure Loan Amount is in Facts.`);
+      }
+    } else {
+      console.warn(`[Stress Test] Cannot recalculate debt service: loan_amount=${loan_amount}, rate=${new_interest_rate}, term=${loan_term_years}, base_debt_service=${debt_service}`);
+    }
   }
 
   // Calculate stressed metrics
   const stressed_noi = gross_rent - operating_expenses;
   const stressed_dscr = debt_service > 0 ? stressed_noi / debt_service : undefined;
   const stressed_cash_flow = stressed_noi - debt_service;
+  
+  console.log(`[Stress Test] Results: NOI=${stressed_noi.toFixed(0)}, DSCR=${stressed_dscr?.toFixed(2)}, Cash Flow=${stressed_cash_flow.toFixed(0)}`);
+  console.log(`[Stress Test] Changes: NOI ${(stressed_noi - base.noi) >= 0 ? '+' : ''}${(stressed_noi - base.noi).toFixed(0)}, DSCR ${stressed_dscr && base.dscr ? ((stressed_dscr - base.dscr) >= 0 ? '+' : '') + (stressed_dscr - base.dscr).toFixed(2) : 'N/A'}`);
 
   // Calculate changes
   const noi_change = stressed_noi - base.noi;

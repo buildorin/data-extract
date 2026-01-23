@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Flex, Text, Card, Button, TextField, Badge } from "@radix-ui/themes";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import {
@@ -31,7 +31,7 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
   const [newFactLabel, setNewFactLabel] = useState("");
   const [newFactValue, setNewFactValue] = useState("");
   const [newFactUnit, setNewFactUnit] = useState("");
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['primary']));
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['operations', 'financing']));
   const queryClient = useQueryClient();
 
   // Adaptive field groups based on deal type
@@ -39,10 +39,19 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
     operations: {
       title: "OPERATIONS",
       fields: [
-        { label: "Annual Rental Income", unit: "$", type: "currency", placeholder: "e.g., 480000" },
+        { label: "Gross Annual Rent", unit: "$", type: "currency", placeholder: "e.g., 480000" },
         { label: "Occupancy Rate", unit: "%", type: "percentage", placeholder: "e.g., 95" },
         { label: "T12 Operating Expenses", unit: "$", type: "currency", placeholder: "e.g., 160000" },
         { label: "Management Fee", unit: "%", type: "percentage", placeholder: "e.g., 5" },
+      ],
+    },
+    financing: {
+      title: "FINANCING",
+      fields: [
+        { label: "Purchase Price", unit: "$", type: "currency", placeholder: "e.g., 2000000" },
+        { label: "Down Payment", unit: "%", type: "percentage", placeholder: "e.g., 25" },
+        { label: "Interest Rate", unit: "%", type: "percentage", placeholder: "e.g., 5.5" },
+        { label: "Loan Term", unit: "years", type: "number", placeholder: "e.g., 30" },
       ],
     },
     terminalValue: {
@@ -220,6 +229,124 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
     }
   };
 
+  // Auto-calculate financing derived values
+  const calculateFinancingValues = () => {
+    if (dealType !== 'rental_income') return;
+
+    const purchasePriceFact = factsList.find(f => f.label === 'Purchase Price');
+    const downPaymentFact = factsList.find(f => f.label === 'Down Payment');
+    const interestRateFact = factsList.find(f => f.label === 'Interest Rate');
+    const loanTermFact = factsList.find(f => f.label === 'Loan Term');
+
+    const purchasePrice = purchasePriceFact ? parseFloat(purchasePriceFact.value) : 0;
+    const downPaymentPercent = downPaymentFact ? parseFloat(downPaymentFact.value) : 0;
+    const interestRate = interestRateFact ? parseFloat(interestRateFact.value) : 0;
+    const loanTermYears = loanTermFact ? parseFloat(loanTermFact.value) : 30;
+
+    if (purchasePrice > 0 && downPaymentPercent >= 0 && interestRate > 0 && loanTermYears > 0) {
+      // Calculate Loan Amount
+      const loanAmount = purchasePrice * (1 - downPaymentPercent / 100);
+      
+      // Calculate Monthly Payment using standard mortgage formula
+      const monthlyRate = interestRate / 100 / 12;
+      const numPayments = loanTermYears * 12;
+      let monthlyPayment = 0;
+      if (monthlyRate > 0) {
+        monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+                         (Math.pow(1 + monthlyRate, numPayments) - 1);
+      } else {
+        monthlyPayment = loanAmount / numPayments;
+      }
+      
+      // Calculate Annual Debt Service
+      const annualDebtService = monthlyPayment * 12;
+
+      // Find or create facts for calculated values
+      const loanAmountFact = factsList.find(f => f.label === 'Loan Amount');
+      const monthlyPaymentFact = factsList.find(f => f.label === 'Monthly Payment');
+      const annualDebtServiceFact = factsList.find(f => f.label === 'Annual Debt Service');
+
+      // Update or create Loan Amount
+      if (loanAmountFact) {
+        if (Math.abs(parseFloat(loanAmountFact.value) - loanAmount) > 0.01) {
+          updateMutation.mutate({
+            factId: loanAmountFact.fact_id,
+            value: loanAmount.toFixed(2),
+            unit: '$',
+          });
+        }
+      } else {
+        createFactMutation.mutate({
+          label: 'Loan Amount',
+          value: loanAmount.toFixed(2),
+          unit: '$',
+        });
+      }
+
+      // Update or create Monthly Payment
+      if (monthlyPaymentFact) {
+        if (Math.abs(parseFloat(monthlyPaymentFact.value) - monthlyPayment) > 0.01) {
+          updateMutation.mutate({
+            factId: monthlyPaymentFact.fact_id,
+            value: monthlyPayment.toFixed(2),
+            unit: '$',
+          });
+        }
+      } else {
+        createFactMutation.mutate({
+          label: 'Monthly Payment',
+          value: monthlyPayment.toFixed(2),
+          unit: '$',
+        });
+      }
+
+      // Update or create Annual Debt Service
+      if (annualDebtServiceFact) {
+        if (Math.abs(parseFloat(annualDebtServiceFact.value) - annualDebtService) > 0.01) {
+          updateMutation.mutate({
+            factId: annualDebtServiceFact.fact_id,
+            value: annualDebtService.toFixed(2),
+            unit: '$',
+          });
+        }
+      } else {
+        createFactMutation.mutate({
+          label: 'Annual Debt Service',
+          value: annualDebtService.toFixed(2),
+          unit: '$',
+        });
+      }
+    }
+  };
+
+  // Watch for financing input field changes and auto-calculate
+  useEffect(() => {
+    if (dealType === 'rental_income' && factsList.length > 0) {
+      const purchasePrice = factsList.find(f => f.label === 'Purchase Price')?.value || '';
+      const downPayment = factsList.find(f => f.label === 'Down Payment')?.value || '';
+      const interestRate = factsList.find(f => f.label === 'Interest Rate')?.value || '';
+      const loanTerm = factsList.find(f => f.label === 'Loan Term')?.value || '';
+      
+      // Only calculate if we have at least one input field with a value
+      const hasInputValues = purchasePrice || downPayment || interestRate || loanTerm;
+      
+      if (hasInputValues) {
+        // Debounce calculation to avoid infinite loops
+        const timer = setTimeout(() => {
+          calculateFinancingValues();
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    factsList.find(f => f.label === 'Purchase Price')?.value,
+    factsList.find(f => f.label === 'Down Payment')?.value,
+    factsList.find(f => f.label === 'Interest Rate')?.value,
+    factsList.find(f => f.label === 'Loan Term')?.value,
+    dealType
+  ]);
+
   const toggleFactSelection = (factId: string) => {
     const newSelected = new Set(selectedFacts);
     if (newSelected.has(factId)) {
@@ -390,14 +517,14 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
       className="fact-review-container"
     >
       <Flex direction="column" gap="2" mb="2" style={{ flexShrink: 0 }}>
-        <Flex direction="column" gap="1">
-          <Text size="6" weight="medium">
+          <Flex direction="column" gap="1">
+          <Text size="6" weight="bold">
             Inputs to run deal analysis
-          </Text>
+            </Text>
           <Text size="2" weight="regular">
             Auto extracted from documents when available
-          </Text>
-        </Flex>
+            </Text>
+          </Flex>
         {factsList.length > 0 && (
           <Flex justify="end" align="center" gap="12px">
             {hasLockedFacts && (
@@ -423,13 +550,13 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
               >
                 <Text size="3">🔄</Text>
                 <Text size="2" style={{ color: "#666", fontWeight: "500" }}>
-                  Reset All
+                Reset All
                 </Text>
               </Flex>
             )}
             {factsList.length > 0 && (
               <>
-                {selectedFacts.size > 0 && (
+            {selectedFacts.size > 0 && (
                   <Flex
                     onClick={() => !approveMutation.isLoading && handleApproveSelected()}
                     align="center"
@@ -452,7 +579,7 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
                   >
                     <Text size="3">✓</Text>
                     <Text size="2" style={{ color: "#1976D2", fontWeight: "500" }}>
-                      Verify Selected ({selectedFacts.size})
+                Verify Selected ({selectedFacts.size})
                     </Text>
                   </Flex>
                 )}
@@ -580,8 +707,8 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
 
       {/* Accordion Groups */}
       <Flex direction="column" gap="16px" style={{ flex: 1, overflowY: "auto", minHeight: 0, paddingBottom: "16px" }}>
-        {Object.entries(fieldGroups).map(([groupKey, group], index) => {
-          const isExpanded = expandedGroups.has(index === 0 ? 'primary' : 'secondary');
+        {Object.entries(fieldGroups).map(([groupKey, group]) => {
+          const isExpanded = expandedGroups.has(groupKey);
           const groupFacts = factsList.filter(f => 
             group.fields.some(field => field.label === f.label)
           );
@@ -592,7 +719,7 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
             <Card key={groupKey} style={{ padding: "0", border: "1px solid #e0e0e0" }}>
               {/* Accordion Header */}
               <Flex
-                onClick={() => toggleGroup(index === 0 ? 'primary' : 'secondary')}
+                onClick={() => toggleGroup(groupKey)}
                 p="16px"
                 align="center"
                 justify="between"
@@ -637,9 +764,9 @@ const FactReviewDeal = ({ dealId, onFactsApproved }: FactReviewDealProps) => {
                                 + Quick add
                               </Button>
                             )}
-                          </Flex>
-                        </Flex>
-                        
+        </Flex>
+      </Flex>
+
                         {existingFact && (
                           <Flex gap="8px" align="center">
                             <TextField.Root

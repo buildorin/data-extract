@@ -45,6 +45,7 @@ const UnderwritingDashboard = ({ dealId }: UnderwritingDashboardProps) => {
     enabled: dealType === 'rental_income', // Only calculate for rental income deals
   });
 
+  // Always calculate stress test result if there are any adjustments (including 0 to track changes)
   const stressTestResult: StressTestResult | null =
     underwritingResult && (stressScenario.rentAdjustment !== 0 ||
       stressScenario.expenseAdjustment !== 0 ||
@@ -142,7 +143,7 @@ const UnderwritingDashboard = ({ dealId }: UnderwritingDashboardProps) => {
         <Text size="6" weight="bold">
           Rental Income Analysis
         </Text>
-        <DealTypeBadge dealType="rental_income" />
+        <DealTypeBadge dealType={deal?.deal_type || 'rental_income'} />
       </Flex>
 
       {/* Warnings */}
@@ -272,6 +273,10 @@ const UnderwritingDashboard = ({ dealId }: UnderwritingDashboardProps) => {
       {/* Stress Testing */}
       <StressTestPanel
         onScenarioChange={(scenario) => setStressScenario(scenario)}
+        stressTestResult={stressTestResult}
+        baseNoi={underwritingResult.noi}
+        baseDscr={underwritingResult.dscr}
+        baseCashFlow={underwritingResult.cash_flow_after_debt}
       />
 
       {/* Audit Trail */}

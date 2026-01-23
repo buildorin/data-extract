@@ -6,6 +6,7 @@ import { DealResponse, DocumentResponse, FactResponse } from "./dealApi";
 // LocalStorage keys
 const MOCK_DEALS_KEY = 'orin_mock_deals';
 const MOCK_DOCUMENTS_KEY = 'orin_mock_documents';
+const MOCK_FACTS_KEY = 'orin_mock_facts';
 const MOCK_LIVE_SHARES_KEY = 'live_shares';
 const MOCK_INVESTOR_INTEREST_KEY = 'investor_interest';
 
@@ -115,7 +116,8 @@ const DEFAULT_MOCK_DOCUMENTS: DocumentResponse[] = [
   },
 ];
 
-export const MOCK_FACTS: FactResponse[] = [
+// Default mock facts
+const DEFAULT_MOCK_FACTS: FactResponse[] = [
   // Facts for Downtown Commercial Property (deal-002-mockdata)
   {
     fact_id: "fact-downtown-001",
@@ -400,6 +402,9 @@ export const MOCK_FACTS: FactResponse[] = [
   },
 ];
 
+// This will be initialized below after loadFromLocalStorage is available
+export let MOCK_FACTS: FactResponse[] = [];
+
 // These two pre-existing deals have pre-loaded documents for demo
 const PREEXISTING_MOCK_DEALS = ['deal-002-mockdata', 'deal-003-mockdata'];
 
@@ -481,6 +486,7 @@ const DEFAULT_MOCK_INVESTOR_INTEREST = [
 // Initialize from localStorage
 export const MOCK_DEALS: DealResponse[] = loadFromLocalStorage(MOCK_DEALS_KEY, DEFAULT_MOCK_DEALS);
 export const MOCK_DOCUMENTS: DocumentResponse[] = loadFromLocalStorage(MOCK_DOCUMENTS_KEY, DEFAULT_MOCK_DOCUMENTS);
+MOCK_FACTS = loadFromLocalStorage(MOCK_FACTS_KEY, DEFAULT_MOCK_FACTS);
 
 // Initialize live shares and investor interest if not present
 if (!localStorage.getItem(MOCK_LIVE_SHARES_KEY)) {
@@ -495,6 +501,7 @@ export const saveMockData = () => {
   try {
     localStorage.setItem(MOCK_DEALS_KEY, JSON.stringify(MOCK_DEALS));
     localStorage.setItem(MOCK_DOCUMENTS_KEY, JSON.stringify(MOCK_DOCUMENTS));
+    localStorage.setItem(MOCK_FACTS_KEY, JSON.stringify(MOCK_FACTS));
   } catch (e) {
     console.error('Failed to save mock data to localStorage:', e);
   }

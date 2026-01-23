@@ -1,7 +1,7 @@
 import { Flex, Card, Text, Button, TextArea, TextField } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
 import { useQuery } from "react-query";
-import { getDeals, DealResponse, getDeal } from "../../services/dealApi";
+import { DealResponse, getDeal } from "../../services/dealApi";
 import { CreateLiveShareModal } from "../LiveShare/CreateLiveShareModal";
 import { DealTypeBadge } from "../Dashboard/DealTypeBadge";
 import "./InvestorPackage.css";
@@ -127,83 +127,83 @@ const getDefaultMemo = (dealId: string, dealName: string): InvestorMemo => ({
   timeline: "Timeline to be established upon commitment.",
 });
 
-const InvestorPackage = () => {
+interface InvestorPackageProps {
+  dealId: string | null;
+}
+
+const InvestorPackage = ({ dealId }: InvestorPackageProps) => {
   const [showCreateLiveShareModal, setShowCreateLiveShareModal] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>("");
   const [customBlocks, setCustomBlocks] = useState<MemoBlock[]>([]);
-  
-  const { data: deals, isLoading } = useQuery<DealResponse[]>({
-    queryKey: ["deals"],
-    queryFn: getDeals,
-  });
 
-  // Filter deals that have completed underwriting
-  const dealsWithMemos = deals?.filter(
-    (deal) => deal.status === "ready_for_underwriting"
-  ) || [];
+  // Get the current deal
+  const { data: currentDeal } = useQuery<DealResponse | null>(
+    ["deal", dealId],
+    () => (dealId ? getDeal(dealId) : Promise.resolve(null)),
+    { enabled: !!dealId }
+  );
 
-  // Initialize memo based on the first deal with memo, or use default
-  const initialDeal = dealsWithMemos[0];
-  const initialMemo = initialDeal
-    ? MOCK_INVESTOR_MEMOS[initialDeal.deal_id] || getDefaultMemo(initialDeal.deal_id, initialDeal.deal_name)
+  // Initialize memo based on the current deal
+  const initialMemo = currentDeal
+    ? MOCK_INVESTOR_MEMOS[currentDeal.deal_id] || getDefaultMemo(currentDeal.deal_id, currentDeal.deal_name)
     : getDefaultMemo("", "");
 
   const [memo, setMemo] = useState<InvestorMemo>(initialMemo);
 
-  // Get deal data for the current memo to access deal_type
-  const { data: currentDeal } = useQuery<DealResponse>(
-    ["deal", memo.dealId],
-    () => getDeal(memo.dealId),
-    { enabled: !!memo.dealId }
-  );
+  // currentDeal is already loaded above
 
-  // Update memo when deals change - initialize with correct deal-specific data
-  useEffect(() => {
-    if (dealsWithMemos.length > 0 && deals) {
-      // Get the first deal (or the one that matches current memo if it exists)
-      const currentDeal = dealsWithMemos.find((d) => d.deal_id === memo.dealId) || dealsWithMemos[0];
-      
-      // Always start with mock data to ensure correct addresses
-      const mockMemo = MOCK_INVESTOR_MEMOS[currentDeal.deal_id] || getDefaultMemo(currentDeal.deal_id, currentDeal.deal_name);
-      
-      // Check localStorage for user edits
-      const savedMemoKey = `memo_${currentDeal.deal_id}`;
-      const savedMemo = localStorage.getItem(savedMemoKey);
-      
-      if (savedMemo) {
-        try {
-          const parsed = JSON.parse(savedMemo);
-          // Only use saved memo if it's for the correct deal
-          if (parsed.dealId === currentDeal.deal_id) {
-            // Merge: mock data as base, but preserve user edits
-            // CRITICAL: Always use mock address (don't use old saved address)
-            const mergedMemo = {
-              ...mockMemo,
-              ...parsed,
-              propertyDetails: {
-                ...mockMemo.propertyDetails, // Start with mock property details
-                ...parsed.propertyDetails,   // Apply user edits
-                address: mockMemo.propertyDetails.address, // Force correct address from mock
-              },
-            };
-            setMemo(mergedMemo);
-            // Update localStorage with correct address
-            localStorage.setItem(savedMemoKey, JSON.stringify(mergedMemo));
-          } else {
-            // Saved memo is for wrong deal, use fresh mock data
-            setMemo(mockMemo);
-          }
-        } catch (e) {
-          console.error("Failed to load saved memo:", e);
+  // Function to load memo for a specific deal
+  const loadMemoForDeal = (dealId: string, dealName: string) => {
+    // Always start with mock data to ensure correct addresses
+    const mockMemo = MOCK_INVESTOR_MEMOS[dealId] || getDefaultMemo(dealId, dealName);
+    
+    // Check localStorage for user edits
+    const savedMemoKey = `memo_${dealId}`;
+    const savedMemo = localStorage.getItem(savedMemoKey);
+    
+    if (savedMemo) {
+      try {
+        const parsed = JSON.parse(savedMemo);
+        // Only use saved memo if it's for the correct deal
+        if (parsed.dealId === dealId) {
+          // Merge: mock data as base, but preserve user edits
+          // CRITICAL: Always use mock address (don't use old saved address)
+          const mergedMemo = {
+            ...mockMemo,
+            ...parsed,
+            propertyDetails: {
+              ...mockMemo.propertyDetails, // Start with mock property details
+              ...parsed.propertyDetails,   // Apply user edits
+              address: mockMemo.propertyDetails.address, // Force correct address from mock
+            },
+          };
+          setMemo(mergedMemo);
+          // Update localStorage with correct address
+          localStorage.setItem(savedMemoKey, JSON.stringify(mergedMemo));
+        } else {
+          // Saved memo is for wrong deal, use fresh mock data
           setMemo(mockMemo);
         }
-      } else {
-        // No saved memo, use fresh mock data
+      } catch (e) {
+        console.error("Failed to load saved memo:", e);
         setMemo(mockMemo);
       }
+    } else {
+      // No saved memo, use fresh mock data
+      setMemo(mockMemo);
     }
-  }, [deals]);
+  };
+
+  // Update memo when dealId changes - load memo for the current deal
+  useEffect(() => {
+    if (currentDeal) {
+      // Only load if memo.dealId is empty (first load) or doesn't match current deal
+      if (!memo.dealId || memo.dealId !== currentDeal.deal_id) {
+        loadMemoForDeal(currentDeal.deal_id, currentDeal.deal_name);
+      }
+    }
+  }, [currentDeal]);
 
   // Load custom blocks from localStorage
   useEffect(() => {
@@ -366,15 +366,8 @@ const InvestorPackage = () => {
     setCustomBlocks(customBlocks.filter((b) => b.id !== blockId));
   };
 
-  if (isLoading) {
-    return (
-      <Flex justify="center" align="center" p="8">
-        <Text>Loading investor packages...</Text>
-      </Flex>
-    );
-  }
-
-  if (dealsWithMemos.length === 0) {
+  // Early return if no deal is selected
+  if (!dealId || !currentDeal) {
     return (
       <Flex
         direction="column"
@@ -385,10 +378,10 @@ const InvestorPackage = () => {
         style={{ height: "100%" }}
       >
         <Text size="6" weight="bold" color="gray">
-          No Investor Packages Available
+          No Deal Selected
         </Text>
         <Text size="3" color="gray">
-          Complete underwriting analysis to generate investor-ready packages
+          Please select a deal to view its investor memo
         </Text>
       </Flex>
     );
@@ -397,27 +390,18 @@ const InvestorPackage = () => {
   return (
     <Flex
       direction="column"
-      gap="4"
-      p="24px"
+      gap="2"
       style={{ overflowY: "auto", height: "100%", minHeight: 0 }}
       className="investor-package-container"
     >
-
-      <Flex gap="4" wrap="wrap">
-        {dealsWithMemos.map((deal) => {
-          if (deal.deal_id !== memo.dealId) return null;
-
-          return (
-            <Card
-              key={deal.deal_id}
-              style={{
-                width: "100%",
-                maxWidth: "900px",
-                padding: "32px",
-                border: "1px solid #e0e0e0",
-              }}
-            >
-              <Flex direction="column" gap="4">
+      <Card
+        style={{
+          width: "100%",
+          padding: "28px",
+          border: "1px solid #e0e0e0",
+        }}
+      >
+          <Flex direction="column" gap="4">
                 {/* Header */}
                 <Flex direction="column" gap="2" style={{ position: "relative" }}>
                   <Flex justify="between" align="start" style={{ width: "100%" }}>
@@ -1009,23 +993,20 @@ const InvestorPackage = () => {
                 </Flex>
               </Flex>
             </Card>
-          );
-        })}
-      </Flex>
 
-      {/* Create Live Share Modal */}
-      {memo && dealsWithMemos[0] && (
-        <CreateLiveShareModal
-          dealId={dealsWithMemos[0].deal_id}
-          dealName={memo.dealName}
-          isOpen={showCreateLiveShareModal}
-          onClose={() => {
-            setShowCreateLiveShareModal(false);
-          }}
-        />
-      )}
-    </Flex>
-  );
+            {/* Create Live Share Modal */}
+            {memo && currentDeal && (
+              <CreateLiveShareModal
+                dealId={currentDeal.deal_id}
+                dealName={memo.dealName}
+                isOpen={showCreateLiveShareModal}
+                onClose={() => {
+                  setShowCreateLiveShareModal(false);
+                }}
+              />
+            )}
+          </Flex>
+    );
 };
 
 export default InvestorPackage;

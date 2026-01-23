@@ -483,7 +483,7 @@ export default function RightPreviewPane({
           {/* Documents Tab */}
           <Tabs.Content value="documents" style={{ padding: "32px" }}>
             <Flex direction="column" gap="12px">
-              <Text size="6" weight="medium">
+              <Text size="6" weight="bold">
                 Parsed Documents
               </Text>
               {documents && documents.length > 0 ? (
@@ -590,7 +590,7 @@ export default function RightPreviewPane({
 
           {/* Memo Tab */}
           <Tabs.Content value="memo" style={{ padding: "16px" }}>
-            {dealId && <InvestorPackage />}
+            {dealId && <InvestorPackage dealId={dealId} />}
           </Tabs.Content>
         </ScrollArea>
       </Tabs.Root>
